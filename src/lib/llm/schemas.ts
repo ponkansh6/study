@@ -7,7 +7,4 @@ export const QuizQuestionSchema = z.object({
   explanation: z.string().optional(),
 });
 
-export const QuizGenerationSchema = z.array(QuizQuestionSchema).length(10);
-
 export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
-export type QuizGeneration = z.infer<typeof QuizGenerationSchema>;

@@ -1,5 +1,3 @@
-import { Question } from "@/types/quiz";
-
 export function fisherYatesShuffle<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -9,32 +7,17 @@ export function fisherYatesShuffle<T>(array: T[]): T[] {
   return result;
 }
 
-export interface ShuffledQuestion {
-  id: number;
-  originalIndex: number;
-  question: string;
+export interface ShuffledChoices {
   choices: string[];
-  choiceIndices: number[];
-  correctChoiceIndex: number;
-  explanation?: string;
+  choiceIndices: number[]; // choiceIndices[シャッフル後idx] = 元のidx
 }
 
-export function shuffleQuestionsAndChoices(questions: Question[]): ShuffledQuestion[] {
-  const shuffled = fisherYatesShuffle(questions.map((q, idx) => ({ ...q, originalIndex: idx })));
-
-  return shuffled.map((q) => {
-    const choiceIndices = fisherYatesShuffle([0, 1, 2, 3]);
-    const choices = choiceIndices.map((i) => q.choices[i]);
-    const correctChoiceIndex = choiceIndices.indexOf(q.correctIndex);
-
-    return {
-      id: q.id,
-      originalIndex: q.originalIndex,
-      question: q.question,
-      choices,
-      choiceIndices,
-      correctChoiceIndex,
-      explanation: q.explanation,
-    };
-  });
+export function shuffleChoices(choices: string[]): ShuffledChoices {
+  const indices = Array.from({ length: choices.length }, (_, i) => i);
+  const choiceIndices = fisherYatesShuffle(indices);
+  const shuffledChoices = choiceIndices.map((i) => choices[i]);
+  return {
+    choices: shuffledChoices,
+    choiceIndices,
+  };
 }

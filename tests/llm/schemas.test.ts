@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { QuizQuestionSchema, QuizGenerationSchema } from "@/lib/llm/schemas";
+import { QuizQuestionSchema } from "@/lib/llm/schemas";
 
 describe("QuizQuestionSchema", () => {
   it("validates a correct question", () => {
@@ -30,18 +30,6 @@ describe("QuizQuestionSchema", () => {
       correctIndex: 4,
     };
     const result = QuizQuestionSchema.safeParse(invalid);
-    expect(result.success).toBe(false);
-  });
-});
-
-describe("QuizGenerationSchema", () => {
-  it("rejects an array that does not contain exactly 10 questions", () => {
-    const invalidArray = Array.from({ length: 5 }, (_, i) => ({
-      question: `Question ${i + 1}`,
-      choices: ["A", "B", "C", "D"],
-      correctIndex: 0,
-    }));
-    const result = QuizGenerationSchema.safeParse(invalidArray);
     expect(result.success).toBe(false);
   });
 });

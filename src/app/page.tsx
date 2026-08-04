@@ -1,116 +1,68 @@
-"use client";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+const DEFAULT_STATS = { totalQuestions: 0, totalAnswers: 0, overallAccuracy: 0 };
 
-interface QuizSetPreview {
-  id: number;
-  title: string;
-  createdAt: string;
+async function getStats() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/stats`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return DEFAULT_STATS;
+    return res.json();
+  } catch {
+    return DEFAULT_STATS;
+  }
 }
 
-export default function Home() {
-  const router = useRouter();
-  const [sourceText, setSourceText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [quizSets, setQuizSets] = useState<QuizSetPreview[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    fetchQuizSets();
-  }, []);
-
-  const fetchQuizSets = async () => {
-    try {
-      const res = await fetch("/api/quiz-sets");
-      if (!res.ok) throw new Error("Failed to fetch quiz sets");
-      const data = await res.json();
-      setQuizSets(data.reverse());
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sourceText.trim()) {
-      setError("Please enter some text");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/quiz-sets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sourceText }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to generate quiz");
-      }
-
-      const { id } = await res.json();
-      router.push(`/quiz/${id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+export default async function Home() {
+  const { totalQuestions, totalAnswers, overallAccuracy } = await getStats();
 
   return (
-    <main className={styles.main}>
-      <h1>Study - Quiz Generator</h1>
-      <p>Paste your knowledge text to generate a quiz set of 10 questions.</p>
+    <main className="py-12 space-y-8">
+      <header className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">Study</h1>
+        <p className="text-text/70">1ナレッジ1問学習アプリ</p>
+      </header>
 
-      <section className={styles.section}>
-        {error && <div className={styles.error}>{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <label htmlFor="source-text" className={styles.label}>
-              Knowledge Text
-            </label>
-            <textarea
-              id="source-text"
-              className={styles.textarea}
-              value={sourceText}
-              onChange={(e) => setSourceText(e.target.value)}
-              placeholder="Paste your text here..."
-              disabled={loading}
-            />
-          </div>
-
-          <button type="submit" className={styles.button} disabled={loading || !sourceText.trim()}>
-            {loading ? "Generating..." : "Generate Quiz"}
-          </button>
-        </form>
-
-        {loading && <div className={styles.loading}>Generating quiz from your text...</div>}
+      <section className="grid gap-4">
+        <Link
+          href="/create"
+          className="flex items-center justify-center p-6 bg-primary text-white rounded-xl font-bold min-h-12 hover:bg-primary-hover transition"
+        >
+          問題を作る
+        </Link>
+        <Link
+          href="/answer"
+          className={`flex items-center justify-center p-6 rounded-xl font-bold min-h-12 border-2 border-primary text-primary transition ${
+            totalQuestions === 0 ? "opacity-50 pointer-events-none" : "hover:bg-primary/10"
+          }`}
+        >
+          問題を解く
+        </Link>
+        {totalQuestions === 0 && (
+          <p className="text-center text-sm text-warning">まず問題を作ってください</p>
+        )}
       </section>
 
-      {quizSets.length > 0 && (
-        <section className={styles.section}>
-          <h2>Previous Quizzes</h2>
-          <ul className={styles.quizList}>
-            {quizSets.map((quiz) => (
-              <li
-                key={quiz.id}
-                className={styles.quizItem}
-                onClick={() => router.push(`/quiz/${quiz.id}`)}
-              >
-                <div className={styles.quizTitle}>{quiz.title}</div>
-                <div className={styles.quizMeta}>{new Date(quiz.createdAt).toLocaleString()}</div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section className="bg-border/20 p-6 rounded-xl text-center space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-text/60">統計</h2>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold">{totalQuestions}</div>
+            <div className="text-xs text-text/60">問題数</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold">{totalAnswers}</div>
+            <div className="text-xs text-text/60">解答数</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold">{Math.round(overallAccuracy * 100)}%</div>
+            <div className="text-xs text-text/60">正答率</div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

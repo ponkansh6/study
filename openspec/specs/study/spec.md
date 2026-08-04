@@ -1,14 +1,14 @@
-# Study - Quiz Generator Specification
+# Study - 1-Knowledge-1-Question Endless Learning Specification
 
 ## Overview
 
-Study is a Next.js application that transforms knowledge text into interactive 4-choice quizzes using Google Gemini API. Users paste knowledge content, receive a 10-question quiz set, and can answer and review results immediately in the browser.
+Study is a Next.js application that transforms knowledge text into interactive 4-choice questions using the Google Gemini API. The app follows an endless learning model (1 knowledge item = 1 generated question) featuring a weighted random question selection algorithm (苦手優先) and continuous answer logging to track overall statistics.
 
 ## Data Model
 
 ```typescript
 // Database (Drizzle ORM / Turso)
-interface QuizSet {
+interface Knowledge {
   id: number;
   title: string;
   sourceText: string;
@@ -17,231 +17,120 @@ interface QuizSet {
 
 interface Question {
   id: number;
-  quizSetId: number;
-  orderIndex: number;
+  knowledgeId: number; // 1:1 with knowledge
   question: string;
-  choices: string[];
+  choices: string[]; // JSON string[]
   correctIndex: number;
   explanation?: string;
+  createdAt: Date;
 }
 
-// Client-side runtime (not persisted)
-interface ShuffledQuestion {
+interface AnswerLog {
   id: number;
-  originalIndex: number;
-  question: string;
-  choices: string[]; // order shuffled
-  choiceIndices: number[]; // mapping to original indices
-  correctChoiceIndex: number; // position of correct answer in shuffled order
-  explanation?: string;
+  questionId: number;
+  selectedIndex: number;
+  isCorrect: number; // 0 | 1
+  answeredAt: Date;
 }
 ```
 
 ## Requirements
 
-### R1: Text-to-Quiz Generation
+### R1: Knowledge & Question Generation
+**WHEN** user submits knowledge text via form on `/create`
+**THEN** `POST /api/questions` triggers Gemini to generate 1 knowledge record and exactly 1 question with 4 choices.
 
-**WHEN** user submits knowledge text via form on home page
-**THEN** POST /api/quiz-sets triggers Gemini to generate exactly 10 questions
-
-- Each question has 4 choices with 1 correct answer
-- Correct answer position varies (0-3) naturally
+- Title auto-generated from the first 100 characters of input
 - JSON validated via Zod schema
-- On parse failure, retry with exponential backoff (max 2 retries)
-- Title auto-generated from first 100 chars of input
+- On parse failure or API error, retry with exponential backoff (max 3 retries)
 
-### R2: Quiz Persistence
+### R2: Endless Learning Question Retrieval
+**WHEN** user requests a question on `/answer`
+**THEN** `GET /api/questions/random` returns a weighted random question favoring incorrectly answered or unanswered questions (苦手優先).
 
-**WHEN** LLM generation succeeds
-**THEN** quiz set + all 10 questions saved to Turso DB
+- Excludes the last 10 answered question IDs passed via query parameters (`exclude=1,2,3`)
+- Returns choices without `correctIndex` or `explanation`
+- Returns 404 if no questions are available in the database
 
-- Rollback on partial write failure
-- `quiz_sets` table: id, title, sourceText, createdAt
-- `questions` table: id, quizSetId, orderIndex, question, choices[], correctIndex, explanation
+### R3: Answer Submission & Feedback
+**WHEN** user selects a choice and clicks submit on `/answer`
+**THEN** `POST /api/answers` validates the answer, records an `answerLogs` entry, and returns feedback (`isCorrect`, `correctIndex`, `explanation`).
 
-### R3: Quiz Retrieval & Display
+### R4: Client-Side Choice Shuffle
+**WHEN** a question is loaded in the answer view
+**THEN** client-side Fisher-Yates shuffle randomizes the choice order and tracks the correct index mapping (`shuffleChoices`).
 
-**WHEN** user navigates to `/quiz/[id]`
-**THEN** server fetches quiz set from DB
+### R5: Dashboard & Stats
+**WHEN** user visits `/` (Home)
+**THEN** server component displays aggregate learning stats (`totalQuestions`, `totalAnswers`, `overallAccuracy`) via `GET /api/stats`, with navigation links to `/create` and `/answer`.
 
-- GET /api/quiz-sets returns all quiz sets (descending by createdAt)
-- GET /api/quiz-sets/[id] returns quiz set with 10 questions in DB order
-
-### R4: Client-Side Shuffle
-
-**WHEN** QuizRunner component mounts with questions
-**THEN** Fisher-Yates shuffles:
-
-- Question order (shuffle indices)
-- Each question's choice order (shuffle positions)
-- Track mapping so correctChoiceIndex stays valid post-shuffle
-
-### R5: Quiz Answer Flow
-
-**WHEN** user views quiz page
-**THEN** display 10-question flow:
-
-- 1 question + 4 clickable choice buttons per screen
-- Navigation: Previous/Next buttons, question indicators (1-10)
-- Selected choices remain highlighted
-- Submit button appears on question 10, disabled until all 10 answered
-
-### R6: Results Display (No Persistence)
-
-**WHEN** user submits all answers
-**THEN** show results immediately:
-
-- Score: X/10 correct
-- For each question: user answer, correct answer (if wrong), explanation
-- No DB write (client-side only, lost on page reload)
-
-### R7: Home Page
-
-**WHEN** user visits `/`
-**THEN** display:
-
-- Text input form ("Knowledge Text")
-- Submit button ("Generate Quiz")
-- List of previous quiz sets (title, createdAt), clickable to retake
+### R6: Responsive & Accessible Interface
+**WHEN** user interacts with any page
+**THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast).
 
 ## API Specification
 
-### POST /api/quiz-sets
+### 1. `POST /api/questions`
+- **Request:** `{ sourceText: string }`
+- **Response (201):** `{ id, knowledgeId, question, choices, correctIndex, explanation }`
+- **Response (400/500):** `{ error: string }`
 
-**Request:**
+### 2. `GET /api/questions/random`
+- **Query Param:** `exclude` (comma-separated question IDs, e.g., `?exclude=1,2,3`)
+- **Response (200):** `{ id, question, choices }` (No correctIndex or explanation)
+- **Response (404):** `{ error: "No questions available" }`
 
-```json
-{
-  "sourceText": "string (required, non-empty)"
-}
-```
+### 3. `POST /api/answers`
+- **Request:** `{ questionId: number, selectedIndex: number }`
+- **Response (200):** `{ isCorrect: boolean, correctIndex: number, explanation: string }`
+- **Response (400/404):** `{ error: string }`
 
-**Response (201):**
-
-```json
-{
-  "id": 123
-}
-```
-
-**Response (400/500):**
-
-```json
-{
-  "error": "string (reason)"
-}
-```
-
-**Flow:**
-
-1. Validate sourceText (non-empty)
-2. Call generateQuizQuestions(sourceText)
-3. On success: createQuizSet(title, sourceText, questions)
-4. Return quiz ID → client redirects to /quiz/[id]
-
-### GET /api/quiz-sets
-
-**Response (200):**
-
-```json
-[
-  { "id": 1, "title": "...", "createdAt": "ISO8601" },
-  ...
-]
-```
-
-### GET /api/quiz-sets/[id]
-
-**Response (200):**
-
-```json
-{
-  "id": 1,
-  "title": "...",
-  "sourceText": "...",
-  "createdAt": "ISO8601",
-  "questions": [
-    {
-      "id": 1,
-      "question": "...",
-      "choices": [...],
-      "correctIndex": 0,
-      "explanation": "..."
-    },
-    ...
-  ]
-}
-```
-
-**Response (404):**
-
-```json
-{
-  "error": "Quiz set not found"
-}
-```
+### 4. `GET /api/stats`
+- **Response (200):** `{ totalQuestions: number, totalAnswers: number, overallAccuracy: number }`
 
 ## Components
 
-### src/app/page.tsx
+### 1. `/` (Home - `src/app/page.tsx`)
+- Server component displaying learning statistics (問題数 / 解答数 / 正答率)
+- Navigation links to `/create` and `/answer`
 
-Home page (use client)
+### 2. `/create` (Create - `src/app/create/page.tsx`)
+- Client component with textarea input for knowledge text
+- Submits text, generates 1 question, displays result with correct answer highlighted and links to continue
 
-- TextArea for knowledge text input
-- Submit button (disabled while loading)
-- Error display
-- Quiz set list (clickable, routes to /quiz/[id])
-
-### src/app/quiz/[id]/page.tsx
-
-Quiz page (server component)
-
-- Fetches quiz set from DB
-- Renders QuizRunner with questions
-
-### src/app/quiz/[id]/QuizRunner.tsx
-
-Quiz runner (use client)
-
-- Shuffles questions on mount
-- Tracks user answers
-- Handles navigation (prev/next)
-- Displays results on submit
+### 3. `/answer` (Answer - `src/app/answer/page.tsx`)
+- Client component running an endless quiz loop
+- Fetches random questions excluding recent ones
+- Shuffles choices using Fisher-Yates
+- Provides immediate feedback and sticky "次の問題へ" button
 
 ## LLM Integration
+- **Model:** `gemini-3.1-flash-lite`
+- **Output:** Exactly 1 question with 4 choices
+- **Parameters:** Temperature 0.1, Max Tokens 512, Timeout 45s
+- **Resilience:** 3 retries with exponential backoff, 2 parse retries
 
-**Model:** gemini-3.1-flash-lite
-**Temperature:** 0.1 (deterministic)
-**Max Tokens:** 2000
-**Timeout:** 45s
-**Retries:** 3 (exponential backoff, 2s base)
-**Parse Retries:** 2
+## Shuffle Algorithm
+- Client-side Fisher-Yates shuffle applied to choices only
+- Returns `{ choices: string[], choiceIndices: number[] }`
 
-**Prompt:** Generate exactly 10 questions from provided text. Each question: `{ question, choices: [4], correctIndex, explanation? }`
-
-**Validation:** Zod schema validates JSON structure + array length.
+## Weighted Random Selection
+- **Base weight:** 5 for unanswered questions
+- **Weight formula:** `1 + 4 * (incorrectRatio)` for answered questions
+- **Bonus:** +2 weight if latest answer was incorrect
+- **Exclusion:** Last 10 answered question IDs
 
 ## Database
-
-**Provider:** Turso (libSQL)
-**ORM:** Drizzle
-
-**Tables:**
-
-- `quiz_sets`: id, title, sourceText, createdAt
-- `questions`: id, quizSetId, orderIndex, question, choices (JSON), correctIndex, explanation
+- **Provider:** SQLite via Turso (libSQL)
+- **ORM:** Drizzle ORM
+- **Tables:** `knowledge`, `questions`, `answerLogs`
 
 ## Non-Functional Requirements
-
-- **Performance:** Quiz generation < 30s (user-facing timeout)
-- **Accessibility:** WCAG 2.1 AA (button labels, color contrast, focus states)
-- **Mobile:** Responsive design (touch-friendly buttons, readable on small screens)
-- **Error Handling:** Graceful fallback for API errors (user-friendly messages, retry option)
-- **Security:** Input validation on all endpoints, SQL injection prevention (Drizzle built-in)
+- Mobile-first responsive design (Tailwind v4)
+- Touch-friendly buttons (`min-h-12`)
+- WCAG 2.1 AA (focus-visible rings, color contrast)
+- No result persistence for scores (in-memory analytics via `answerLogs`)
 
 ## Deployment
-
-- **Platform:** Vercel
-- **Build Command:** `pnpm build`
-- **Framework:** Next.js
-- **Environment:** GOOGLE_API_KEY, TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
+- Platform: Vercel / Turso
+- Framework: Next.js

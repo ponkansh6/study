@@ -1,7 +1,7 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm/sql";
 
-export const quizSets = sqliteTable("quiz_sets", {
+export const knowledge = sqliteTable("knowledge", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   sourceText: text("source_text").notNull(),
@@ -14,16 +14,40 @@ export const questions = sqliteTable(
   "questions",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    quizSetId: integer("quiz_set_id")
+    knowledgeId: integer("knowledge_id")
       .notNull()
-      .references(() => quizSets.id, { onDelete: "cascade" }),
-    orderIndex: integer("order_index").notNull(),
+      .unique()
+      .references(() => knowledge.id, { onDelete: "cascade" }),
     question: text("question").notNull(),
     choices: text("choices", { mode: "json" }).notNull().$type<string[]>(),
     correctIndex: integer("correct_index").notNull(),
-    explanation: text("explanation"),
+    explanation: text("explanation"), // nullable: optional in API
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
   },
   (t) => ({
-    quizSetIdx: index("questions_quiz_set_idx").on(t.quizSetId),
+    knowledgeIdIdx: index("questions_knowledge_id_idx").on(t.knowledgeId),
+  }),
+);
+
+export const answerLogs = sqliteTable(
+  "answer_logs",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    questionId: integer("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    selectedIndex: integer("selected_index").notNull(),
+    isCorrect: integer("is_correct", { mode: "number" })
+      .notNull()
+      .$type<0 | 1>(),
+    answeredAt: integer("answered_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => ({
+    questionIdIdx: index("answer_logs_question_id_idx").on(t.questionId),
+    answeredAtIdx: index("answer_logs_answered_at_idx").on(t.answeredAt),
   }),
 );

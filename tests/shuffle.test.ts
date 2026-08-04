@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fisherYatesShuffle, shuffleQuestionsAndChoices } from "@/lib/shuffle";
-import { Question } from "@/types/quiz";
+import { fisherYatesShuffle, shuffleChoices } from "@/lib/shuffle";
 
 describe("fisherYatesShuffle", () => {
   it("shuffles array elements while preserving the set of elements", () => {
@@ -12,26 +11,25 @@ describe("fisherYatesShuffle", () => {
   });
 });
 
-describe("shuffleQuestionsAndChoices", () => {
-  it("shuffles questions and choices, keeping correct answer trackable", () => {
-    const questions: Question[] = [
-      {
-        id: 1,
-        question: "What is 2 + 2?",
-        choices: ["3", "4", "5", "6"],
-        correctIndex: 1, // "4" is at index 1
-        explanation: "2 + 2 is 4",
-      },
-    ];
+describe("shuffleChoices", () => {
+  it("shuffles choices and provides correct index mapping", () => {
+    const originalChoices = ["A", "B", "C", "D"];
+    const originalCorrectIndex = 1; // "B"
 
-    const shuffled = shuffleQuestionsAndChoices(questions);
+    const { choices, choiceIndices } = shuffleChoices(originalChoices);
 
-    expect(shuffled).toHaveLength(1);
-    const sq = shuffled[0];
-    expect(sq.choices).toHaveLength(4);
-    expect([...sq.choices].sort()).toEqual(["3", "4", "5", "6"].sort());
+    expect(choices).toHaveLength(4);
+    expect([...choices].sort()).toEqual(originalChoices.sort());
 
-    const selectedChoiceText = sq.choices[sq.correctChoiceIndex];
-    expect(selectedChoiceText).toBe("4");
+    // Verify mapping: choices[shuffledIdx] === originalChoices[choiceIndices[shuffledIdx]]
+    choices.forEach((c, idx) => {
+      expect(c).toBe(originalChoices[choiceIndices[idx]]);
+    });
+
+    // Verify correct answer tracking:
+    // The correct answer "B" (index 1) is now at some position in shuffled choices.
+    // We need to find which index in `choices` corresponds to index 1.
+    const shuffledCorrectIndex = choiceIndices.indexOf(originalCorrectIndex);
+    expect(choices[shuffledCorrectIndex]).toBe("B");
   });
 });

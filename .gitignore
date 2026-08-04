@@ -36,3 +36,6 @@ yarn-error.log*
 *.tsbuildinfo
 .vercel
 .env*
+
+# Deepwork state
+.slim/deepwork/

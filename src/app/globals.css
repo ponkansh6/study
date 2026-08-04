@@ -1,105 +1,24 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import "tailwindcss";
 
-:root {
-  --color-bg: #ffffff;
-  --color-text: #1a1a1a;
-  --color-border: #e5e5e5;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-success: #16a34a;
-  --color-error: #dc2626;
-  --color-warning: #ea580c;
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-  --spacing-xl: 3rem;
+@theme {
+  --color-bg: oklch(0.98 0.01 250);
+  --color-text: oklch(0.2 0.02 250);
+  --color-border: oklch(0.9 0.02 250);
+  --color-primary: oklch(0.55 0.15 250);
+  --color-primary-hover: oklch(0.45 0.15 250);
+  --color-success: oklch(0.6 0.15 150);
+  --color-error: oklch(0.6 0.15 30);
+  --color-warning: oklch(0.7 0.15 80);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1a1a1a;
-    --color-text: #ffffff;
-    --color-border: #404040;
-    --color-primary: #3b82f6;
-    --color-primary-hover: #2563eb;
+    --color-bg: oklch(0.15 0.02 250);
+    --color-text: oklch(0.95 0.01 250);
+    --color-border: oklch(0.3 0.02 250);
   }
 }
 
-html,
 body {
-  height: 100%;
-}
-
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.6;
-}
-
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: var(--spacing-md);
-}
-
-h1 {
-  font-size: 2rem;
-  margin-bottom: var(--spacing-md);
-}
-
-h2 {
-  font-size: 1.5rem;
-  margin-bottom: var(--spacing-sm);
-}
-
-button {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  border-radius: 4px;
-  background-color: var(--color-primary);
-  color: white;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: var(--color-primary-hover);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-input,
-textarea {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 1rem;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 150px;
-}
-
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+  @apply bg-bg text-text font-sans antialiased leading-relaxed;
 }
