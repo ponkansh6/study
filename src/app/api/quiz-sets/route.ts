@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateQuizQuestions } from "@/lib/llm/quiz";
 import { createQuizSet, listQuizSets } from "@/lib/db/repository/quiz-repository";
 
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
