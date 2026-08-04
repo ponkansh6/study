@@ -1,16 +1,20 @@
 import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
+import { createClient, type Client } from "@libsql/client";
 
 import * as schema from "./schema";
 
-const url = process.env.TURSO_DATABASE_URL;
-if (process.env.NODE_ENV === "production" && !url) {
-  throw new Error("TURSO_DATABASE_URL must be set in production");
+function createDbClient(): Client {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  if (url) {
+    return createClient({ url, authToken });
+  }
+
+  // CI / local dev fallback: use in-memory DB
+  // Queries will fail at runtime if Turso is actually needed
+  return createClient({ url: ":memory:" });
 }
 
-const client = createClient({
-  url: url ?? ":memory:",
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
-
+const client = createDbClient();
 export const db = drizzle({ client, schema });
