@@ -11,9 +11,15 @@ function createDbClient(): Client {
     return createClient({ url, authToken });
   }
 
-  // CI / local dev fallback: use in-memory DB
-  // Queries will fail at runtime if Turso is actually needed
-  return createClient({ url: ":memory:" });
+  // Build time (next build): allow in-memory fallback for static generation
+  if (process.env.NEXT_BUILD) {
+    return createClient({ url: ":memory:" });
+  }
+
+  // Runtime without DB configured: fail fast to prevent silent data loss
+  throw new Error(
+    "TURSO_DATABASE_URL is required at runtime. Set it in your environment or .env.local.",
+  );
 }
 
 const client = createDbClient();

@@ -39,6 +39,7 @@ jobs:
       - name: Build
         run: pnpm build
         env:
+          NEXT_BUILD: "1"
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
