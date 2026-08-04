@@ -70,10 +70,12 @@ Quiz generation application that transforms knowledge text into 4-choice quiz se
 ## Dependencies Summary
 
 **Runtime**:
+
 - `next` (16.2.9), `react` (19.2.7), `react-dom` (19.2.7)
 - `@google/generative-ai`, `@libsql/client`, `drizzle-orm`, `zod`, `p-limit`
 
 **Dev**:
+
 - Testing: `vitest`, `@playwright/test`, `@testing-library/react`
 - Lint: `eslint`, `eslint-config-next`, `oxlint`, `prettier`, `oxfmt`
 - Tools: `typescript`, `tsx`, `ts-node`, `drizzle-kit`

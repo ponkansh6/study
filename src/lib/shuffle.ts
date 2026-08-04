@@ -1,3 +1,5 @@
+import { Question } from "@/types/quiz";
+
 export function fisherYatesShuffle<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -17,20 +19,19 @@ export interface ShuffledQuestion {
   explanation?: string;
 }
 
-export function shuffleQuestionsAndChoices(questions: any[]): ShuffledQuestion[] {
-  const shuffled = fisherYatesShuffle(
-    questions.map((q, idx) => ({ ...q, originalIndex: idx })),
-  );
+export function shuffleQuestionsAndChoices(questions: Question[]): ShuffledQuestion[] {
+  const shuffled = fisherYatesShuffle(questions.map((q, idx) => ({ ...q, originalIndex: idx })));
 
   return shuffled.map((q) => {
     const choiceIndices = fisherYatesShuffle([0, 1, 2, 3]);
+    const choices = choiceIndices.map((i) => q.choices[i]);
     const correctChoiceIndex = choiceIndices.indexOf(q.correctIndex);
 
     return {
       id: q.id,
       originalIndex: q.originalIndex,
       question: q.question,
-      choices: choiceIndices.map((i) => q.choices[i]),
+      choices,
       choiceIndices,
       correctChoiceIndex,
       explanation: q.explanation,

@@ -6,6 +6,7 @@
 ## Summary
 
 Study quiz generator project created from scratch, fully integrated with:
+
 - **nextjstest** configuration (Next.js 16, Turbopack, TypeScript 6, ESLint/Oxlint/Prettier, husky)
 - **news-watch** patterns (Google Gemini LLM, Drizzle ORM, Turso DB, Zod validation)
 - Custom quiz generation + client-side shuffling + in-browser scoring
@@ -13,6 +14,7 @@ Study quiz generator project created from scratch, fully integrated with:
 ## Deliverables
 
 ### Core Application (49 files)
+
 - ✅ Next.js 16 App Router with Turbopack
 - ✅ React 19 components + CSS Modules (no Tailwind)
 - ✅ TypeScript 6 strict mode
@@ -23,6 +25,7 @@ Study quiz generator project created from scratch, fully integrated with:
 - ✅ In-browser quiz scoring (no persistence)
 
 ### Configuration
+
 - ✅ `package.json` (pnpm 11.9.0, node >=24)
 - ✅ `next.config.ts` (Turbopack + ReactCompiler)
 - ✅ `tsconfig.json` (strict, path aliases)
@@ -34,6 +37,7 @@ Study quiz generator project created from scratch, fully integrated with:
 - ✅ `lint-staged.config.js`
 
 ### Documentation
+
 - ✅ `README.md` (setup + usage guide)
 - ✅ `PLAN.md` (architecture + implementation steps)
 - ✅ `codemap.md` (per-folder responsibility)
@@ -41,6 +45,7 @@ Study quiz generator project created from scratch, fully integrated with:
 - ✅ `AGENTS.md` + `CLAUDE.md` (agent orchestration rules)
 
 ### DevOps
+
 - ✅ GitHub repository created: https://github.com/ponkansh6/study
 - ✅ Initial commit + push to main branch
 - ✅ `.env.local` (shared Turso DB with news-watch)
@@ -129,6 +134,7 @@ CREATE INDEX questions_quiz_set_idx ON questions(quiz_set_id);
 ## API Specification
 
 ### POST /api/quiz-sets
+
 Generate a quiz from input text.
 
 **Request**: `{ "sourceText": "string" }`  
@@ -136,11 +142,13 @@ Generate a quiz from input text.
 **Flow**: Validate → Call Gemini → Validate JSON (Zod) → Create in DB → Return ID
 
 ### GET /api/quiz-sets
+
 Fetch all quiz sets.
 
 **Response (200)**: `[{ "id", "title", "createdAt" }, ...]`
 
 ### GET /api/quiz-sets/[id]
+
 Fetch single quiz with questions.
 
 **Response (200)**: `{ "id", "title", "sourceText", "createdAt", "questions": [...] }`
@@ -148,12 +156,14 @@ Fetch single quiz with questions.
 ## Testing & Validation
 
 ### ✅ Build Prerequisites Met
+
 - pnpm 11.9.0 installed
 - Dependencies resolved (postcss compatibility via pnpmrc)
 - TypeScript 6 configured
 - Node 24 required (currently v22.14.0, warning only)
 
 ### ⏳ Next: Local Validation
+
 ```bash
 cd /home/shunki/working/study
 
@@ -172,6 +182,7 @@ pnpm dev
 ```
 
 ### ⏳ Later: Full Test Suite
+
 ```bash
 pnpm lint:fast       # Oxlint
 pnpm type-check:fast # tsgo (fast TypeScript)
@@ -183,17 +194,20 @@ pnpm build           # Next.js production build
 ## Environment
 
 **Configured (.env.local)**
+
 - `GOOGLE_API_KEY` ✅
 - `TURSO_DATABASE_URL` ✅ (shared with news-watch)
 - `TURSO_AUTH_TOKEN` ✅
 
 **Not Committed** (security)
+
 - `.env.local` (in .gitignore)
 - `pnpm-lock.yaml` (will be generated locally)
 
 ## Deployment
 
 **Vercel Ready**
+
 - `vercel.ts` configured (buildCommand, framework)
 - Environment variables template provided
 - GitHub Actions CI workflow available (add via git push after auth fix)
@@ -210,6 +224,7 @@ pnpm build           # Next.js production build
 ## Next Actions for User
 
 1. **Local Setup**
+
    ```bash
    cd /home/shunki/working/study
    pnpm db:push          # Initialize DB schema
@@ -235,12 +250,12 @@ pnpm build           # Next.js production build
 
 ## Files Modified from Templates
 
-| Source | Destination | Changes |
-|---|---|---|
-| nextjstest | study/ | Core config (Next.js, TS, ESLint, Husky, CI) |
-| news-watch | study/src/lib/llm | LLM client, parser, schemas, constants |
-| news-watch | study/src/lib/db | DB setup, Drizzle config, schema pattern |
-| news-watch | study/.env.local | Credentials (shared Turso + Gemini) |
+| Source     | Destination       | Changes                                      |
+| ---------- | ----------------- | -------------------------------------------- |
+| nextjstest | study/            | Core config (Next.js, TS, ESLint, Husky, CI) |
+| news-watch | study/src/lib/llm | LLM client, parser, schemas, constants       |
+| news-watch | study/src/lib/db  | DB setup, Drizzle config, schema pattern     |
+| news-watch | study/.env.local  | Credentials (shared Turso + Gemini)          |
 
 ## Commit History
 
@@ -248,17 +263,17 @@ pnpm build           # Next.js production build
 
 ## Status
 
-| Component | Status | Notes |
-|---|---|---|
-| Code | ✅ Complete | All 49 files implemented |
-| Dependencies | ✅ Installed | pnpm install successful |
-| Config | ✅ Complete | All config files in place |
-| DB Schema | ⏳ Ready | Run `pnpm db:push` to create tables |
-| Local Dev | ⏳ Ready | Run `pnpm dev` to start |
-| Tests | ⏳ Ready | tests/ directory scaffolded, run `pnpm test:all` |
-| Build | ⏳ Ready | Run `pnpm build` after `pnpm db:push` |
-| GitHub | ✅ Pushed | https://github.com/ponkansh6/study |
-| Vercel | ⏳ Ready | Set up via Vercel dashboard |
+| Component    | Status       | Notes                                            |
+| ------------ | ------------ | ------------------------------------------------ |
+| Code         | ✅ Complete  | All 49 files implemented                         |
+| Dependencies | ✅ Installed | pnpm install successful                          |
+| Config       | ✅ Complete  | All config files in place                        |
+| DB Schema    | ⏳ Ready     | Run `pnpm db:push` to create tables              |
+| Local Dev    | ⏳ Ready     | Run `pnpm dev` to start                          |
+| Tests        | ⏳ Ready     | tests/ directory scaffolded, run `pnpm test:all` |
+| Build        | ⏳ Ready     | Run `pnpm build` after `pnpm db:push`            |
+| GitHub       | ✅ Pushed    | https://github.com/ponkansh6/study               |
+| Vercel       | ⏳ Ready     | Set up via Vercel dashboard                      |
 
 ---
 

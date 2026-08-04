@@ -1,12 +1,9 @@
 import { getQuizSet } from "@/lib/db/repository/quiz-repository";
 import QuizRunner from "./QuizRunner";
 
-export default async function QuizPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const id = parseInt(params.id, 10);
+export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
 
   if (isNaN(id)) {
     return <div>Invalid quiz ID</div>;

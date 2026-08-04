@@ -1,10 +1,13 @@
-import { index, integer, sql, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm/sql";
 
 export const quizSets = sqliteTable("quiz_sets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   sourceText: text("source_text").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 });
 
 export const questions = sqliteTable(

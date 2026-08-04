@@ -86,11 +86,7 @@ export default function Home() {
             />
           </div>
 
-          <button
-            type="submit"
-            className={styles.button}
-            disabled={loading || !sourceText.trim()}
-          >
+          <button type="submit" className={styles.button} disabled={loading || !sourceText.trim()}>
             {loading ? "Generating..." : "Generate Quiz"}
           </button>
         </form>
@@ -109,9 +105,7 @@ export default function Home() {
                 onClick={() => router.push(`/quiz/${quiz.id}`)}
               >
                 <div className={styles.quizTitle}>{quiz.title}</div>
-                <div className={styles.quizMeta}>
-                  {new Date(quiz.createdAt).toLocaleString()}
-                </div>
+                <div className={styles.quizMeta}>{new Date(quiz.createdAt).toLocaleString()}</div>
               </li>
             ))}
           </ul>

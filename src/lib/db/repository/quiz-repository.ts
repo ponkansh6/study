@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../index";
 import { quizSets, questions } from "../schema";
 
@@ -17,10 +17,13 @@ export interface CreateQuizSetInput {
 
 export async function createQuizSet(input: CreateQuizSetInput) {
   return db.transaction(async (tx) => {
-    const [result] = await tx.insert(quizSets).values({
-      title: input.title,
-      sourceText: input.sourceText,
-    }).returning({ id: quizSets.id });
+    const [result] = await tx
+      .insert(quizSets)
+      .values({
+        title: input.title,
+        sourceText: input.sourceText,
+      })
+      .returning({ id: quizSets.id });
 
     if (!result) throw new Error("Failed to create quiz set");
 
@@ -57,7 +60,7 @@ export async function getQuizSet(id: number) {
       question: q.question,
       choices: q.choices,
       correctIndex: q.correctIndex,
-      explanation: q.explanation,
+      explanation: q.explanation ?? undefined,
     })),
   };
 }

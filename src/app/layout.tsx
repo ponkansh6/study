@@ -6,17 +6,11 @@ export const metadata: Metadata = {
   description: "Generate quiz questions from any text",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
       <body>
-        <div className="container">
-          {children}
-        </div>
+        <div className="container">{children}</div>
       </body>
     </html>
   );

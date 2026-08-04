@@ -1,9 +1,4 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-# TODO: Re-enable after initial setup and build scripts approval
-
-echo "⏭️  pre-push hooks disabled during initial setup"
-echo "   Run tests manually: pnpm test:all"
-echo ""
-
-exit 0
+pnpm test:all

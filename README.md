@@ -31,17 +31,20 @@ A Next.js application that transforms knowledge text into interactive 4-choice q
 ### Setup
 
 1. **Clone and install**:
+
    ```bash
    cd study
    pnpm install
    ```
 
 2. **Configure environment**:
+
    ```bash
    cp .env.local.example .env.local
    ```
 
    Edit `.env.local` with your credentials:
+
    ```
    GOOGLE_API_KEY=your-key-here
    TURSO_DATABASE_URL=libsql://your-db.turso.io
@@ -49,11 +52,13 @@ A Next.js application that transforms knowledge text into interactive 4-choice q
    ```
 
 3. **Initialize database**:
+
    ```bash
    pnpm db:push
    ```
 
 4. **Run development server**:
+
    ```bash
    pnpm dev
    ```
@@ -98,21 +103,23 @@ openspec/           # Specification documents
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `GOOGLE_API_KEY` | Google Gemini API key |
+| Variable             | Description                   |
+| -------------------- | ----------------------------- |
+| `GOOGLE_API_KEY`     | Google Gemini API key         |
 | `TURSO_DATABASE_URL` | Turso database connection URL |
-| `TURSO_AUTH_TOKEN` | Turso authentication token |
+| `TURSO_AUTH_TOKEN`   | Turso authentication token    |
 
 ## Database Schema
 
 ### quiz_sets
+
 - `id` (integer, PK)
 - `title` (text) — Auto-generated from input text
 - `sourceText` (text) — Original input text
 - `createdAt` (timestamp)
 
 ### questions
+
 - `id` (integer, PK)
 - `quizSetId` (integer, FK → quiz_sets)
 - `orderIndex` (integer) — Generation order
@@ -154,6 +161,7 @@ Pre-push runs: Full test suite
 ## Deployment
 
 Designed for Vercel deployment. Connect repository to Vercel and set environment variables:
+
 - `GOOGLE_API_KEY`
 - `TURSO_DATABASE_URL`
 - `TURSO_AUTH_TOKEN`

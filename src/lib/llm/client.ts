@@ -1,10 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import {
-  LLM_MODEL,
-  LLM_MAX_RETRIES,
-  LLM_BACKOFF_BASE_MS,
-  LLM_GEN_TEMPERATURE,
-} from "../constants";
+import { LLM_MODEL, LLM_MAX_RETRIES, LLM_BACKOFF_BASE_MS, LLM_GEN_TEMPERATURE } from "../constants";
 
 export function backoffMs(attempt: number, baseMs = LLM_BACKOFF_BASE_MS): number {
   return baseMs * 2 ** attempt + Math.floor(Math.random() * baseMs);

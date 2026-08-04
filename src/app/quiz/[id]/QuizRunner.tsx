@@ -15,15 +15,14 @@ interface Question {
 
 export default function QuizRunner({ questions: initialQuestions }: { questions: Question[] }) {
   const router = useRouter();
-  const [shuffledQuestions] = useState(() =>
-    shuffleQuestionsAndChoices(initialQuestions),
-  );
+  const [shuffledQuestions] = useState(() => shuffleQuestionsAndChoices(initialQuestions));
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(shuffledQuestions.length).fill(null));
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    Array.from({ length: shuffledQuestions.length }, () => null),
+  );
   const [submitted, setSubmitted] = useState(false);
 
   const currentQuestion = shuffledQuestions[currentIndex];
-  const isAnswered = answers[currentIndex] !== null;
   const isLastQuestion = currentIndex === shuffledQuestions.length - 1;
   const allAnswered = answers.every((a) => a !== null);
 
@@ -61,7 +60,9 @@ export default function QuizRunner({ questions: initialQuestions }: { questions:
       <div className={styles.results}>
         <h2>Quiz Completed!</h2>
         <div className={styles.score}>
-          <div className={styles.scoreNumber}>{correctCount}/10</div>
+          <div className={styles.scoreNumber}>
+            {correctCount}/{shuffledQuestions.length}
+          </div>
           <div className={styles.scoreText}>questions answered correctly</div>
         </div>
 
@@ -71,8 +72,13 @@ export default function QuizRunner({ questions: initialQuestions }: { questions:
             const isCorrect = userAnswered === q.correctChoiceIndex;
 
             return (
-              <div key={q.id} className={`${styles.resultItem} ${isCorrect ? styles.correct : styles.incorrect}`}>
-                <div className={styles.resultQuestion}>Q{idx + 1}: {q.question}</div>
+              <div
+                key={q.id}
+                className={`${styles.resultItem} ${isCorrect ? styles.correct : styles.incorrect}`}
+              >
+                <div className={styles.resultQuestion}>
+                  Q{idx + 1}: {q.question}
+                </div>
                 <div className={styles.resultAnswer}>
                   You answered: <strong>{q.choices[userAnswered ?? 0]}</strong>
                 </div>
@@ -81,9 +87,7 @@ export default function QuizRunner({ questions: initialQuestions }: { questions:
                     Correct: <strong>{q.choices[q.correctChoiceIndex]}</strong>
                   </div>
                 )}
-                {q.explanation && (
-                  <div className={styles.explanation}>{q.explanation}</div>
-                )}
+                {q.explanation && <div className={styles.explanation}>{q.explanation}</div>}
               </div>
             );
           })}

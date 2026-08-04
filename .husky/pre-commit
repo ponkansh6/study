@@ -1,6 +1,7 @@
 #!/bin/sh
-# pnpm run lint:fast
-# pnpm exec oxfmt --write .
-# pnpm exec tsgo --noEmit
-# pnpm exec lint-staged
-echo "⏭️  pre-commit hooks disabled during initial setup (build scripts need approval)"
+. "$(dirname "$0")/_/husky.sh"
+
+pnpm lint:fast
+pnpm exec oxfmt --write .
+pnpm exec tsgo --noEmit
+pnpm exec lint-staged

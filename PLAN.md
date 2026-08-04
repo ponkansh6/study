@@ -13,6 +13,7 @@
 ## 参照した既存設定
 
 ### nextjstest(ツール設定の複製元)
+
 - `package.json`: pnpm 11.9.0 / node >=24, scripts(`dev`/`build`/`test:all`/`lint:fast`/`type-check:fast`/`security-check`等), deps(`next@^16.2.9`, `react@^19.2.7`), devDeps(oxlint/oxfmt/eslint/prettier/husky/lint-staged/playwright/vitest/depcheck/secretlint/@typescript/native-preview/bun等)
 - `next.config.ts`: Turbopack root設定 + bundle-analyzer + `reactCompiler: true` + prod `removeConsole`
 - `tsconfig.json`: strict, ES2022, `moduleResolution: bundler`, path alias `@/*``@server/*`
@@ -24,6 +25,7 @@
 - スタイリング: プレーンCSS + CSS Modules(Tailwind/UIライブラリなし)→ study でも踏襲
 
 ### news-watch(LLM・DB実装パターンの参照元)
+
 - LLM: `src/lib/llm/client.ts` の `callGemini()` — `@google/generative-ai` で `gemini-3.1-flash-lite`、`responseMimeType:"application/json"`、リトライ+指数バックオフ。`src/lib/llm/schemas.ts`(Zodスキーマ)+`src/lib/llm/parser.ts`(`parseWithRetry`)でJSON検証。プロンプトは `src/lib/llm/prompts.ts` にテンプレ文字列。env: `GOOGLE_API_KEY`
 - DB: Drizzle ORM + `@libsql/client`(Turso)。`src/lib/db/schema.ts`(テーブル定義)、`src/lib/db/index.ts`(`drizzle({client, schema})`)、`src/lib/db/repository/*.ts`(upsert/save関数)、`drizzle.config.ts`(dialect: turso)。env: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 
@@ -71,22 +73,30 @@ study/
 ```ts
 export const quizSets = sqliteTable("quiz_sets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  title: text("title").notNull(),        // sourceTextの冒頭から自動生成
+  title: text("title").notNull(), // sourceTextの冒頭から自動生成
   sourceText: text("source_text").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 });
 
-export const questions = sqliteTable("questions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  quizSetId: integer("quiz_set_id").notNull().references(() => quizSets.id, { onDelete: "cascade" }),
-  orderIndex: integer("order_index").notNull(),   // 生成順(保存用、表示時は shuffle.ts でシャッフル)
-  question: text("question").notNull(),
-  choices: text("choices", { mode: "json" }).notNull().$type<string[]>(), // 長さ4
-  correctIndex: integer("correct_index").notNull(), // 0-3
-  explanation: text("explanation"),
-}, (t) => ({
-  quizSetIdx: index("questions_quiz_set_idx").on(t.quizSetId),
-}));
+export const questions = sqliteTable(
+  "questions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    quizSetId: integer("quiz_set_id")
+      .notNull()
+      .references(() => quizSets.id, { onDelete: "cascade" }),
+    orderIndex: integer("order_index").notNull(), // 生成順(保存用、表示時は shuffle.ts でシャッフル)
+    question: text("question").notNull(),
+    choices: text("choices", { mode: "json" }).notNull().$type<string[]>(), // 長さ4
+    correctIndex: integer("correct_index").notNull(), // 0-3
+    explanation: text("explanation"),
+  },
+  (t) => ({
+    quizSetIdx: index("questions_quiz_set_idx").on(t.quizSetId),
+  }),
+);
 ```
 
 - 1セット=10問固定。`createQuizSet` はDB書き込み前にLLM出力が「ちょうど10問・各4択」であることをZodで検証し、不足/不正なら再生成リトライ(news-watchの `LLM_MAX_PARSE_RETRIES` パターンを踏襲)。
@@ -94,6 +104,7 @@ export const questions = sqliteTable("questions", {
 ## LLM プロンプト設計
 
 `prompts.ts` の `QUIZ_GENERATION_PROMPT`:
+
 - 入力: ユーザーが貼り付けた知識文章(`sourceText`)
 - 指示: その文章から学習内容を問う4択問題をちょうど10問作成。各問題は `question`, `choices`(4件, 順不同で正解位置を偏らせない), `correctIndex`(0-3), 簡潔な `explanation`(なぜ正解か)を持つJSON配列のみを出力(`responseMimeType: application/json` で強制)。
 - news-watchの `callGemini(prompt, maxTokens, timeoutMs, retries)` をそのまま流用(モデル `gemini-3.1-flash-lite`、`temperature`は低め)。
@@ -123,6 +134,7 @@ GOOGLE_API_KEY=...
 TURSO_DATABASE_URL=...
 TURSO_AUTH_TOKEN=...
 ```
+
 既存Turso DBを流用するため、実装時にユーザーから接続情報を受け取って `.env.local` に設定する(チャットにトークンを貼らず、ローカルファイル編集 or 環境変数コピーで対応)。`drizzle-kit push` で `quiz_sets`/`questions` テーブルをそのDBに追加作成する。
 
 ## 実装ステップ
