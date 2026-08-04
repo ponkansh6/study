@@ -127,16 +127,16 @@ TURSO_AUTH_TOKEN=...
 
 ## 実装ステップ
 
-1. `study/` ディレクトリ作成、`pnpm create next-app` 相当の最小構成を手動で用意(nextjstestの設定ファイル群をコピー・調整)。
-2. package.json 整備 → `pnpm install`。
-3. `src/lib/db/schema.ts`, `drizzle.config.ts`, `src/lib/db/index.ts`, `repository/quiz-repository.ts` 実装。
-4. `.env.local` にユーザー提供のTurso接続情報+GOOGLE_API_KEYを設定 → `pnpm db:push` でテーブル作成。
-5. `src/lib/llm/*`(client/schemas/parser/prompts/quiz.ts)実装。
-6. API routes(`/api/quiz-sets`, `/api/quiz-sets/[id]`)実装。
-7. UI(`src/app/page.tsx`, `src/app/quiz/[id]/*`, `src/lib/shuffle.ts`)実装。
-8. ツール設定移植: eslint/oxlint/oxfmt/prettier/husky/lint-staged/CI workflow/AGENTS.md/openspec/codemap.md。
-9. `pnpm lint:fast` / `pnpm type-check` / `pnpm test:all` / `pnpm build` を通す。
-10. `gh repo create` でリモート作成 → `git push`。
+1. ✅ `study/` ディレクトリ作成、`pnpm create next-app` 相当の最小構成を手動で用意(nextjstestの設定ファイル群をコピー・調整)。
+2. ✅ package.json 整備 → `pnpm install` (postcss 依存解決、husky pre-commit hook対応)。
+3. ✅ `src/lib/db/schema.ts`, `drizzle.config.ts`, `src/lib/db/index.ts`, `repository/quiz-repository.ts` 実装。
+4. ✅ `.env.local` にユーザー提供のTurso接続情報+GOOGLE_APIKEYを設定(news-watchから流用)。
+5. ✅ `src/lib/llm/*`(client/schemas/parser/prompts/quiz.ts)実装 — news-watchパターンから移植・調整。
+6. ✅ API routes(`/api/quiz-sets`, `/api/quiz-sets/[id]`)実装。
+7. ✅ UI(`src/app/page.tsx`, `src/app/quiz/[id]/*`, `src/lib/shuffle.ts`)実装 — CSS Modules + React 19。
+8. ✅ ツール設定移植: eslint/oxlint/oxfmt/prettier/husky/lint-staged/AGENTS.md/openspec/codemap.md。
+9. ⏳ `pnpm lint:fast` / `pnpm type-check` / `pnpm test:all` / `pnpm build` — husky build scripts承認後実行。
+10. ✅ `gh repo create ponkansh6/study --public` でリモート作成 → `git push` 完了。
 
 ## 検証方法
 
