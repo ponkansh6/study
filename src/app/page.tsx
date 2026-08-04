@@ -1,18 +1,5 @@
 import Link from "next/link";
-
-const DEFAULT_STATS = { totalQuestions: 0, totalAnswers: 0, overallAccuracy: 0 };
-
-async function getStats() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/stats`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return DEFAULT_STATS;
-    return res.json();
-  } catch {
-    return DEFAULT_STATS;
-  }
-}
+import { getStats } from "@/lib/db/repository/question-repository";
 
 export const dynamic = "force-dynamic";
 
