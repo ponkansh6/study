@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "preinstall": "pnpm dlx only-allow pnpm",
     "tsgo": "tsgo",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
@@ -25,7 +24,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "check-env": "tsx scripts/check-env.ts",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
