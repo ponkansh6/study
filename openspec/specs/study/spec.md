@@ -67,7 +67,7 @@ interface AnswerLog {
 ### R5: Dashboard & Stats
 
 **WHEN** user visits `/` (Home)
-**THEN** server component displays aggregate learning stats (`totalQuestions`, `totalAnswers`, `overallAccuracy`) via direct call to `getStats()` from `answer-repository`, with navigation links to `/create` and `/answer`.
+**THEN** server component displays today's learning stats (`totalQuestions`, `todayAnswers`, `todayAccuracy`) via direct call to `getStats()` from `answer-repository` (aggregating answer logs from JST day start 00:00 onward via `src/lib/date.ts`), with navigation links to `/create` and `/answer`.
 
 ### R6: Responsive & Accessible Interface
 
@@ -98,7 +98,7 @@ interface AnswerLog {
 
 ### 1. `/` (Home - `src/app/page.tsx`)
 
-- Server component displaying learning statistics (問題数 / 解答数 / 正答率) directly fetched via `getStats()`
+- Server component displaying learning statistics (問題数 / 本日の解答数 / 本日の正答率) directly fetched via `getStats()` (using JST day start helper `src/lib/date.ts`)
 - Navigation links to `/create` and `/answer`
 - Shared header via `src/app/layout.tsx`
 

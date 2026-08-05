@@ -7,7 +7,7 @@ Next.js App Router pages and REST API routes for the 1-knowledge-1-question endl
 ## Structure
 
 - `layout.tsx` — Root layout with global navigation header and Tailwind CSS v4 styling
-- `page.tsx` — Home page (server component displaying aggregate learning stats via `getStats()`)
+- `page.tsx` — Home page (server component displaying today's JST learning stats via `getStats()`)
 - `globals.css` — Global CSS and Tailwind imports
 - `create/page.tsx` — Knowledge creation and question generation client form
 - `answer/` — Endless quiz answer flow

@@ -4,7 +4,7 @@ import { getStats } from "@/lib/db/repository/answer-repository";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { totalQuestions, totalAnswers, overallAccuracy } = await getStats();
+  const { totalQuestions, todayAnswers, todayAccuracy } = await getStats();
 
   return (
     <main className="py-12 space-y-8 flex-1 flex flex-col justify-center">
@@ -45,12 +45,12 @@ export default async function Home() {
             <div className="text-xs text-text/60">問題数</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{totalAnswers}</div>
-            <div className="text-xs text-text/60">解答数</div>
+            <div className="text-2xl font-bold">{todayAnswers}</div>
+            <div className="text-xs text-text/60">本日の解答数</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{Math.round(overallAccuracy * 100)}%</div>
-            <div className="text-xs text-text/60">正答率</div>
+            <div className="text-2xl font-bold">{Math.round(todayAccuracy * 100)}%</div>
+            <div className="text-xs text-text/60">本日の正答率</div>
           </div>
         </div>
       </section>

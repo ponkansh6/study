@@ -1,6 +1,7 @@
-import { eq, count } from "drizzle-orm";
+import { and, gte, eq, count } from "drizzle-orm";
 import { db } from "../index";
 import { answerLogs, questions } from "../schema";
+import { jstDayStart } from "../../date";
 
 export async function recordAnswer(input: {
   questionId: number;
@@ -15,22 +16,26 @@ export async function recordAnswer(input: {
 }
 
 export async function getStats() {
+  const dayStart = jstDayStart();
   const [qCountResult] = await db.select({ count: count(questions.id) }).from(questions);
-  const [aCountResult] = await db.select({ count: count(answerLogs.id) }).from(answerLogs);
+  const [aCountResult] = await db
+    .select({ count: count(answerLogs.id) })
+    .from(answerLogs)
+    .where(gte(answerLogs.answeredAt, dayStart));
   const [correctCountResult] = await db
     .select({ count: count(answerLogs.id) })
     .from(answerLogs)
-    .where(eq(answerLogs.isCorrect, 1));
+    .where(and(eq(answerLogs.isCorrect, 1), gte(answerLogs.answeredAt, dayStart)));
 
   const totalQuestions = Number(qCountResult?.count ?? 0);
-  const totalAnswers = Number(aCountResult?.count ?? 0);
-  const totalCorrect = Number(correctCountResult?.count ?? 0);
+  const todayAnswers = Number(aCountResult?.count ?? 0);
+  const todayCorrect = Number(correctCountResult?.count ?? 0);
 
-  const overallAccuracy = totalAnswers > 0 ? totalCorrect / totalAnswers : 0;
+  const todayAccuracy = todayAnswers > 0 ? todayCorrect / todayAnswers : 0;
 
   return {
     totalQuestions,
-    totalAnswers,
-    overallAccuracy,
+    todayAnswers,
+    todayAccuracy,
   };
 }

@@ -10,4 +10,4 @@ Database layer: Drizzle ORM setup with lazy connection initialization, SQLite sc
 - `schema.ts` — SQLite table definitions (`knowledge`, `questions`, `answerLogs`)
 - `repository/`
   - `question-repository.ts` — Question creation and weighted random question picker (苦手優先)
-  - `answer-repository.ts` — Answer recording (`answerLogs`) and aggregate stats (`getStats()`)
+  - `answer-repository.ts` — Answer recording (`answerLogs`) and today's JST aggregate stats (`getStats()`)

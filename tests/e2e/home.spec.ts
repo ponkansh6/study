@@ -8,8 +8,8 @@ test("home page displays title and navigation buttons", async ({ page }) => {
   await expect(page.locator("text=問題を解く")).toBeVisible();
   await expect(page.locator("h2:has-text('統計')")).toBeVisible();
   await expect(page.locator("text=問題数")).toBeVisible();
-  await expect(page.locator("text=解答数")).toBeVisible();
-  await expect(page.locator("text=正答率")).toBeVisible();
+  await expect(page.locator("text=本日の解答数")).toBeVisible();
+  await expect(page.locator("text=本日の正答率")).toBeVisible();
 });
 
 test("home page navigation links work", async ({ page }) => {
