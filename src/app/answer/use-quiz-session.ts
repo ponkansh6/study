@@ -18,13 +18,15 @@ export type Phase =
 export function useQuizSession() {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [loading, setLoading] = useState(false);
   const excludeRef = useRef<number[]>([]);
   const mountedRef = useRef(true);
+  const loadingRef = useRef(false);
 
   const loadNext = useCallback(async (isInitial = false) => {
-    if (!isInitial) {
-      setPhase({ kind: "loading" });
-    }
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    if (!isInitial) setLoading(true);
     try {
       const question = await fetchRandomQuestion(excludeRef.current);
       if (!mountedRef.current) return;
@@ -41,6 +43,9 @@ export function useQuizSession() {
         kind: "error",
         message: e instanceof Error ? e.message : "予期せぬエラーが発生しました",
       });
+    } finally {
+      loadingRef.current = false;
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
@@ -84,5 +89,5 @@ export function useQuizSession() {
     };
   }, [loadNext]);
 
-  return { phase, score, loadNext, select };
+  return { phase, score, loadNext, select, loading };
 }

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import { NavLink } from "@/components/NavLink";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -19,9 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-dvh">
         <div className="w-full max-w-2xl mx-auto px-4 flex flex-col min-h-dvh">
           <header className="py-4 border-b border-border flex items-center justify-between">
-            <Link href="/" className="font-bold text-lg hover:text-primary transition">
+            <NavLink
+              href="/"
+              className="font-bold text-lg hover:text-primary transition motion-safe:active:scale-[0.98]"
+              pendingClassName="opacity-50"
+            >
               ホームへ
-            </Link>
+            </NavLink>
           </header>
           <div className="flex-1 flex flex-col">{children}</div>
         </div>

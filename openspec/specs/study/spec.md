@@ -72,7 +72,7 @@ interface AnswerLog {
 ### R6: Responsive & Accessible Interface
 
 **WHEN** user interacts with any page
-**THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast).
+**THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast). All buttons and primary navigation links provide immediate tap feedback: a press animation (`motion-safe:active:scale-[0.98]`) on the shared `Button`, inline loading spinners (`loading` prop with `aria-busy` + `disabled`) for asynchronous actions (question generation, next-question, retry, and `router.push` navigation via `useTransition`), pending-navigation feedback on links via `useLinkStatus`, and double-fire guards on `loadNext` / `handleCreate`.
 
 ## API Specification
 

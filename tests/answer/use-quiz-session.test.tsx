@@ -273,4 +273,73 @@ describe("useQuizSession hook", () => {
     );
     expect(answerCalls).toHaveLength(1);
   });
+
+  it("8. loadNext guards against concurrent double-fetch", async () => {
+    let resolveRandom!: (value: unknown) => void;
+    const pending = new Promise((r) => {
+      resolveRandom = r;
+    });
+
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes("/api/questions/random")) {
+        return pending;
+      }
+      return { ok: false, status: 404 };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useQuizSession());
+
+    // Initial load is in flight
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalled();
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // Resolve the initial load
+    await act(async () => {
+      resolveRandom({ ok: true, json: async () => mockQuestion });
+    });
+    await waitFor(() => {
+      expect(result.current.phase.kind).toBe("question");
+    });
+
+    // Prepare a second pending fetch
+    let resolveNext!: (value: unknown) => void;
+    const nextPending = new Promise((r) => {
+      resolveNext = r;
+    });
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes("/api/questions/random")) {
+        return nextPending;
+      }
+      return { ok: false, status: 404 };
+    });
+
+    // Call loadNext twice in the same tick — the second call must be ignored
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.loadNext();
+    });
+    act(() => {
+      void result.current.loadNext();
+    });
+
+    const randomCalls = fetchMock.mock.calls.filter(
+      (call) => typeof call[0] === "string" && call[0].includes("/api/questions/random"),
+    );
+    expect(randomCalls).toHaveLength(2); // 1 initial + 1 guarded next call
+
+    await act(async () => {
+      resolveNext({ ok: true, json: async () => ({ ...mockQuestion, id: 2 }) });
+    });
+    await first;
+
+    await waitFor(() => {
+      expect(result.current.phase.kind).toBe("question");
+    });
+    if (result.current.phase.kind === "question") {
+      expect(result.current.phase.quiz.question.id).toBe(2);
+    }
+  });
 });

@@ -68,3 +68,36 @@ test("create page error handling when API returns error", async ({ page }) => {
 
   await expect(page.locator("text=生成に失敗しました")).toBeVisible();
 });
+
+test("create page shows loading feedback on the button during generation", async ({ page }) => {
+  await page.route("**/api/questions", async (route) => {
+    if (route.request().method() === "POST") {
+      await new Promise((r) => setTimeout(r, 500));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 1,
+          question: "テスト問題です。",
+          choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+          correctIndex: 0,
+          explanation: "テストの解説です。",
+        }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.goto("/create");
+  await page.locator("textarea").fill("テスト用のナレッジです。");
+
+  const createButton = page.locator("button", { hasText: "この内容から1問作る" });
+  await createButton.click();
+
+  // Immediately assert loading state before the 500ms response arrives
+  await expect(createButton).toHaveAttribute("aria-busy", "true");
+  await expect(createButton).toBeDisabled();
+
+  await expect(page.locator("h2", { hasText: "テスト問題です。" })).toBeVisible({ timeout: 15000 });
+});

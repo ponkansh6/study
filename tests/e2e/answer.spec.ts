@@ -280,3 +280,93 @@ test("Test D: submitting state shows busy button and disables others", async ({ 
   // Wait for the response and assert the 正解！ banner appears
   await expect(page.locator("text=正解！")).toBeVisible({ timeout: 15000 });
 });
+
+test("Test E: 次の問題へ shows loading and prevents double-fetch", async ({ page }) => {
+  const question1 = {
+    id: 1,
+    question: "質問1",
+    choices: ["A1", "B1", "C1", "D1"],
+    correctIndex: 0,
+  };
+  const question2 = {
+    id: 2,
+    question: "質問2",
+    choices: ["A2", "B2", "C2", "D2"],
+    correctIndex: 0,
+  };
+  const sampleAnswerResult = { isCorrect: true, correctIndex: 0, explanation: "解説1" };
+
+  let randomCallCount = 0;
+  await page.route("/api/questions/random*", async (route) => {
+    randomCallCount++;
+    const q = randomCallCount === 1 ? question1 : question2;
+    await new Promise((r) => setTimeout(r, 400));
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(q) });
+  });
+  await page.route("/api/answers", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleAnswerResult),
+    });
+  });
+
+  await page.goto("/answer");
+  await expect(page.locator("text=質問1")).toBeVisible({ timeout: 15000 });
+  expect(randomCallCount).toBe(1);
+
+  await page.locator("main button").nth(0).click();
+  await expect(page.locator("text=正解！")).toBeVisible();
+
+  const nextBtn = page.locator("button", { hasText: "次の問題へ" });
+  await nextBtn.click();
+
+  // Button enters loading state while fetching the next question
+  await expect(nextBtn).toHaveAttribute("aria-busy", "true");
+  await expect(nextBtn).toBeDisabled();
+
+  // A second click while disabled must not trigger another fetch
+  await nextBtn.click({ force: true }).catch(() => {});
+
+  await expect(page.locator("text=質問2")).toBeVisible({ timeout: 15000 });
+  expect(randomCallCount).toBe(2);
+});
+
+test("Test F: 再試行 shows loading and prevents double-fetch", async ({ page }) => {
+  const sampleQuestion = {
+    id: 1,
+    question: "再試行テストの質問",
+    choices: ["A", "B", "C", "D"],
+    correctIndex: 0,
+  };
+
+  let randomCallCount = 0;
+  await page.route("/api/questions/random*", async (route) => {
+    randomCallCount++;
+    if (randomCallCount === 1) {
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Server error" }),
+      });
+    } else {
+      await new Promise((r) => setTimeout(r, 400));
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(sampleQuestion) });
+    }
+  });
+
+  await page.goto("/answer");
+  await expect(page.locator("button", { hasText: "再試行" })).toBeVisible({ timeout: 15000 });
+  expect(randomCallCount).toBe(1);
+
+  const retryBtn = page.locator("button", { hasText: "再試行" });
+  await retryBtn.click();
+
+  await expect(retryBtn).toHaveAttribute("aria-busy", "true");
+  await expect(retryBtn).toBeDisabled();
+
+  await retryBtn.click({ force: true }).catch(() => {});
+
+  await expect(page.locator("text=再試行テストの質問")).toBeVisible({ timeout: 15000 });
+  expect(randomCallCount).toBe(2);
+});

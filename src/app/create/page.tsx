@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Question } from "@/types/quiz";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/Button";
-import { LoadingState } from "@/components/LoadingState";
 import { ErrorMessage } from "@/components/ErrorMessage";
 
 export default function CreatePage() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isNavigating, startTransition] = useTransition();
   const [result, setResult] = useState<Question | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -45,13 +45,14 @@ export default function CreatePage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          {loading ? (
-            <LoadingState label="数秒〜数十秒かかる場合があります" />
-          ) : (
-            <Button onClick={handleCreate} disabled={!text.trim()}>
+          <div className="space-y-2">
+            <Button onClick={handleCreate} disabled={!text.trim()} loading={loading}>
               この内容から1問作る
             </Button>
-          )}
+            {loading && (
+              <p className="text-sm text-text/60 text-center">数秒〜数十秒かかる場合があります</p>
+            )}
+          </div>
           {error && <ErrorMessage message={error} />}
         </div>
       ) : (
@@ -76,8 +77,10 @@ export default function CreatePage() {
             >
               続けてもう1問作る
             </Button>
-            <Button onClick={() => router.push("/answer")}>問題を解きに行く</Button>
-            <Button variant="ghost" onClick={() => router.push("/")}>
+            <Button onClick={() => startTransition(() => router.push("/answer"))} loading={isNavigating}>
+              問題を解きに行く
+            </Button>
+            <Button variant="ghost" onClick={() => startTransition(() => router.push("/"))} loading={isNavigating}>
               ホームへ
             </Button>
           </div>
