@@ -12,6 +12,7 @@ export type Phase =
   | { kind: "empty" }
   | { kind: "error"; message: string }
   | { kind: "question"; quiz: LoadedQuiz }
+  | { kind: "submitting"; quiz: LoadedQuiz; selectedIndex: number }
   | { kind: "graded"; quiz: LoadedQuiz; selectedIndex: number; result: AnswerResult };
 
 export function useQuizSession() {
@@ -47,6 +48,7 @@ export function useQuizSession() {
     async (shuffledIdx: number) => {
       if (phase.kind !== "question") return;
       const { quiz } = phase;
+      setPhase({ kind: "submitting", quiz, selectedIndex: shuffledIdx });
       const originalIdx = quiz.shuffled.choiceIndices[shuffledIdx];
       try {
         const result = await submitAnswer(quiz.question.id, originalIdx);
@@ -70,7 +72,7 @@ export function useQuizSession() {
         });
       }
     },
-    [phase]
+    [phase],
   );
 
   useEffect(() => {

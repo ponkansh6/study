@@ -57,7 +57,7 @@ interface AnswerLog {
 ### R3: Answer Submission & Feedback
 
 **WHEN** user selects a choice and clicks submit on `/answer`
-**THEN** `POST /api/answers` validates the answer, records an `answerLogs` entry, and returns feedback (`isCorrect`, `correctIndex`, `explanation`). The UI displays a clear 正解! / 不正解 banner, marks the user's selected wrong answer, and highlights the correct answer.
+**THEN** `POST /api/answers` validates the answer, records an `answerLogs` entry, and returns feedback (`isCorrect`, `correctIndex`, `explanation`). The UI displays a clear 正解! / 不正解 banner, marks the user's selected wrong answer, and highlights the correct answer. When a choice is selected, the UI immediately shows a sending state (spinner on the selected choice, other choices disabled) while awaiting server response. Double-submission is structurally prevented.
 
 ### R4: Client-Side Choice Shuffle
 
@@ -110,7 +110,7 @@ interface AnswerLog {
 ### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`)
 
 - Thin page wrapper rendering `QuizRunner`
-- `use-quiz-session.ts`: State machine hook handling fetching, answering, loading, error states, and `mountedRef` guard
+- `use-quiz-session.ts`: State machine hook handling fetching, answering, loading, error states, submitting state, and `mountedRef` guard
 - `quiz-runner.tsx`: Display-only component rendering questions, choice buttons, feedback banners, and navigation
 
 ### 4. Common UI Components (`src/components/`)

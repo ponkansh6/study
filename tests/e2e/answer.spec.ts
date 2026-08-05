@@ -105,7 +105,7 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
   await page.goto("/answer");
 
   await expect(page.locator("header", { hasText: "正解 0 / 0" })).toBeVisible({ timeout: 15000 });
-  
+
   const choiceButtons = page.locator("main button");
   await expect(choiceButtons).toHaveCount(4);
 
@@ -235,4 +235,48 @@ test("Test C: next question only loads when 次の問題へ is clicked", async (
   expect(callCount).toBe(2);
 });
 
+test("Test D: submitting state shows busy button and disables others", async ({ page }) => {
+  const sampleQuestion = {
+    id: 1,
+    question: "サブミッティングテストの質問",
+    choices: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
+    correctIndex: 0,
+  };
 
+  await page.route("/api/questions/random*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleQuestion),
+    });
+  });
+
+  await page.route("/api/answers", async (route) => {
+    await new Promise((r) => setTimeout(r, 500));
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ isCorrect: true, correctIndex: 0, explanation: "解説です" }),
+    });
+  });
+
+  await page.goto("/answer");
+
+  await expect(page.locator("text=サブミッティングテストの質問")).toBeVisible({ timeout: 15000 });
+
+  const choiceButtons = page.locator("main button");
+  await expect(choiceButtons).toHaveCount(4);
+
+  // Click choice 0
+  await choiceButtons.nth(0).click();
+
+  // Immediately assert (before the 500ms elapses)
+  await expect(choiceButtons.nth(0)).toHaveAttribute("aria-busy", "true");
+  await expect(choiceButtons.nth(1)).toBeDisabled();
+  await expect(choiceButtons.nth(2)).toBeDisabled();
+  await expect(choiceButtons.nth(3)).toBeDisabled();
+  await expect(page.locator("text=サブミッティングテストの質問")).toBeVisible();
+
+  // Wait for the response and assert the 正解！ banner appears
+  await expect(page.locator("text=正解！")).toBeVisible({ timeout: 15000 });
+});

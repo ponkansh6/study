@@ -40,11 +40,11 @@
 
 ## 方針決定（ユーザー確認済み）
 
-| 項目 | 決定 |
-| --- | --- |
-| フィードバック形式 | **1 問ごと即時のみ**（まとめ結果ページは作らない） |
-| 永続化 | 正誤のみ DB 保存 → **既存 `answer_logs` のまま。変更なし** |
-| リファクタ範囲 | **全面** |
+| 項目               | 決定                                                       |
+| ------------------ | ---------------------------------------------------------- |
+| フィードバック形式 | **1 問ごと即時のみ**（まとめ結果ページは作らない）         |
+| 永続化             | 正誤のみ DB 保存 → **既存 `answer_logs` のまま。変更なし** |
+| リファクタ範囲     | **全面**                                                   |
 
 ---
 
@@ -227,13 +227,13 @@ API へは従来どおり `shuffled.choiceIndices[selectedIndex]` で元 index �
 ユーザー判断により、**過去のプラン文書は経緯の記録として残し**、
 外部から読まれる README とコードマップのみ現行仕様に合わせる。
 
-| ファイル | 現状 | 対応 |
-| --- | --- | --- |
-| `README.md` | 「10-question quiz」「Quiz History」等、存在しない機能を記載 | **現行仕様に書き直す** |
-| `codemap.md`（ルート） | 「10-question quiz sets」前提 | **現構成に更新** |
-| `IMPLEMENTATION.md` | 2026-08-04 時点の完了報告。旧設計 | 経緯の記録として**保持**（変更しない） |
-| `PLAN.md` | プロジェクト新規作成時のプラン | 経緯の記録として**保持**（変更しない） |
-| `shared_plan/IMPLEMENTATION_PLAN.md` | 1ナレッジ1問への移行プラン | 経緯の記録として**保持**（変更しない） |
+| ファイル                             | 現状                                                         | 対応                                   |
+| ------------------------------------ | ------------------------------------------------------------ | -------------------------------------- |
+| `README.md`                          | 「10-question quiz」「Quiz History」等、存在しない機能を記載 | **現行仕様に書き直す**                 |
+| `codemap.md`（ルート）               | 「10-question quiz sets」前提                                | **現構成に更新**                       |
+| `IMPLEMENTATION.md`                  | 2026-08-04 時点の完了報告。旧設計                            | 経緯の記録として**保持**（変更しない） |
+| `PLAN.md`                            | プロジェクト新規作成時のプラン                               | 経緯の記録として**保持**（変更しない） |
+| `shared_plan/IMPLEMENTATION_PLAN.md` | 1ナレッジ1問への移行プラン                                   | 経緯の記録として**保持**（変更しない） |
 
 保持する 3 ファイルは履歴文書であることが伝わるよう、README から
 「これらは過去の設計経緯であり現行仕様は `openspec/specs/study/spec.md` を参照」と
@@ -284,18 +284,18 @@ pnpm build           # Turbopack ビルド
 
 ### 実装フェーズ
 
-| #   | フェーズ                                                     | 担当              | 状態    | 検証                                                               |
-| --- | ------------------------------------------------------------ | ----------------- | ------- | ------------------------------------------------------------------ |
-| 1a  | 正誤フィードバック修正（状態機械フック + quiz-runner + UI）     | @designer + @fixer | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5                  |
-| 1b  | e2e answer 拡張（不正解バナー/フィードバック不消滅/次の問題へ） | @fixer             | ✅ 完了 | test:e2e exit0 (20テスト)                                          |
-| 1r  | Oracleレビュー Phase 1                                        | @oracle           | ✅ 承認 | S1なし                                                             |
-| 2a  | バックエンド（API response helper/Zod/リポジトリ分割/DB遅延初期化/sleep削除/stats削除） | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5                  |
-| 2b  | 共通UI（Button/QuestionCard/EmptyState/LoadingState/ErrorMessage） | @designer         | ✅ 完了 | type-check:fast exit0 / lint:fast exit0                              |
-| 2c  | ページ薄型化（layoutヘッダー/create分割/quiz-runner共通UI使用/mountedRefガード） | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5 / test:e2e 20/20 |
-| 2r  | Oracleレビュー Phase 2                                        | @oracle           | ✅ 承認 | S1なし                                                             |
-| 3a  | 単体テスト + Oracle修正（use-quiz-session/answers/home.spec/SQL参照統一） | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 16/16               |
-| 3b  | ドキュメント同期（spec.md/codemap 6ファイル/README.md）         | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0                             |
-| 最終 | 最終検証                                                     | -                 | ✅ 完了 | type-check/lint/test 16/16/e2e 20/20/build exit0                   |
+| #    | フェーズ                                                                                | 担当               | 状態    | 検証                                                                |
+| ---- | --------------------------------------------------------------------------------------- | ------------------ | ------- | ------------------------------------------------------------------- |
+| 1a   | 正誤フィードバック修正（状態機械フック + quiz-runner + UI）                             | @designer + @fixer | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5                  |
+| 1b   | e2e answer 拡張（不正解バナー/フィードバック不消滅/次の問題へ）                         | @fixer             | ✅ 完了 | test:e2e exit0 (20テスト)                                           |
+| 1r   | Oracleレビュー Phase 1                                                                  | @oracle            | ✅ 承認 | S1なし                                                              |
+| 2a   | バックエンド（API response helper/Zod/リポジトリ分割/DB遅延初期化/sleep削除/stats削除） | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5                  |
+| 2b   | 共通UI（Button/QuestionCard/EmptyState/LoadingState/ErrorMessage）                      | @designer          | ✅ 完了 | type-check:fast exit0 / lint:fast exit0                             |
+| 2c   | ページ薄型化（layoutヘッダー/create分割/quiz-runner共通UI使用/mountedRefガード）        | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 5/5 / test:e2e 20/20 |
+| 2r   | Oracleレビュー Phase 2                                                                  | @oracle            | ✅ 承認 | S1なし                                                              |
+| 3a   | 単体テスト + Oracle修正（use-quiz-session/answers/home.spec/SQL参照統一）               | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test 16/16                |
+| 3b   | ドキュメント同期（spec.md/codemap 6ファイル/README.md）                                 | @fixer             | ✅ 完了 | type-check:fast exit0 / lint:fast exit0                             |
+| 最終 | 最終検証                                                                                | -                  | ✅ 完了 | type-check/lint/test 16/16/e2e 20/20/build exit0                    |
 
 ### 変更ファイル一覧
 
@@ -370,8 +370,8 @@ Phase 1 の核心バグ修正（フィードバック消失防止・`selectedInd
 
 ```ts
 return ok(
-  { id: result.questionId, /* ... */ },
-  21,   // ← 201 のはずが 21 になっている（タイポ）
+  { id: result.questionId /* ... */ },
+  21, // ← 201 のはずが 21 になっている（タイポ）
 );
 ```
 
@@ -427,13 +427,13 @@ return ok(
 以下のコードマップが実コードと一致していない
 （`openspec/specs/study/spec.md` と `README.md` は正確だった）。
 
-| ファイル | 記載 | 実際 |
-| --- | --- | --- |
-| `codemap.md`（ルート） | `generateQuizQuestion` | `generateQuestion`（`src/lib/llm/quiz.ts`） |
-| `src/lib/llm/codemap.md` | `generateQuizQuestion` | `generateQuestion` |
-| `src/lib/llm/codemap.md` | `QUESTION_GENERATION_PROMPT` | `QUIZ_GENERATION_PROMPT`（`src/lib/llm/prompts.ts`） |
-| `codemap.md`（ルート） | `createQuestion`（DB保存関数として） | `createKnowledgeWithQuestion`（`question-repository.ts`） |
-| `codemap.md`（ルート） | `types/index.ts` | `types/quiz.ts` |
+| ファイル                 | 記載                                 | 実際                                                      |
+| ------------------------ | ------------------------------------ | --------------------------------------------------------- |
+| `codemap.md`（ルート）   | `generateQuizQuestion`               | `generateQuestion`（`src/lib/llm/quiz.ts`）               |
+| `src/lib/llm/codemap.md` | `generateQuizQuestion`               | `generateQuestion`                                        |
+| `src/lib/llm/codemap.md` | `QUESTION_GENERATION_PROMPT`         | `QUIZ_GENERATION_PROMPT`（`src/lib/llm/prompts.ts`）      |
+| `codemap.md`（ルート）   | `createQuestion`（DB保存関数として） | `createKnowledgeWithQuestion`（`question-repository.ts`） |
+| `codemap.md`（ルート）   | `types/index.ts`                     | `types/quiz.ts`                                           |
 
 → 該当箇所の名称を実コードに合わせて修正する。
 

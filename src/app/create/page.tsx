@@ -48,10 +48,7 @@ export default function CreatePage() {
           {loading ? (
             <LoadingState label="数秒〜数十秒かかる場合があります" />
           ) : (
-            <Button
-              onClick={handleCreate}
-              disabled={!text.trim()}
-            >
+            <Button onClick={handleCreate} disabled={!text.trim()}>
               この内容から1問作る
             </Button>
           )}
@@ -79,15 +76,8 @@ export default function CreatePage() {
             >
               続けてもう1問作る
             </Button>
-            <Button
-              onClick={() => router.push("/answer")}
-            >
-              問題を解きに行く
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/")}
-            >
+            <Button onClick={() => router.push("/answer")}>問題を解きに行く</Button>
+            <Button variant="ghost" onClick={() => router.push("/")}>
               ホームへ
             </Button>
           </div>

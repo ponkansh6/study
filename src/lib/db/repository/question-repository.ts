@@ -87,7 +87,10 @@ export async function pickWeightedRandomQuestion(
     .from(answerLogs)
     .groupBy(answerLogs.questionId);
 
-  const statsMap = new Map<number, { totalAnswers: number; incorrectAnswers: number; latestCorrect: boolean }>();
+  const statsMap = new Map<
+    number,
+    { totalAnswers: number; incorrectAnswers: number; latestCorrect: boolean }
+  >();
   for (const row of statsRows) {
     statsMap.set(row.questionId, {
       totalAnswers: Number(row.totalAnswers),

@@ -33,9 +33,10 @@ export default function QuizRunner() {
     return <ErrorMessage message={phase.message} onRetry={() => void loadNext()} />;
   }
 
+  const isPending = phase.kind === "submitting";
   const isGraded = phase.kind === "graded";
   const quiz = phase.quiz;
-  const selectedIndex = isGraded ? phase.selectedIndex : undefined;
+  const selectedIndex = isPending || isGraded ? phase.selectedIndex : undefined;
   const result = isGraded ? phase.result : undefined;
 
   return (
@@ -48,8 +49,12 @@ export default function QuizRunner() {
         <p className="text-lg font-bold">{quiz.question.question}</p>
         <div className="space-y-3">
           {quiz.shuffled.choices.map((c, i) => {
-            let variant: "idle" | "correct" | "selectedWrong" | "muted" = "idle";
-            if (isGraded && result) {
+            let variant: "idle" | "correct" | "selectedWrong" | "muted" | "selected" = "idle";
+            if (isPending && i === selectedIndex) {
+              variant = "selected";
+            } else if (isPending) {
+              variant = "muted";
+            } else if (isGraded && result) {
               const correctShuffledIdx = quiz.shuffled.choiceIndices.indexOf(result.correctIndex);
               if (i === correctShuffledIdx) {
                 variant = "correct";
@@ -67,7 +72,7 @@ export default function QuizRunner() {
                 text={c}
                 variant={variant}
                 onClick={() => void select(i)}
-                disabled={isGraded}
+                disabled={isPending || isGraded}
               />
             );
           })}

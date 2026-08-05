@@ -1,4 +1,4 @@
-type ChoiceVariant = "idle" | "correct" | "selectedWrong" | "muted";
+type ChoiceVariant = "idle" | "correct" | "selectedWrong" | "muted" | "selected";
 
 interface ChoiceButtonProps {
   label: string;
@@ -23,6 +23,8 @@ export default function ChoiceButton({
         return "border-error bg-error/10 text-error";
       case "muted":
         return "border-border opacity-50";
+      case "selected":
+        return "border-primary bg-primary/10";
       case "idle":
       default:
         return "border-border hover:border-primary";
@@ -32,13 +34,17 @@ export default function ChoiceButton({
   return (
     <button
       onClick={onClick}
-      disabled={disabled || variant !== "idle"}
-      className={`flex w-full min-h-14 items-start gap-2 rounded-xl border-2 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getStyles()}`}
+      disabled={disabled}
+      aria-busy={variant === "selected"}
+      className={`flex w-full min-h-14 items-start gap-2 rounded-xl border-2 p-4 text-left transition motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getStyles()}`}
     >
       <span className="font-bold shrink-0">{label}</span>
       <span className="break-words">{text}</span>
       {variant === "correct" && <span className="ml-auto">✓</span>}
       {variant === "selectedWrong" && <span className="ml-auto">✗</span>}
+      {variant === "selected" && (
+        <span className="ml-auto w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      )}
     </button>
   );
 }

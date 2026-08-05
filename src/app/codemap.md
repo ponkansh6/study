@@ -13,7 +13,7 @@ Next.js App Router pages and REST API routes for the 1-knowledge-1-question endl
 - `answer/` — Endless quiz answer flow
   - `page.tsx` — Page wrapper
   - `quiz-runner.tsx` — Display component for question, choices, and immediate feedback
-  - `use-quiz-session.ts` — Quiz session state machine hook with mount guarding
+  - `use-quiz-session.ts` — Quiz session state machine hook with mount guarding and submitting state (送信中状態)
 - `api/` — REST API routes
   - `questions/route.ts` — POST (generate question from knowledge text)
   - `questions/random/route.ts` — GET (fetch weighted random question with exclusion)

@@ -23,7 +23,7 @@ describe("useQuizSession hook", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => mockQuestion,
-      })
+      }),
     );
 
     const { result } = renderHook(() => useQuizSession());
@@ -46,7 +46,7 @@ describe("useQuizSession hook", () => {
       vi.fn().mockResolvedValue({
         status: 404,
         ok: false,
-      })
+      }),
     );
 
     const { result } = renderHook(() => useQuizSession());
@@ -57,10 +57,7 @@ describe("useQuizSession hook", () => {
   });
 
   it("3. Error -> error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network failure"))
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network failure")));
 
     const { result } = renderHook(() => useQuizSession());
 
@@ -203,10 +200,77 @@ describe("useQuizSession hook", () => {
     });
 
     // Check that fetch was called with exclude=1
-    const randomCalls = fetchMock.mock.calls.filter((call) =>
-      typeof call[0] === "string" && call[0].includes("/api/questions/random")
+    const randomCalls = fetchMock.mock.calls.filter(
+      (call) => typeof call[0] === "string" && call[0].includes("/api/questions/random"),
     );
     const lastCallUrl = randomCalls[randomCalls.length - 1][0] as string;
     expect(lastCallUrl).toContain("exclude=1");
+  });
+
+  it("7. submitting phase is entered immediately on select and double-submission is prevented", async () => {
+    let resolveAnswer!: (value: unknown) => void;
+    const answerPromise = new Promise((r) => {
+      resolveAnswer = r;
+    });
+
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes("/api/questions/random")) {
+        return {
+          ok: true,
+          json: async () => mockQuestion,
+        };
+      }
+      if (url.includes("/api/answers")) {
+        return answerPromise;
+      }
+      return { ok: false, status: 404 };
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useQuizSession());
+
+    await waitFor(() => {
+      expect(result.current.phase.kind).toBe("question");
+    });
+
+    const quizPhase = result.current.phase;
+    if (quizPhase.kind !== "question") throw new Error("Expected question phase");
+
+    // Select first choice
+    act(() => {
+      void result.current.select(0);
+    });
+
+    // Immediately assert submitting phase
+    expect(result.current.phase.kind).toBe("submitting");
+    if (result.current.phase.kind === "submitting") {
+      expect(result.current.phase.selectedIndex).toBe(0);
+    }
+
+    // Try double-submission immediately
+    act(() => {
+      void result.current.select(1);
+    });
+
+    // Resolve answer promise
+    await act(async () => {
+      resolveAnswer({
+        ok: true,
+        json: async () => ({
+          isCorrect: true,
+          correctIndex: 0,
+          explanation: "Correct explanation",
+        }),
+      });
+    });
+
+    expect(result.current.phase.kind).toBe("graded");
+    expect(result.current.score).toEqual({ correct: 1, total: 1 });
+
+    const answerCalls = fetchMock.mock.calls.filter(
+      (call) => typeof call[0] === "string" && call[0].includes("/api/answers"),
+    );
+    expect(answerCalls).toHaveLength(1);
   });
 });

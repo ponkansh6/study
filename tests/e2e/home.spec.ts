@@ -23,9 +23,11 @@ test("home page navigation links work", async ({ page }) => {
   await page.goto("/");
   const answerButton = page.locator("a[href='/answer']");
   await expect(answerButton).toBeVisible();
-  
+
   // Deterministic check: either it's enabled (can click and navigate) or disabled (has pointer-events-none)
-  const isEnabled = !(await answerButton.evaluate((el) => el.classList.contains("pointer-events-none")));
+  const isEnabled = !(await answerButton.evaluate((el) =>
+    el.classList.contains("pointer-events-none"),
+  ));
   if (isEnabled) {
     await answerButton.click();
     await expect(page).toHaveURL(/\/answer/);

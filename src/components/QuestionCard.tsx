@@ -24,13 +24,14 @@ export function QuestionCard({
         {choices.map((choice, i) => {
           const isCorrect = correctIndex === i;
           const isSelected = selectedIndex === i;
-          
-          const baseClasses = "w-full p-3 rounded-lg text-left transition flex gap-2 items-center break-words";
+
+          const baseClasses =
+            "w-full p-3 rounded-lg text-left transition flex gap-2 items-center break-words";
           const stateClasses = isCorrect
             ? "bg-success/20"
             : isSelected && !isCorrect
-            ? "bg-error/20"
-            : "bg-border/10 hover:bg-border/20";
+              ? "bg-error/20"
+              : "bg-border/10 hover:bg-border/20";
 
           if (onSelect) {
             return (

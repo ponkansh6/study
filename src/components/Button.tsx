@@ -17,7 +17,9 @@ export function Button({ variant = "primary", className, ...props }: ButtonProps
         "w-full py-3 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition disabled:opacity-50",
         variants[variant],
         className,
-      ].filter(Boolean).join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     />
   );

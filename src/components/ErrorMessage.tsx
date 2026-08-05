@@ -11,7 +11,9 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
       <p className="text-error font-bold">{message}</p>
       {onRetry && (
         <div className="w-48">
-          <Button variant="outline" onClick={onRetry}>再試行</Button>
+          <Button variant="outline" onClick={onRetry}>
+            再試行
+          </Button>
         </div>
       )}
     </div>
