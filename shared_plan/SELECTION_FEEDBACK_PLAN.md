@@ -40,11 +40,11 @@ const select = useCallback(async (shuffledIdx: number) => {
 
 ## 方針決定（ユーザー確認済み）
 
-| 項目 | 決定 |
-| --- | --- |
-| 採点待ちの見せ方 | **選択色 + ボタン内スピナー**。他の選択肢は減光して無効化 |
+| 項目             | 決定                                                             |
+| ---------------- | ---------------------------------------------------------------- |
+| 採点待ちの見せ方 | **選択色 + ボタン内スピナー**。他の選択肢は減光して無効化        |
 | 押した瞬間の反応 | **押し込みアニメーション**（`active:scale`、CSS のみでラグゼロ） |
-| バイブレーション | 入れない |
+| バイブレーション | 入れない                                                         |
 
 ---
 
@@ -60,7 +60,7 @@ export type Phase =
   | { kind: "empty" }
   | { kind: "error"; message: string }
   | { kind: "question"; quiz: LoadedQuiz }
-  | { kind: "submitting"; quiz: LoadedQuiz; selectedIndex: number }   // ← 追加
+  | { kind: "submitting"; quiz: LoadedQuiz; selectedIndex: number } // ← 追加
   | { kind: "graded"; quiz: LoadedQuiz; selectedIndex: number; result: AnswerResult };
 ```
 
@@ -111,11 +111,11 @@ const result = isGraded ? phase.result : undefined;
 
 variant の決定:
 
-| 状態 | 選んだ選択肢 | それ以外 |
-| --- | --- | --- |
-| `question` | — | `idle` |
-| `submitting` | `selected`（スピナー） | `muted`（減光） |
-| `graded` | 正解なら `correct` / 誤答なら `selectedWrong` | 正解は `correct`、他は `muted`（現行どおり） |
+| 状態         | 選んだ選択肢                                  | それ以外                                     |
+| ------------ | --------------------------------------------- | -------------------------------------------- |
+| `question`   | —                                             | `idle`                                       |
+| `submitting` | `selected`（スピナー）                        | `muted`（減光）                              |
+| `graded`     | 正解なら `correct` / 誤答なら `selectedWrong` | 正解は `correct`、他は `muted`（現行どおり） |
 
 `ChoiceButton` へは `disabled={isPending || isGraded}` を明示的に渡す。
 sticky「次の問題へ」の表示条件は `isGraded` のまま（待機中は出さない）。
@@ -191,3 +191,41 @@ pnpm build
    ヘッダーのスコアが **1 だけ** 増える（連打しても 2 増えない）
 6. OS の「視差効果を減らす / アニメーションを減らす」を有効にすると、
    押し込みアニメーションが無効になる
+
+---
+
+## 進捗
+
+**完了日**: 2026-08-05
+**コミット**: `b6504e9` — fix: add submitting phase to prevent double-submission and show loading feedback
+
+### 実装フェーズ
+
+| # | フェーズ | 担当 | 状態 | 検証 |
+|---|---|---|---|---|
+| 1 | submitting フェーズ追加 + ChoiceButton selected variant + quiz-runner 3状態対応 | @fixer | ✅ 完了 | type-check/lint/test exit0 |
+| 2 | 単体テスト (submitting遷移 + 二重送信ガード) + e2eテスト | @fixer | ✅ 完了 | test 21/21 / e2e 22/22 |
+| 3 | ドキュメント同期 (spec.md R3 + codemap) | @fixer | ✅ 完了 | type-check/lint exit0 |
+| 最終 | 最終検証 | - | ✅ 完了 | type-check/lint/test 21/21/e2e 22/22/build exit0 |
+
+### 変更ファイル一覧
+
+**変更:**
+
+- `src/app/answer/use-quiz-session.ts` — Phase union に `submitting` 追加、`select()` で await 前に即遷移
+- `src/components/ChoiceButton.tsx` — `selected` variant 追加、スピナー、`aria-busy`、`motion-safe:active:scale-[0.98]`、`disabled` を呼び出し側明示に
+- `src/app/answer/quiz-runner.tsx` — `isPending`/`isGraded` の 3 状態描画分岐、`disabled={isPending || isGraded}` を ChoiceButton に明示渡し
+- `openspec/specs/study/spec.md` — R3 に送信中状態・二重送信防止の記述追加、Components → /answer に submitting フェーズ追記
+- `src/app/codemap.md` — use-quiz-session.ts に送信中状態の記述追加
+- `tests/answer/use-quiz-session.test.tsx` — submitting 遷移テスト + 二重送信ガード回帰テスト追加
+- `tests/e2e/answer.spec.ts` — Test D: aria-busy + disabled + 遅延モックで送信中表示検証
+
+### 検証結果
+
+```bash
+pnpm type-check      # exit 0
+pnpm lint            # exit 0
+pnpm test            # 21/21 passed (shuffle, schemas, use-quiz-session, answers, questions)
+pnpm test:e2e        # 22/22 passed (chromium + Mobile Chrome)
+pnpm build           # exit 0
+```
