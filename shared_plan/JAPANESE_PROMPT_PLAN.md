@@ -61,4 +61,3 @@ pnpm test
 ## 進捗
 
 - [100%] `QUIZ_GENERATION_PROMPT` に日本語生成指示（ルール先頭＋出力構造ライン）を追加し、`tests/llm/prompts.test.ts` で回帰テストを追加。`pnpm type-check` / `pnpm lint` / `pnpm test` で検証完了。
-
