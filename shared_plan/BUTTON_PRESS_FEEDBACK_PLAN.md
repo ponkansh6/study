@@ -22,13 +22,13 @@ Next.js は `^16.2.9`、React は `^19.2.7` のため、Link のナビゲーシ�
 
 ## 方針決定
 
-| 項目 | 決定 |
-| --- | --- |
-| 押し込みアニメーション | 全ボタン共通で `motion-safe:active:scale-[0.98]` を `Button.tsx` のベースクラスに追加（ChoiceButton と同じ値で統一） |
-| 非同期ボタンのローディング表示 | `Button.tsx` に `loading?: boolean` prop を追加。true時: `disabled` 化・`aria-busy`・インラインスピナー（ChoiceButton と同じ `w-4 h-4 border-2 border-t-transparent rounded-full animate-spin` を流用、色は variant に合わせて `border-current` にする） |
-| Link のナビゲーション中表示 | `useLinkStatus()`（Next.js App Router 標準）を使い、pending 中に `active:scale` 相当の視覚変化 or 軽いopacity低下を表示する小さなラッパーコンポーネントを用意 |
-| router.push ボタンのローディング | `useTransition` の `isPending` を `Button` の `loading` prop に渡す |
-| 「次の問題へ」「再試行」 | 画面全体スワップ方式は維持しつつ、ボタン自体にも `loading` を渡し、連打時の二重発火を防ぐガードを `loadNext` に追加（実行中は早期return） |
+| 項目                             | 決定                                                                                                                                                                                                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 押し込みアニメーション           | 全ボタン共通で `motion-safe:active:scale-[0.98]` を `Button.tsx` のベースクラスに追加（ChoiceButton と同じ値で統一）                                                                                                                                     |
+| 非同期ボタンのローディング表示   | `Button.tsx` に `loading?: boolean` prop を追加。true時: `disabled` 化・`aria-busy`・インラインスピナー（ChoiceButton と同じ `w-4 h-4 border-2 border-t-transparent rounded-full animate-spin` を流用、色は variant に合わせて `border-current` にする） |
+| Link のナビゲーション中表示      | `useLinkStatus()`（Next.js App Router 標準）を使い、pending 中に `active:scale` 相当の視覚変化 or 軽いopacity低下を表示する小さなラッパーコンポーネントを用意                                                                                            |
+| router.push ボタンのローディング | `useTransition` の `isPending` を `Button` の `loading` prop に渡す                                                                                                                                                                                      |
+| 「次の問題へ」「再試行」         | 画面全体スワップ方式は維持しつつ、ボタン自体にも `loading` を渡し、連打時の二重発火を防ぐガードを `loadNext` に追加（実行中は早期return）                                                                                                                |
 
 ---
 

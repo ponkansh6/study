@@ -16,14 +16,17 @@ export function NavLink({ href, pendingClassName, className, children, ...rest }
   );
 }
 
-function PendingState({ pendingClassName, children }: { pendingClassName?: string; children: ReactNode }) {
+function PendingState({
+  pendingClassName,
+  children,
+}: {
+  pendingClassName?: string;
+  children: ReactNode;
+}) {
   const { pending } = useLinkStatus();
   return (
     <span
-      className={[
-        "inline-flex items-center justify-center gap-2",
-        pending && pendingClassName,
-      ]
+      className={["inline-flex items-center justify-center gap-2", pending && pendingClassName]
         .filter(Boolean)
         .join(" ")}
     >

@@ -201,12 +201,12 @@ pnpm build
 
 ### 実装フェーズ
 
-| # | フェーズ | 担当 | 状態 | 検証 |
-|---|---|---|---|---|
-| 1 | submitting フェーズ追加 + ChoiceButton selected variant + quiz-runner 3状態対応 | @fixer | ✅ 完了 | type-check/lint/test exit0 |
-| 2 | 単体テスト (submitting遷移 + 二重送信ガード) + e2eテスト | @fixer | ✅ 完了 | test 21/21 / e2e 22/22 |
-| 3 | ドキュメント同期 (spec.md R3 + codemap) | @fixer | ✅ 完了 | type-check/lint exit0 |
-| 最終 | 最終検証 | - | ✅ 完了 | type-check/lint/test 21/21/e2e 22/22/build exit0 |
+| #    | フェーズ                                                                        | 担当   | 状態    | 検証                                             |
+| ---- | ------------------------------------------------------------------------------- | ------ | ------- | ------------------------------------------------ |
+| 1    | submitting フェーズ追加 + ChoiceButton selected variant + quiz-runner 3状態対応 | @fixer | ✅ 完了 | type-check/lint/test exit0                       |
+| 2    | 単体テスト (submitting遷移 + 二重送信ガード) + e2eテスト                        | @fixer | ✅ 完了 | test 21/21 / e2e 22/22                           |
+| 3    | ドキュメント同期 (spec.md R3 + codemap)                                         | @fixer | ✅ 完了 | type-check/lint exit0                            |
+| 最終 | 最終検証                                                                        | -      | ✅ 完了 | type-check/lint/test 21/21/e2e 22/22/build exit0 |
 
 ### 変更ファイル一覧
 

@@ -77,10 +77,17 @@ export default function CreatePage() {
             >
               続けてもう1問作る
             </Button>
-            <Button onClick={() => startTransition(() => router.push("/answer"))} loading={isNavigating}>
+            <Button
+              onClick={() => startTransition(() => router.push("/answer"))}
+              loading={isNavigating}
+            >
               問題を解きに行く
             </Button>
-            <Button variant="ghost" onClick={() => startTransition(() => router.push("/"))} loading={isNavigating}>
+            <Button
+              variant="ghost"
+              onClick={() => startTransition(() => router.push("/"))}
+              loading={isNavigating}
+            >
               ホームへ
             </Button>
           </div>

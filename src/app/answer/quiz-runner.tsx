@@ -30,7 +30,9 @@ export default function QuizRunner() {
   }
 
   if (phase.kind === "error") {
-    return <ErrorMessage message={phase.message} onRetry={() => void loadNext()} loading={loading} />;
+    return (
+      <ErrorMessage message={phase.message} onRetry={() => void loadNext()} loading={loading} />
+    );
   }
 
   const isPending = phase.kind === "submitting";
@@ -92,7 +94,9 @@ export default function QuizRunner() {
 
       {isGraded && (
         <div className="sticky bottom-0 p-4 pb-[env(safe-area-inset-bottom)] bg-bg border-t border-border">
-          <Button onClick={() => void loadNext()} loading={loading}>次の問題へ</Button>
+          <Button onClick={() => void loadNext()} loading={loading}>
+            次の問題へ
+          </Button>
         </div>
       )}
     </main>

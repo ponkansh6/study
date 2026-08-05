@@ -23,7 +23,11 @@ describe("Button", () => {
   });
 
   it("loading overrides an explicit disabled prop", () => {
-    render(<Button loading disabled>作成</Button>);
+    render(
+      <Button loading disabled>
+        作成
+      </Button>,
+    );
     expect(screen.getByRole("button", { name: "作成" })).toBeDisabled();
   });
 });

@@ -351,7 +351,11 @@ test("Test F: 再試行 shows loading and prevents double-fetch", async ({ page 
       });
     } else {
       await new Promise((r) => setTimeout(r, 400));
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(sampleQuestion) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(sampleQuestion),
+      });
     }
   });
 
