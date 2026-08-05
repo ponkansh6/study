@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { pickWeightedRandomQuestion } from "@/lib/db/repository/question-repository";
+import { ok, fail } from "@/lib/api/response";
 
 export async function GET(request: Request) {
   try {
@@ -17,12 +17,12 @@ export async function GET(request: Request) {
     const question = await pickWeightedRandomQuestion(excludeIds);
 
     if (!question) {
-      return NextResponse.json({ error: "No questions available" }, { status: 404 });
+      return fail("No questions available", 404);
     }
 
-    return NextResponse.json(question, { status: 200 });
+    return ok(question);
   } catch (error) {
     console.error("Error in GET /api/questions/random:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return fail("Internal server error", 500);
   }
 }

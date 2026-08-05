@@ -1,25 +1,22 @@
-import { NextResponse } from "next/server";
-import { getQuestionById, recordAnswer } from "@/lib/db/repository/question-repository";
-import { QUIZ_CHOICES_PER_QUESTION } from "@/lib/constants";
+import { getQuestionById } from "@/lib/db/repository/question-repository";
+import { recordAnswer } from "@/lib/db/repository/answer-repository";
+import { submitAnswerSchema } from "@/lib/api/schemas";
+import { ok, fail } from "@/lib/api/response";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const questionId = Number(body.questionId);
-    const selectedIndex = Number(body.selectedIndex);
+    const json = await request.json();
+    const parsed = submitAnswerSchema.safeParse(json);
 
-    if (
-      isNaN(questionId) ||
-      isNaN(selectedIndex) ||
-      selectedIndex < 0 ||
-      selectedIndex >= QUIZ_CHOICES_PER_QUESTION
-    ) {
-      return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+    if (!parsed.success) {
+      return fail("Invalid parameters", 400);
     }
+
+    const { questionId, selectedIndex } = parsed.data;
 
     const question = await getQuestionById(questionId);
     if (!question) {
-      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+      return fail("Question not found", 404);
     }
 
     const isCorrect = selectedIndex === question.correctIndex;
@@ -30,16 +27,13 @@ export async function POST(request: Request) {
       isCorrect,
     });
 
-    return NextResponse.json(
-      {
-        isCorrect,
-        correctIndex: question.correctIndex,
-        explanation: question.explanation,
-      },
-      { status: 200 },
-    );
+    return ok({
+      isCorrect,
+      correctIndex: question.correctIndex,
+      explanation: question.explanation,
+    });
   } catch (error) {
     console.error("Error in POST /api/answers:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return fail("Internal server error", 500);
   }
 }

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LLM_MODEL, LLM_MAX_RETRIES, LLM_BACKOFF_BASE_MS, LLM_GEN_TEMPERATURE } from "../constants";
+import { sleep } from "../sleep";
 
 export function backoffMs(attempt: number, baseMs = LLM_BACKOFF_BASE_MS): number {
   return baseMs * 2 ** attempt + Math.floor(Math.random() * baseMs);
@@ -40,7 +41,7 @@ export async function callGemini(
         console.warn(
           `[llm] Gemini ${isRateLimit ? "rate limit" : "transient error"}: ${apiError.message} (retry ${attempt + 1}/${retries}), waiting ${waitMs}ms`,
         );
-        await new Promise((r) => setTimeout(r, waitMs));
+        await sleep(waitMs);
         continue;
       }
 

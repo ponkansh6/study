@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { LLM_MAX_PARSE_RETRIES, DEBUG_LOG_TRUNCATE_LENGTH } from "../constants";
 import { backoffMs } from "./client";
+import { sleep } from "../sleep";
 
 export async function parseWithRetry<T>(
   fetcher: () => Promise<string | null>,
@@ -30,7 +31,7 @@ export async function parseWithRetry<T>(
         text.slice(0, DEBUG_LOG_TRUNCATE_LENGTH),
       );
       if (attempt < maxParseRetries) {
-        await new Promise((r) => setTimeout(r, backoffMs(attempt)));
+        await sleep(backoffMs(attempt));
         continue;
       }
       return null;
@@ -41,7 +42,7 @@ export async function parseWithRetry<T>(
         parsed = transform(parsed);
       } catch {
         if (attempt < maxParseRetries) {
-          await new Promise((r) => setTimeout(r, backoffMs(attempt)));
+          await sleep(backoffMs(attempt));
           continue;
         }
         return null;
@@ -58,7 +59,7 @@ export async function parseWithRetry<T>(
         );
       }
       if (attempt < maxParseRetries) {
-        await new Promise((r) => setTimeout(r, backoffMs(attempt)));
+        await sleep(backoffMs(attempt));
         continue;
       }
       return null;

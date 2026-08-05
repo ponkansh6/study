@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Question } from "@/types/quiz";
+import { QuestionCard } from "@/components/QuestionCard";
+import { Button } from "@/components/Button";
+import { LoadingState } from "@/components/LoadingState";
+import { ErrorMessage } from "@/components/ErrorMessage";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -31,7 +35,7 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="py-8 space-y-6">
+    <main className="py-8 space-y-6 flex-1 flex flex-col">
       <h1 className="text-xl font-bold">問題を作成</h1>
       {!result ? (
         <div className="space-y-4">
@@ -41,48 +45,51 @@ export default function CreatePage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <button
-            onClick={handleCreate}
-            disabled={loading || !text.trim()}
-            className="w-full py-4 bg-primary text-white rounded-xl font-bold min-h-12 disabled:opacity-50"
-          >
-            {loading ? "問題を生成中..." : "この内容から1問作る"}
-          </button>
-          {loading && <p className="text-sm text-center text-text/60">数秒〜数十秒かかる場合があります</p>}
-          {error && <p className="text-error">{error}</p>}
+          {loading ? (
+            <LoadingState label="数秒〜数十秒かかる場合があります" />
+          ) : (
+            <Button
+              onClick={handleCreate}
+              disabled={!text.trim()}
+            >
+              この内容から1問作る
+            </Button>
+          )}
+          {error && <ErrorMessage message={error} />}
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="p-6 bg-border/20 rounded-xl space-y-4">
-            <h2 className="font-bold">{result.question}</h2>
-            <div className="space-y-2">
-              {result.choices.map((c: string, i: number) => (
-                <div key={i} className={`p-3 rounded-lg ${i === result.correctIndex ? "bg-success/20" : "bg-white/5"}`}>
-                  {String.fromCharCode(65 + i)}. {c}
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-text/70 italic">解説: {result.explanation}</p>
+          <div className="space-y-4">
+            <QuestionCard
+              question={result.question}
+              choices={result.choices}
+              correctIndex={result.correctIndex}
+            />
+            {result.explanation && (
+              <p className="text-sm text-text/70 italic px-2">解説: {result.explanation}</p>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-3">
-            <button
-              onClick={() => { setResult(null); setText(""); }}
-              className="py-3 bg-white/10 rounded-lg font-bold"
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResult(null);
+                setText("");
+              }}
             >
               続けてもう1問作る
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => router.push("/answer")}
-              className="py-3 bg-primary text-white rounded-lg font-bold"
             >
               問題を解きに行く
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => router.push("/")}
-              className="py-3 text-text/60 underline"
             >
               ホームへ
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,21 +1,24 @@
-import { NextResponse } from "next/server";
 import { generateQuestion } from "@/lib/llm/quiz";
 import { createKnowledgeWithQuestion } from "@/lib/db/repository/question-repository";
+import { createQuestionSchema } from "@/lib/api/schemas";
+import { ok, fail } from "@/lib/api/response";
 
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const sourceText = typeof body.sourceText === "string" ? body.sourceText.trim() : "";
+    const json = await request.json();
+    const parsed = createQuestionSchema.safeParse(json);
 
-    if (!sourceText) {
-      return NextResponse.json({ error: "sourceText is required" }, { status: 400 });
+    if (!parsed.success) {
+      return fail("sourceText is required", 400);
     }
+
+    const { sourceText } = parsed.data;
 
     const generatedQuestion = await generateQuestion(sourceText);
     if (!generatedQuestion) {
-      return NextResponse.json({ error: "Failed to generate question from LLM" }, { status: 500 });
+      return fail("Failed to generate question from LLM", 500);
     }
 
     const title = sourceText
@@ -30,7 +33,7 @@ export async function POST(request: Request) {
       question: generatedQuestion,
     });
 
-    return NextResponse.json(
+    return ok(
       {
         id: result.questionId,
         knowledgeId: result.knowledgeId,
@@ -39,10 +42,10 @@ export async function POST(request: Request) {
         correctIndex: generatedQuestion.correctIndex,
         explanation: generatedQuestion.explanation,
       },
-      { status: 201 },
+      201,
     );
   } catch (error) {
     console.error("Error in POST /api/questions:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return fail("Internal server error", 500);
   }
 }

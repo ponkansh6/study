@@ -1,33 +1,17 @@
-export interface Knowledge {
-  id: number;
-  title: string;
-  sourceText: string;
-  createdAt: Date;
-}
+import type { knowledge, questions, answerLogs } from "@/lib/db/schema";
 
-export interface Question {
+export type Knowledge = typeof knowledge.$inferSelect;
+export type Question = typeof questions.$inferSelect;
+export type AnswerLog = typeof answerLogs.$inferSelect;
+
+export interface QuizQuestion {
   id: number;
-  knowledgeId: number;
   question: string;
   choices: string[];
+}
+
+export interface AnswerResult {
+  isCorrect: boolean;
   correctIndex: number;
   explanation?: string;
-  createdAt: Date;
-}
-
-export interface AnswerLog {
-  id: number;
-  questionId: number;
-  selectedIndex: number;
-  isCorrect: boolean;
-  answeredAt: Date;
-}
-
-export interface QuestionForAnswering {
-  id: number;
-  question: string;
-  choices: string[];
-  correctIndex?: number;
-  explanation?: string;
-  isCorrect?: boolean;
 }

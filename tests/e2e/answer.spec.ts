@@ -15,7 +15,9 @@ test("answer page empty state when no questions available", async ({ page }) => 
   await expect(page.locator("text=問題作成へ")).toBeVisible();
 });
 
-test("answer page displays question, choices, score header, and handles interaction", async ({ page }) => {
+test("answer page displays question, choices, score header, and handles interaction", async ({
+  page,
+}) => {
   const sampleQuestion = {
     id: 1,
     question: "TypeScriptのデフォルトの挙動ではないものはどれか？",
@@ -49,7 +51,9 @@ test("answer page displays question, choices, score header, and handles interact
 
   // Check score header and question
   await expect(page.locator("header", { hasText: "正解 0 / 0" })).toBeVisible({ timeout: 15000 });
-  await expect(page.locator("text=TypeScriptのデフォルトの挙動ではないものはどれか？")).toBeVisible();
+  await expect(
+    page.locator("text=TypeScriptのデフォルトの挙動ではないものはどれか？"),
+  ).toBeVisible();
 
   // Check 4 choice buttons
   const choiceButtons = page.locator("main button");
@@ -60,6 +64,175 @@ test("answer page displays question, choices, score header, and handles interact
 
   // Check feedback and score update
   await expect(page.locator("header", { hasText: "正解 1 / 1" })).toBeVisible();
-  await expect(page.locator("text=解説: TypeScriptは静的型付け言語です。")).toBeVisible({ timeout: 15000 });
+  await expect(page.locator("text=解説: TypeScriptは静的型付け言語です。")).toBeVisible({
+    timeout: 15000,
+  });
   await expect(page.locator("button", { hasText: "次の問題へ" })).toBeVisible();
 });
+
+test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and correct-choice mark", async ({
+  page,
+}) => {
+  const sampleQuestion = {
+    id: 1,
+    question: "次のうちどれが誤っているか？",
+    choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+    correctIndex: 1,
+  };
+
+  const sampleAnswerResult = {
+    isCorrect: false,
+    correctIndex: 1,
+    explanation: "正解は選択肢Bです。",
+  };
+
+  await page.route("/api/questions/random*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleQuestion),
+    });
+  });
+
+  await page.route("/api/answers", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleAnswerResult),
+    });
+  });
+
+  await page.goto("/answer");
+
+  await expect(page.locator("header", { hasText: "正解 0 / 0" })).toBeVisible({ timeout: 15000 });
+  
+  const choiceButtons = page.locator("main button");
+  await expect(choiceButtons).toHaveCount(4);
+
+  // Click choice "選択肢A" (which is incorrect since correctIndex is 1, i.e., "選択肢B")
+  await page.locator("button", { hasText: "選択肢A" }).click();
+
+  // Assertions
+  await expect(page.locator("text=不正解")).toBeVisible();
+  await expect(page.locator("header", { hasText: "正解 0 / 1" })).toBeVisible();
+  await expect(page.locator("text=解説: 正解は選択肢Bです。")).toBeVisible();
+
+  // Correct choice ("選択肢B") should show ✓ mark, wrong choice ("選択肢A") should show ✗ mark
+  await expect(page.locator("button", { hasText: "選択肢B" })).toContainText("✓");
+  await expect(page.locator("button", { hasText: "選択肢A" })).toContainText("✗");
+  await expect(page.locator("button", { hasText: "次の問題へ" })).toBeVisible();
+});
+
+test("Test B: feedback does NOT disappear (no auto-refetch after grading)", async ({ page }) => {
+  const sampleQuestion = {
+    id: 1,
+    question: "リフレッシュテストの質問",
+    choices: ["A", "B", "C", "D"],
+    correctIndex: 0,
+  };
+
+  const sampleAnswerResult = {
+    isCorrect: true,
+    correctIndex: 0,
+    explanation: "正解です",
+  };
+
+  let randomCallCount = 0;
+
+  await page.route("/api/questions/random*", async (route) => {
+    randomCallCount++;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleQuestion),
+    });
+  });
+
+  await page.route("/api/answers", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleAnswerResult),
+    });
+  });
+
+  await page.goto("/answer");
+
+  await expect(page.locator("text=リフレッシュテストの質問")).toBeVisible({ timeout: 15000 });
+  expect(randomCallCount).toBe(1);
+
+  const choiceButtons = page.locator("main button");
+  await choiceButtons.nth(0).click();
+
+  // Assert "正解！" banner is visible and question text is still the same
+  await expect(page.locator("text=正解！")).toBeVisible();
+  await expect(page.locator("text=リフレッシュテストの質問")).toBeVisible();
+
+  // Wait a bit to ensure no auto-refetch happened
+  await page.waitForTimeout(1000);
+  expect(randomCallCount).toBe(1);
+
+  await expect(page.locator("button", { hasText: "次の問題へ" })).toBeVisible();
+});
+
+test("Test C: next question only loads when 次の問題へ is clicked", async ({ page }) => {
+  const question1 = {
+    id: 1,
+    question: "質問1",
+    choices: ["A1", "B1", "C1", "D1"],
+    correctIndex: 0,
+  };
+
+  const question2 = {
+    id: 2,
+    question: "質問2",
+    choices: ["A2", "B2", "C2", "D2"],
+    correctIndex: 0,
+  };
+
+  const sampleAnswerResult = {
+    isCorrect: true,
+    correctIndex: 0,
+    explanation: "解説1",
+  };
+
+  let callCount = 0;
+  await page.route("/api/questions/random*", async (route) => {
+    callCount++;
+    const q = callCount === 1 ? question1 : question2;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(q),
+    });
+  });
+
+  await page.route("/api/answers", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(sampleAnswerResult),
+    });
+  });
+
+  await page.goto("/answer");
+
+  await expect(page.locator("text=質問1")).toBeVisible({ timeout: 15000 });
+  expect(callCount).toBe(1);
+
+  const choiceButtons = page.locator("main button");
+  await choiceButtons.nth(0).click();
+
+  await expect(page.locator("text=正解！")).toBeVisible();
+  await expect(page.locator("text=質問1")).toBeVisible();
+  expect(callCount).toBe(1);
+
+  // Click "次の問題へ"
+  await page.locator("button", { hasText: "次の問題へ" }).click();
+
+  // Question 2 should appear
+  await expect(page.locator("text=質問2")).toBeVisible({ timeout: 15000 });
+  expect(callCount).toBe(2);
+});
+
+

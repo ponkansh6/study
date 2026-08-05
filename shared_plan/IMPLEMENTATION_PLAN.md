@@ -235,21 +235,22 @@ pnpm test:e2e        # chromium + Pixel 5 の両プロジェクト
 
 ### 実装フェーズ
 
-| # | フェーズ | 担当 | 状態 | 検証 |
-|---|---------|------|------|------|
-| 1 | バックエンド全面入れ替え (schema/types/constants/LLM/API/repository) | @fixer | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test exit0(5ケース) |
-| 1r | Oracleレビュー → remediation (S2/S3 5件修正) | @oracle → @fixer | ✅ 完了 | exit0 |
-| 2 | Tailwind v4 + 画面3本 (/ /create /answer) | @designer | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test exit0 / build exit0 |
-| 2r | Oracleレビュー → remediation (UI S2/S3 + lint warning) | @oracle → @fixer | ✅ 完了 | exit0 |
-| 3.1 | E2Eテスト作成 (home/create/answer) | @fixer | ✅ 完了 | test exit0 / build exit0 |
-| 3.2 | Playwright Pixel 5追加 | @fixer | ✅ 完了 | - |
-| 3.3 | spec.md全面改訂 | @fixer | ✅ 完了 | - |
-| 3.4 | 最終検証 | - | ✅ 完了 | type-check/lint/test/build 全exit0 |
-| 3r | Oracleレビュー(最終) | @oracle | ✅ 承認 | S1なし |
+| #   | フェーズ                                                             | 担当             | 状態    | 検証                                                               |
+| --- | -------------------------------------------------------------------- | ---------------- | ------- | ------------------------------------------------------------------ |
+| 1   | バックエンド全面入れ替え (schema/types/constants/LLM/API/repository) | @fixer           | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test exit0(5ケース)      |
+| 1r  | Oracleレビュー → remediation (S2/S3 5件修正)                         | @oracle → @fixer | ✅ 完了 | exit0                                                              |
+| 2   | Tailwind v4 + 画面3本 (/ /create /answer)                            | @designer        | ✅ 完了 | type-check:fast exit0 / lint:fast exit0 / test exit0 / build exit0 |
+| 2r  | Oracleレビュー → remediation (UI S2/S3 + lint warning)               | @oracle → @fixer | ✅ 完了 | exit0                                                              |
+| 3.1 | E2Eテスト作成 (home/create/answer)                                   | @fixer           | ✅ 完了 | test exit0 / build exit0                                           |
+| 3.2 | Playwright Pixel 5追加                                               | @fixer           | ✅ 完了 | -                                                                  |
+| 3.3 | spec.md全面改訂                                                      | @fixer           | ✅ 完了 | -                                                                  |
+| 3.4 | 最終検証                                                             | -                | ✅ 完了 | type-check/lint/test/build 全exit0                                 |
+| 3r  | Oracleレビュー(最終)                                                 | @oracle          | ✅ 承認 | S1なし                                                             |
 
 ### 変更ファイル一覧
 
 **削除** (旧10問モデル):
+
 - `src/app/api/quiz-sets/route.ts`
 - `src/app/api/quiz-sets/[id]/route.ts`
 - `src/app/quiz/[id]/page.tsx`, `QuizRunner.tsx`, `styles.module.css`
@@ -257,6 +258,7 @@ pnpm test:e2e        # chromium + Pixel 5 の両プロジェクト
 - `src/lib/db/repository/quiz-repository.ts`
 
 **新規** (1問エンドレスモデル):
+
 - `src/app/api/questions/route.ts` — POST 1問生成
 - `src/app/api/questions/random/route.ts` — GET 苦手優先ランダム
 - `src/app/api/answers/route.ts` — POST 正誤判定+記録
@@ -267,6 +269,7 @@ pnpm test:e2e        # chromium + Pixel 5 の両プロジェクト
 - `tests/e2e/create.spec.ts`, `tests/e2e/answer.spec.ts`
 
 **更新**:
+
 - `src/lib/db/schema.ts` — knowledge/questions/answerLogs
 - `src/types/quiz.ts` — Knowledge/Question/AnswerLog/QuestionForAnswering
 - `src/lib/llm/prompts.ts` — 1問生成プロンプト

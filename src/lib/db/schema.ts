@@ -39,9 +39,7 @@ export const answerLogs = sqliteTable(
       .notNull()
       .references(() => questions.id, { onDelete: "cascade" }),
     selectedIndex: integer("selected_index").notNull(),
-    isCorrect: integer("is_correct", { mode: "number" })
-      .notNull()
-      .$type<0 | 1>(),
+    isCorrect: integer("is_correct", { mode: "number" }).notNull().$type<0 | 1>(),
     answeredAt: integer("answered_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),

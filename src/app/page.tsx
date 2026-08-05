@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getStats } from "@/lib/db/repository/question-repository";
+import { getStats } from "@/lib/db/repository/answer-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +7,7 @@ export default async function Home() {
   const { totalQuestions, totalAnswers, overallAccuracy } = await getStats();
 
   return (
-    <main className="py-12 space-y-8">
+    <main className="py-12 space-y-8 flex-1 flex flex-col justify-center">
       <header className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Study</h1>
         <p className="text-text/70">1ナレッジ1問学習アプリ</p>
@@ -16,14 +16,16 @@ export default async function Home() {
       <section className="grid gap-4">
         <Link
           href="/create"
-          className="flex items-center justify-center p-6 bg-primary text-white rounded-xl font-bold min-h-12 hover:bg-primary-hover transition"
+          className="w-full py-3 px-6 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition bg-primary text-white hover:bg-primary-hover flex items-center justify-center"
         >
           問題を作る
         </Link>
         <Link
           href="/answer"
-          className={`flex items-center justify-center p-6 rounded-xl font-bold min-h-12 border-2 border-primary text-primary transition ${
-            totalQuestions === 0 ? "opacity-50 pointer-events-none" : "hover:bg-primary/10"
+          aria-disabled={totalQuestions === 0}
+          tabIndex={totalQuestions === 0 ? -1 : undefined}
+          className={`w-full py-3 px-6 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition border-2 border-primary text-primary hover:bg-primary/10 flex items-center justify-center ${
+            totalQuestions === 0 ? "opacity-50 pointer-events-none" : ""
           }`}
         >
           問題を解く

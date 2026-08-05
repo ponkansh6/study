@@ -15,7 +15,7 @@ async function main() {
 
   // Check existing tables
   const existing = await client.execute(
-    `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`
+    `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
   );
   console.log("Existing tables:", existing.rows.map((r) => r.name).join(", "));
 
@@ -75,7 +75,7 @@ async function main() {
 
   // Verify
   const tables = await client.execute(
-    `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`
+    `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
   );
   console.log("\nFinal tables:", tables.rows.map((r) => r.name).join(", "));
 

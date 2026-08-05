@@ -2,10 +2,11 @@
 
 ## Responsibility
 
-Source code for the Study quiz application frontend and API logic.
+Source code for the Study application frontend (Next.js App Router), API endpoints, UI components, database repositories, and LLM integrations.
 
 ## Structure
 
-- `app/` — Next.js App Router pages and API routes
-- `lib/` — Reusable utilities (database, LLM, shuffling, constants)
-- `types/` — Shared TypeScript interfaces
+- `app/` — Next.js pages (`/`, `/create`, `/answer`) and REST API routes
+- `components/` — Reusable Tailwind UI components (Button, QuestionCard, ResultBanner, ChoiceButton, etc.)
+- `lib/` — Reusable utilities, database repositories, API clients, and LLM orchestration
+- `types/` — Shared TypeScript definitions
