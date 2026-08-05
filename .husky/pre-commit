@@ -5,3 +5,4 @@ pnpm lint:fast
 pnpm exec oxfmt --write .
 pnpm exec tsgo --noEmit
 pnpm exec lint-staged
+bash scripts/check-spec-update.sh

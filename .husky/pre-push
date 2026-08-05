@@ -4,6 +4,11 @@
 MERGE_BASE=$(git merge-base --fork-point origin/main HEAD 2>/dev/null || git rev-parse HEAD)
 PUSH_FILES=$(git diff --name-only "$MERGE_BASE"...HEAD 2>/dev/null || true)
 
+# --- Spec references check (blocking) ---
+if ! bash scripts/check-spec-refs.sh; then
+  exit 1
+fi
+
 # --- Test file staleness check ---
 if echo "$PUSH_FILES" | grep -qE "^src/"; then
   if echo "$PUSH_FILES" | grep -qE "^tests/"; then
@@ -18,6 +23,36 @@ fi
 
 # --- Unit tests ---
 pnpm test:all
+
+# --- E2E tests (blocking) ---
+echo ""
+echo "Running E2E tests..."
+pnpm test:e2e
+E2E_EXIT_CODE=$?
+if [ $E2E_EXIT_CODE -ne 0 ]; then
+  echo "E2E tests failed with code $E2E_EXIT_CODE"
+  exit $E2E_EXIT_CODE
+fi
+echo "E2E tests passed!"
+
+# --- Coverage tier check (blocking) ---
+if echo "$PUSH_FILES" | grep -qE "^src/"; then
+  echo ""
+  echo "📊 Running coverage tier check (blocking)..."
+  pnpm exec vitest run --coverage
+  COVERAGE_EXIT_CODE=$?
+  if [ $COVERAGE_EXIT_CODE -ne 0 ]; then
+    echo "Coverage run failed with code $COVERAGE_EXIT_CODE"
+    exit $COVERAGE_EXIT_CODE
+  fi
+  node scripts/check-coverage-tiers.mjs
+  TIER_EXIT_CODE=$?
+  if [ $TIER_EXIT_CODE -ne 0 ]; then
+    echo "Coverage tier check failed with code $TIER_EXIT_CODE"
+    exit $TIER_EXIT_CODE
+  fi
+  echo ""
+fi
 
 # --- Production schema drift detection ---
 ENV_FILE="$(git rev-parse --show-toplevel)/.env.local"

@@ -159,6 +159,38 @@ describe("useQuizSession hook", () => {
     expect(result.current.score).toEqual({ correct: 0, total: 1 });
   });
 
+  it("7. select submit error -> error phase", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes("/api/questions/random")) {
+        return {
+          ok: true,
+          json: async () => mockQuestion,
+        };
+      }
+      if (url.includes("/api/answers")) {
+        throw new Error("Answer API error");
+      }
+      return { ok: false, status: 404 };
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useQuizSession());
+
+    await waitFor(() => {
+      expect(result.current.phase.kind).toBe("question");
+    });
+
+    await act(async () => {
+      await result.current.select(0);
+    });
+
+    expect(result.current.phase.kind).toBe("error");
+    if (result.current.phase.kind === "error") {
+      expect(result.current.phase.message).toBe("Answer API error");
+    }
+  });
+
   it("6. loadNext after graded -> loading then question with exclude param", async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url.includes("/api/questions/random")) {

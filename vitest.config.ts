@@ -9,6 +9,13 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     exclude: ["tests/e2e/**", "node_modules", ".next"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      reportsDirectory: "coverage",
+      include: ["src/**"],
+      exclude: ["src/**/codemap.md"],
+    },
   },
   resolve: {
     alias: {

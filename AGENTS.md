@@ -23,6 +23,7 @@
 - **更新ルール**:
   - コンポーネント追加/削除・データモデル変更・API変更・アーキテクチャ変更は仕様書に反映する。
   - Requirements と API セクションを実装と同期させる。
+  - 自動チェック: コミット時に spec 関連パスの変更で spec.md 未更新なら警告（`scripts/check-spec-update.sh`、non-blocking）、push 時に spec.md のファイル参照の有効性を検証（`scripts/check-spec-refs.sh`、blocking）・E2E テストを実行（blocking）・カバレッジ Tier チェックを実行（`scripts/check-coverage-tiers.mjs`、blocking。外部サービス直結で意図的にモックされるモジュールは判定対象外）。
 
 ## 実行モード
 
