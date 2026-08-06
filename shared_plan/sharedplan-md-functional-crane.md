@@ -563,3 +563,90 @@ pnpm test:e2e                          ✅ 28 passed
 - **unit 141 / 30 files、e2e 28/28、tsgo 0、lint:fast 0 件**
 - カバレッジ 6 Tier 全 PASS（Tier2b のみ 91.30 → **94.29** に向上）
 - spec.md は変更なし（`check-spec-refs.sh` は 8 件の参照を全て維持、テスト/カバレッジセクションへの影響なし）
+
+---
+
+# 第三次独立検証（2026-08-06）
+
+第三次実施結果（課題A/B/C と未コミット差分の取り込み）を実ファイルに突き合わせて検証した。HEAD = `5865b98`、tracked tree は clean（未追跡は `.claude/summaries/*.md` のみ）。
+
+## 結論
+
+第三次実施結果の 4 項目のうち、**課題A と `51e57d7` は記載どおり**。**課題B・課題C は達成しているが、記述に誤り／未記載の副作用が計 3 件**ある。
+
+| 項目                        | 判定 | 要点                                                          |
+| --------------------------- | ---- | ------------------------------------------------------------- |
+| 課題A（回帰防護 1→3 本）    | ✅   | 記載どおり。実効 3 本・偽陽性なしを 11 ケース個別に確認        |
+| 課題B（`request()` 統合）   | ⚠️   | 統合は達成。ただし `as` cast による型安全の穴を 2 箇所新設     |
+| 課題C（ESLint 撤去）        | ⚠️   | 撤去は完全。ただし :545 の「残置理由」の記述が事実と異なる     |
+| `51e57d7`（未コミット差分） | ✅   | 記載どおり。全て committed・clean                             |
+
+## 課題A — ✅ 記載どおり
+
+`tests/api/client.test.ts` の全 11 ケース（`it` 9 個 + `it.each` 2 行）を旧バグ順 `customErrorMsg ?? (await readErrorMessage(res))` に戻した場合に赤くなるかを個別判定した。
+
+- `customErrorMsg` を渡すのは `createQuestion` のみ（`client.ts:110`）。他 7 ケースは構造上バグを検出し得ない。
+- `:77`（非 JSON → `生成に失敗しました`）は `readErrorMessage` が `null` を返すため両実装で同結果 = 検出せず。
+- **検出 3 本**: `:67`（body `サーバで問題が発生しました`）、`:84` の 2 行（`データベースエラーが発生しました` / `LLM の応答が不正です`）。
+- 3 本の body 文言は全て fallback `生成に失敗しました` と別文字列で、`rejects.toThrow(string)` の部分一致でも取り違えなし → 偽陽性なしの主張も正しい。
+
+「1 本 → 3 本」は正確。139 + 2 = 141 も算術的に整合。
+
+## 課題B — ⚠️ 統合は達成、ただし未記載の型安全リグレッション
+
+達成確認点（実ファイル一致）:
+
+- `fetchRandomQuestion`（`client.ts:73-82`）は `request()` 経由。手書きのエラー処理・パース・schema 検証は消滅。
+- `RequestOptions { customErrorMsg?, allowNotFound? }` は `client.ts:27`。404→null は `client.ts:49-51` で `!res.ok` 判定より前に処理し旧セマンティクスを保持。
+- 優先順位 `readErrorMessage(res) ?? options?.customErrorMsg ?? fallback` は `client.ts:54` に維持。
+- `"Unexpected response"` / `"Invalid response schema"` は `src/` から消滅。
+- `fetch("/api...)` の直接呼び出しは `client.ts:48`（`request()` 内部）の 1 箇所のみ。3/3 ラッパーが `request()` 経由。
+
+**未記載の問題（主要な発見）**: `request<T>` の戻り値が `Promise<T>` → `Promise<T | null>` に広がった（`client.ts:47`）。`null` を返し得るのは `allowNotFound: true` の時だけなのに、型は全呼び出し元に `| null` を伝播させる。その結果、非 null の 2 呼び出し元が **本コミットで新設された unsound な cast** で握り潰している:
+
+```ts
+client.ts:97   return (await request(...)) as AnswerResult;
+client.ts:111  return (await request(...)) as CreatedQuestion;
+```
+
+このコミット以前は存在しなかった型の穴で、「`src/` の `any` 0 hit」を成果として掲げてきた本計画の方針と不整合。`as` は `any` と違い tsgo にも oxlint にも掛からず、どのゲートも検出しない。
+
+## 課題C — ⚠️ 撤去は完全、ただし :545 の記述が誤り
+
+撤去の機械的完全性（確認済み）:
+- `eslint.config.mjs` 不在（tracked にも disk にもなし）
+- `package.json` に `lint` スクリプトなし。残るのは `lint:fast` / `format:fast` / `security-check`
+- devDependencies に `eslint*` が 0 件
+- `pnpm-lock.yaml` の `eslint` grep が完全に 0 hit
+- `lint-staged.config.js` は `vitest related --passWithNoTests` のみの 3 行
+- `openspec/config.yaml:13` は `Oxlint, Oxfmt, Prettier`、`.gitignore` から `.eslintcache` 削除済み
+- CI・husky は `lint:fast` のみで実行経路の破壊ゼロ
+
+**誤りが 1 件（:545）**: 「`use-quiz-session.ts:90` の `// eslint-disable-next-line react-hooks/set-state-in-effect` は oxlint が eslint-disable ディレクティブを解釈するため残置」という記述は、このディレクティブが**何も抑制していない no-op** である点で誤り。
+
+- oxlint 1.76 に `react-hooks/set-state-in-effect` というルールは存在しない（native の react-hooks ルールは `exhaustive-deps` と `rules-of-hooks` の 2 つのみ。setState-in-effect の検査は react-compiler crate 内にあり lint ルールとして未露出）。
+- `lint:fast` は `--react-hooks-plugin` を有効化していない。
+- repo に oxlint 設定ファイル（`.oxlintrc.json` 等）は存在しない。
+- 実証: `oxlint <same flags> --report-unused-disable-directives src/app/answer/use-quiz-session.ts` → `90:5: warning: Unused eslint-disable directive (no problems were reported).`
+
+「`lint:fast` 0 件で確認済み」という根拠も無効。`--report-unused-disable-directives` が付いていないので、0 件は「他に何も出ていない」ことしか示さない。
+
+**加えて `d5b6cab` が取りこぼしたドキュメント**:
+- `README.md:20` — `- **Tooling**: pnpm, ESLint, Prettier`
+- `IMPLEMENTATION.md:10, 32, 89, 255` — `eslint.config.mjs` を現存ファイルとして記載、構成表にも ESLint
+- `openspec/specs/study/spec.md` には eslint 参照なし（spec 側は無傷）
+
+## `51e57d7`（未コミット差分の取り込み）— ✅ 記載どおり
+
+- `next-env.d.ts:3-4` が `./.next/dev/types/routes.d.ts` と `./.next/dev/types/root-params.d.ts` を import
+- `AGENTS.md:32-40` に `<!-- BEGIN:nextjs-agent-rules -->` ブロック
+- 3 ファイルとも committed・clean
+
+## 是正方針
+
+下記 1〜3 を実施する:
+1. `request()` の戻り値型を overload で健全化（`as` cast 2 箇所を削除）
+2. dead な eslint-disable ディレクティブを平文コメント化
+3. ドキュメント（README / IMPLEMENTATION）の ESLint 記述を除去
+
+実施後にゲート実測値を追記する。
