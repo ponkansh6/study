@@ -14,7 +14,7 @@
     "test:all": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint --cache",
-    "lint:fast": "oxlint --ignore-pattern 'tests/**' --nextjs-plugin --react-plugin --react-perf-plugin",
+    "lint:fast": "oxlint --nextjs-plugin --react-plugin --react-perf-plugin",
     "format:fast": "oxfmt --write .",
     "type-check": "tsc --noEmit",
     "type-check:fast": "tsgo --noEmit",
