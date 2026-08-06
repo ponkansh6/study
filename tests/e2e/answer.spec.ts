@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { makeQuestion } from "../fixtures/question";
+import { makeAnswerResult } from "../fixtures/answer";
 
 test("answer page empty state when no questions available", async ({ page }) => {
   await page.route("/api/questions/random*", async (route) => {
@@ -18,18 +20,16 @@ test("answer page empty state when no questions available", async ({ page }) => 
 test("answer page displays question, choices, score header, and handles interaction", async ({
   page,
 }) => {
-  const sampleQuestion = {
-    id: 1,
+  const sampleQuestion = makeQuestion({
     question: "TypeScriptのデフォルトの挙動ではないものはどれか？",
     choices: ["静的型付け", "動的型付け", "型推論", "オプショナルチェイニング"],
-    correctIndex: 1,
-  };
+  });
 
-  const sampleAnswerResult = {
+  const sampleAnswerResult = makeAnswerResult({
     isCorrect: true,
     correctIndex: 1,
     explanation: "TypeScriptは静的型付け言語です。",
-  };
+  });
 
   await page.route("/api/questions/random*", async (route) => {
     await route.fulfill({
@@ -73,18 +73,16 @@ test("answer page displays question, choices, score header, and handles interact
 test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and correct-choice mark", async ({
   page,
 }) => {
-  const sampleQuestion = {
-    id: 1,
+  const sampleQuestion = makeQuestion({
     question: "次のうちどれが誤っているか？",
     choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
-    correctIndex: 1,
-  };
+  });
 
-  const sampleAnswerResult = {
+  const sampleAnswerResult = makeAnswerResult({
     isCorrect: false,
     correctIndex: 1,
     explanation: "正解は選択肢Bです。",
-  };
+  });
 
   await page.route("/api/questions/random*", async (route) => {
     await route.fulfill({
@@ -124,18 +122,16 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
 });
 
 test("Test B: feedback does NOT disappear (no auto-refetch after grading)", async ({ page }) => {
-  const sampleQuestion = {
-    id: 1,
+  const sampleQuestion = makeQuestion({
     question: "リフレッシュテストの質問",
     choices: ["A", "B", "C", "D"],
-    correctIndex: 0,
-  };
+  });
 
-  const sampleAnswerResult = {
+  const sampleAnswerResult = makeAnswerResult({
     isCorrect: true,
     correctIndex: 0,
     explanation: "正解です",
-  };
+  });
 
   let randomCallCount = 0;
 
@@ -176,25 +172,23 @@ test("Test B: feedback does NOT disappear (no auto-refetch after grading)", asyn
 });
 
 test("Test C: next question only loads when 次の問題へ is clicked", async ({ page }) => {
-  const question1 = {
+  const question1 = makeQuestion({
     id: 1,
     question: "質問1",
     choices: ["A1", "B1", "C1", "D1"],
-    correctIndex: 0,
-  };
+  });
 
-  const question2 = {
+  const question2 = makeQuestion({
     id: 2,
     question: "質問2",
     choices: ["A2", "B2", "C2", "D2"],
-    correctIndex: 0,
-  };
+  });
 
-  const sampleAnswerResult = {
+  const sampleAnswerResult = makeAnswerResult({
     isCorrect: true,
     correctIndex: 0,
     explanation: "解説1",
-  };
+  });
 
   let callCount = 0;
   await page.route("/api/questions/random*", async (route) => {
@@ -236,12 +230,10 @@ test("Test C: next question only loads when 次の問題へ is clicked", async (
 });
 
 test("Test D: submitting state shows busy button and disables others", async ({ page }) => {
-  const sampleQuestion = {
-    id: 1,
+  const sampleQuestion = makeQuestion({
     question: "サブミッティングテストの質問",
     choices: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
-    correctIndex: 0,
-  };
+  });
 
   await page.route("/api/questions/random*", async (route) => {
     await route.fulfill({
@@ -282,19 +274,17 @@ test("Test D: submitting state shows busy button and disables others", async ({ 
 });
 
 test("Test E: 次の問題へ shows loading and prevents double-fetch", async ({ page }) => {
-  const question1 = {
+  const question1 = makeQuestion({
     id: 1,
     question: "質問1",
     choices: ["A1", "B1", "C1", "D1"],
-    correctIndex: 0,
-  };
-  const question2 = {
+  });
+  const question2 = makeQuestion({
     id: 2,
     question: "質問2",
     choices: ["A2", "B2", "C2", "D2"],
-    correctIndex: 0,
-  };
-  const sampleAnswerResult = { isCorrect: true, correctIndex: 0, explanation: "解説1" };
+  });
+  const sampleAnswerResult = makeAnswerResult({ isCorrect: true, correctIndex: 0, explanation: "解説1" });
 
   let randomCallCount = 0;
   await page.route("/api/questions/random*", async (route) => {
@@ -333,12 +323,10 @@ test("Test E: 次の問題へ shows loading and prevents double-fetch", async ({
 });
 
 test("Test F: 再試行 shows loading and prevents double-fetch", async ({ page }) => {
-  const sampleQuestion = {
-    id: 1,
+  const sampleQuestion = makeQuestion({
     question: "再試行テストの質問",
     choices: ["A", "B", "C", "D"],
-    correctIndex: 0,
-  };
+  });
 
   let randomCallCount = 0;
   await page.route("/api/questions/random*", async (route) => {

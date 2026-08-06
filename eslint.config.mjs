@@ -29,7 +29,6 @@ const eslintConfig = defineConfig([
     // Project assets
     "public/**",
     "scripts/**",
-    "tests/**",
 
     // Config and data files
     "*.json",

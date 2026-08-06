@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { backoffMs, callGemini } from "@/lib/llm/client";
+import { setEnv } from "../helpers/env";
 
 const mockGenerateContent = vi.fn();
 const mockGetGenerativeModel = vi.fn(() => ({
@@ -21,27 +22,15 @@ vi.mock("@/lib/sleep", () => ({
 }));
 
 describe("llm/client", () => {
-  const originalEnv = (
-    globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }
-  ).process?.env?.GOOGLE_API_KEY;
+  const originalEnv = process.env.GOOGLE_API_KEY;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const proc = (
-      globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }
-    ).process;
-    if (proc?.env) {
-      proc.env.GOOGLE_API_KEY = "test-api-key";
-    }
+    setEnv("GOOGLE_API_KEY", "test-api-key");
   });
 
   afterEach(() => {
-    const proc = (
-      globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }
-    ).process;
-    if (proc?.env) {
-      proc.env.GOOGLE_API_KEY = originalEnv;
-    }
+    setEnv("GOOGLE_API_KEY", originalEnv);
   });
 
   describe("backoffMs", () => {
@@ -58,12 +47,7 @@ describe("llm/client", () => {
 
   describe("callGemini", () => {
     it("1. GOOGLE_API_KEY unset -> throws error", async () => {
-      const proc = (
-        globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }
-      ).process;
-      if (proc?.env) {
-        delete proc.env.GOOGLE_API_KEY;
-      }
+      setEnv("GOOGLE_API_KEY", undefined);
       await expect(callGemini("prompt", 100, 1000)).rejects.toThrow(
         "GOOGLE_API_KEY environment variable is not set",
       );

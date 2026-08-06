@@ -14,11 +14,8 @@ describe("GET /api/questions/random", () => {
   it("1. Normal: pickWeightedRandomQuestion resolves a question -> status 200 and body matches", async () => {
     const mockQuestion = {
       id: 1,
-      knowledgeId: 10,
       question: "What is TypeScript?",
       choices: ["A", "B", "C", "D"],
-      correctIndex: 0,
-      explanation: "Typed superset",
     };
     vi.mocked(pickWeightedRandomQuestion).mockResolvedValueOnce(mockQuestion);
 
@@ -45,11 +42,8 @@ describe("GET /api/questions/random", () => {
   it("3. exclude query param parsing: valid numbers >0 -> passed to repo", async () => {
     vi.mocked(pickWeightedRandomQuestion).mockResolvedValueOnce({
       id: 2,
-      knowledgeId: 11,
       question: "Q",
       choices: ["1", "2", "3", "4"],
-      correctIndex: 0,
-      explanation: "E",
     });
 
     const request = new Request("http://localhost/api/questions/random?exclude=1,2");
@@ -61,11 +55,8 @@ describe("GET /api/questions/random", () => {
   it("4. exclude query param parsing: filters out non-numbers, negative, or zero -> parsed correctly", async () => {
     vi.mocked(pickWeightedRandomQuestion).mockResolvedValueOnce({
       id: 2,
-      knowledgeId: 11,
       question: "Q",
       choices: ["1", "2", "3", "4"],
-      correctIndex: 0,
-      explanation: "E",
     });
 
     const request = new Request("http://localhost/api/questions/random?exclude=abc,3,-1,0");
