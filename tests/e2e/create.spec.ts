@@ -18,6 +18,7 @@ test("create page form submission and post-creation navigation", async ({ page }
         contentType: "application/json",
         body: JSON.stringify({
           id: 1,
+          knowledgeId: 1,
           question: "テスト問題です。",
           choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
           correctIndex: 0,
@@ -78,6 +79,7 @@ test("create page shows loading feedback on the button during generation", async
         contentType: "application/json",
         body: JSON.stringify({
           id: 1,
+          knowledgeId: 1,
           question: "テスト問題です。",
           choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
           correctIndex: 0,

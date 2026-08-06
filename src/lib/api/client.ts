@@ -24,23 +24,29 @@ export const createdQuestionSchema = z.object({
 
 export type CreatedQuestion = z.infer<typeof createdQuestionSchema>;
 
+async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const json = await res.json();
+    if (json && typeof json === "object" && "error" in json && typeof json.error === "string") {
+      return json.error;
+    }
+  } catch {
+    // non-JSON body, fall back
+  }
+  return fallback;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit | undefined,
   label: string,
   schema: z.ZodType<T>,
+  customErrorMsg?: string,
 ): Promise<T> {
   const res = await fetch(path, init);
   if (!res.ok) {
-    let errorMsg = `Failed to ${label}: status ${res.status}`;
-    try {
-      const json = await res.json();
-      if (json && typeof json === "object" && "error" in json && typeof json.error === "string") {
-        errorMsg = json.error;
-      }
-    } catch {
-      // non-JSON body, fallback to status
-    }
+    const fallback = `Failed to ${label}: status ${res.status}`;
+    const errorMsg = customErrorMsg ?? (await readErrorMessage(res, fallback));
     throw new Error(errorMsg);
   }
 
@@ -66,15 +72,8 @@ export async function fetchRandomQuestion(excludeIds: number[]): Promise<QuizQue
     return null;
   }
   if (!res.ok) {
-    let errorMsg = `Failed to fetch random question: status ${res.status}`;
-    try {
-      const json = await res.json();
-      if (json && typeof json === "object" && "error" in json && typeof json.error === "string") {
-        errorMsg = json.error;
-      }
-    } catch {
-      // ignore
-    }
+    const fallback = `Failed to fetch random question: status ${res.status}`;
+    const errorMsg = await readErrorMessage(res, fallback);
     throw new Error(errorMsg);
   }
 
@@ -109,28 +108,15 @@ export async function submitAnswer(
 }
 
 export async function createQuestion(sourceText: string): Promise<CreatedQuestion> {
-  const res = await fetch("/api/questions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sourceText }),
-  });
-  if (!res.ok) {
-    throw new Error("生成に失敗しました");
-  }
-
-  let data: any;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error("生成に失敗しました");
-  }
-
-  return {
-    id: data.id,
-    knowledgeId: data.knowledgeId,
-    question: data.question,
-    choices: data.choices,
-    correctIndex: data.correctIndex,
-    explanation: data.explanation ?? null,
-  };
+  return request(
+    "/api/questions",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sourceText }),
+    },
+    "create question",
+    createdQuestionSchema,
+    "生成に失敗しました",
+  );
 }

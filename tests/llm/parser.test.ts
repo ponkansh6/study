@@ -91,10 +91,12 @@ describe("parseWithRetry", () => {
   });
 
   it("10. Re-throws error if GOOGLE_API_KEY error occurs", async () => {
-    const fetcher = vi.fn().mockRejectedValueOnce(new Error("GOOGLE_API_KEY environment variable is not set"));
+    const fetcher = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("GOOGLE_API_KEY environment variable is not set"));
 
     await expect(parseWithRetry(fetcher, schema, "test-context")).rejects.toThrow(
-      "GOOGLE_API_KEY environment variable is not set"
+      "GOOGLE_API_KEY environment variable is not set",
     );
   });
 });
