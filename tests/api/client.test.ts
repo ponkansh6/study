@@ -1,11 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { fetchRandomQuestion, submitAnswer, createQuestion } from "@/lib/api/client";
 
 describe("api client", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("fetchRandomQuestion returns null on 404", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response(null, { status: 404 }));
     const result = await fetchRandomQuestion([1]);
@@ -24,7 +20,9 @@ describe("api client", () => {
 
   it("fetchRandomQuestion throws fallback message on non-JSON non-ok", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }));
-    await expect(fetchRandomQuestion([])).rejects.toThrow();
+    await expect(fetchRandomQuestion([])).rejects.toThrow(
+      "Failed to fetch random question: status 502",
+    );
   });
 
   it("fetchRandomQuestion returns QuizQuestion on success", async () => {
@@ -51,12 +49,34 @@ describe("api client", () => {
     expect(result).toEqual(ans);
   });
 
-  it("createQuestion throws error body message on failure", async () => {
+  it("submitAnswer throws error body message on failure", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: "生成に失敗しました" }), {
+      new Response(JSON.stringify({ error: "回答の保存に失敗しました" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       }),
+    );
+    await expect(submitAnswer(1, 0)).rejects.toThrow("回答の保存に失敗しました");
+  });
+
+  it("submitAnswer throws fallback message on non-JSON non-ok", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }));
+    await expect(submitAnswer(1, 0)).rejects.toThrow("Failed to submit answer: status 502");
+  });
+
+  it("createQuestion throws error body message on failure", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "サーバで問題が発生しました" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(createQuestion("test")).rejects.toThrow("サーバで問題が発生しました");
+  });
+
+  it("createQuestion uses customErrorMsg fallback when body has no error", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response("Internal Server Error", { status: 500 }),
     );
     await expect(createQuestion("test")).rejects.toThrow("生成に失敗しました");
   });

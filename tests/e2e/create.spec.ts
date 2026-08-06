@@ -67,7 +67,7 @@ test("create page error handling when API returns error", async ({ page }) => {
   await page.locator("textarea").fill("エラーテスト用ナレッジ");
   await page.locator("button", { hasText: "この内容から1問作る" }).click();
 
-  await expect(page.locator("text=生成に失敗しました")).toBeVisible();
+  await expect(page.locator("text=Server error")).toBeVisible();
 });
 
 test("create page shows loading feedback on the button during generation", async ({ page }) => {
