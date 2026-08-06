@@ -1,42 +1,30 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { QuestionCard } from "@/components/QuestionCard";
 
 describe("QuestionCard", () => {
   const choices = ["Choice A", "Choice B", "Choice C", "Choice D"];
 
-  it("renders question and choices as divs when onSelect is not provided", () => {
-    render(
-      <QuestionCard question="What is 2+2?" choices={choices} correctIndex={1} selectedIndex={1} />,
-    );
+  it("renders question and choices as divs (no interactive elements)", () => {
+    render(<QuestionCard question="What is 2+2?" choices={choices} correctIndex={1} />);
     expect(screen.getByText("What is 2+2?")).toBeInTheDocument();
     expect(screen.getByText("Choice A")).toBeInTheDocument();
     expect(screen.getByText("Choice B")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("renders choices as interactive buttons when onSelect is provided", () => {
-    const handleSelect = vi.fn();
-    render(<QuestionCard question="What is 2+2?" choices={choices} onSelect={handleSelect} />);
-    const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(4);
-
-    fireEvent.click(buttons[2]);
-    expect(handleSelect).toHaveBeenCalledWith(2);
+  it("highlights the correct choice and not the others", () => {
+    render(<QuestionCard question="What is 2+2?" choices={choices} correctIndex={1} />);
+    const choiceEls = choices.map((c) => screen.getByText(c).parentElement!);
+    expect(choiceEls[1].className).toContain("bg-success/20");
+    expect(choiceEls[0].className).not.toContain("bg-success/20");
+    expect(choiceEls[2].className).not.toContain("bg-success/20");
+    expect(choiceEls[3].className).not.toContain("bg-success/20");
   });
 
-  it("disables buttons when disabled or selectedIndex is present", () => {
-    render(
-      <QuestionCard
-        question="What is 2+2?"
-        choices={choices}
-        selectedIndex={0}
-        onSelect={() => {}}
-      />,
-    );
-    const buttons = screen.getAllByRole("button");
-    buttons.forEach((btn) => {
-      expect(btn).toBeDisabled();
-    });
+  it("renders without highlighting when correctIndex is undefined", () => {
+    render(<QuestionCard question="What is 2+2?" choices={choices} />);
+    const choiceEls = choices.map((c) => screen.getByText(c).parentElement!);
+    choiceEls.forEach((el) => expect(el.className).not.toContain("bg-success/20"));
   });
 });

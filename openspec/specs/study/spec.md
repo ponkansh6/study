@@ -7,7 +7,9 @@ Study is a Next.js application that transforms knowledge text into interactive 4
 ## Data Model
 
 ```typescript
-// Database (Drizzle ORM / Turso)
+// Database tables (Drizzle ORM / Turso) — shapes defined in src/lib/db/schema.ts.
+// These are server-side table rows, not client-facing types (client types live
+// in src/types/quiz.ts: Question, QuizQuestion, AnswerResult).
 interface Knowledge {
   id: number;
   title: string;
@@ -102,9 +104,9 @@ interface AnswerLog {
 - Navigation links to `/create` and `/answer`
 - Shared header via `src/app/layout.tsx`
 
-### 2. `/create` (Create - `src/app/create/page.tsx`)
+### 2. `/create` (Create - `src/app/create/page.tsx`, `src/app/create/create-form.tsx`)
 
-- Client component with textarea input for knowledge text
+- Server component shell (`page.tsx`) rendering a `"use client"` form component (`create-form.tsx`) with textarea input for knowledge text
 - Submits text via API client, generates 1 question, displays result with correct answer highlighted and links to continue
 
 ### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`, `src/app/answer/choice-state.ts`)
@@ -116,14 +118,18 @@ interface AnswerLog {
 
 ### 4. Common UI Components (`src/components/`)
 
-- `Button.tsx`: Unified button styles
-- `QuestionCard.tsx`: Question container card
+- `Button.tsx`: Unified button styles with shared `buttonBaseClasses` / `buttonVariants` exported for reuse by `NavLink`
+- `NavLink.tsx`: Link wrapper applying the `Button` design system (via `buttonVariants`) plus `useLinkStatus` pending feedback
+- `Spinner.tsx`: Shared loading spinner (sizes `sm`/`lg`, colors `current`/`primary`) used by `Button`, `ChoiceButton`, and `LoadingState`
+- `QuestionCard.tsx`: Display-only question container card (correct answer highlighting via `correctIndex`; no interactive props)
 - `ResultBanner.tsx`: Correct/incorrect feedback banner
 - `ChoiceButton.tsx`: Choice selection button with state highlights
 - `EmptyState.tsx`: Empty state display
-- `LoadingState.tsx`: Loading spinner/state
+- `LoadingState.tsx`: Loading spinner/state (renders `Spinner`)
 - `ErrorMessage.tsx`: Error display banner
 - `src/lib/choice-label.ts`: Choice label formatter (A/B/C/D)
+- `src/lib/cn.ts`: Class name combiner used across UI components
+- `src/lib/error-message.ts`: `errorMessage()` helper converting unknown errors to user-facing messages
 
 ## LLM Integration
 

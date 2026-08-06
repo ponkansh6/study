@@ -73,7 +73,10 @@ describe("QuizRunner", () => {
         kind: "question",
         quiz: {
           question: basePhase,
-          shuffled: { choices: ["Paris", "London", "Berlin", "Madrid"], choiceIndices: [0, 1, 2, 3] },
+          shuffled: {
+            choices: ["Paris", "London", "Berlin", "Madrid"],
+            choiceIndices: [0, 1, 2, 3],
+          },
         },
       },
       score: { correct: 0, total: 0 },
@@ -99,7 +102,10 @@ describe("QuizRunner", () => {
         selectedIndex: 1,
         quiz: {
           question: basePhase,
-          shuffled: { choices: ["Paris", "London", "Berlin", "Madrid"], choiceIndices: [0, 1, 2, 3] },
+          shuffled: {
+            choices: ["Paris", "London", "Berlin", "Madrid"],
+            choiceIndices: [0, 1, 2, 3],
+          },
         },
       },
       score: { correct: 0, total: 0 },
@@ -124,7 +130,10 @@ describe("QuizRunner", () => {
         result: { isCorrect: true, correctIndex: 0, explanation: "Paris is the capital." },
         quiz: {
           question: basePhase,
-          shuffled: { choices: ["Paris", "London", "Berlin", "Madrid"], choiceIndices: [0, 1, 2, 3] },
+          shuffled: {
+            choices: ["Paris", "London", "Berlin", "Madrid"],
+            choiceIndices: [0, 1, 2, 3],
+          },
         },
       },
       score: { correct: 1, total: 1 },
@@ -148,7 +157,10 @@ describe("QuizRunner", () => {
         result: { isCorrect: false, correctIndex: 1, explanation: null },
         quiz: {
           question: basePhase,
-          shuffled: { choices: ["Paris", "London", "Berlin", "Madrid"], choiceIndices: [0, 1, 2, 3] },
+          shuffled: {
+            choices: ["Paris", "London", "Berlin", "Madrid"],
+            choiceIndices: [0, 1, 2, 3],
+          },
         },
       },
       score: { correct: 0, total: 1 },

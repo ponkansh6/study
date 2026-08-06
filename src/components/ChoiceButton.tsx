@@ -1,3 +1,5 @@
+import { Spinner } from "@/components/Spinner";
+
 type ChoiceVariant = "idle" | "correct" | "selectedWrong" | "muted" | "selected";
 
 interface ChoiceButtonProps {
@@ -42,9 +44,7 @@ export default function ChoiceButton({
       <span className="break-words">{text}</span>
       {variant === "correct" && <span className="ml-auto">✓</span>}
       {variant === "selectedWrong" && <span className="ml-auto">✗</span>}
-      {variant === "selected" && (
-        <span className="ml-auto w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      )}
+      {variant === "selected" && <Spinner color="primary" className="ml-auto" />}
     </button>
   );
 }

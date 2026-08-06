@@ -2,15 +2,30 @@
 
 import Link, { useLinkStatus } from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { cn } from "@/lib/cn";
+import { buttonBaseClasses, buttonVariants } from "@/components/Button";
 
 type NavLinkProps = Omit<ComponentProps<typeof Link>, "children"> & {
   pendingClassName?: string;
+  /** Mirrors `Button`'s visual variants so links share the design system. */
+  variant?: keyof typeof buttonVariants;
   children: ReactNode;
 };
 
-export function NavLink({ href, pendingClassName, className, children, ...rest }: NavLinkProps) {
+export function NavLink({
+  href,
+  pendingClassName,
+  className,
+  variant = "primary",
+  children,
+  ...rest
+}: NavLinkProps) {
   return (
-    <Link href={href} className={className} {...rest}>
+    <Link
+      href={href}
+      className={cn(buttonBaseClasses, buttonVariants[variant], className)}
+      {...rest}
+    >
       <PendingState pendingClassName={pendingClassName}>{children}</PendingState>
     </Link>
   );
@@ -25,11 +40,7 @@ function PendingState({
 }) {
   const { pending } = useLinkStatus();
   return (
-    <span
-      className={["inline-flex items-center justify-center gap-2", pending && pendingClassName]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <span className={cn("inline-flex items-center justify-center gap-2", pending && pendingClassName)}>
       {children}
     </span>
   );

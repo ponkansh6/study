@@ -1,8 +1,6 @@
-import type { knowledge, questions, answerLogs } from "@/lib/db/schema";
+import type { questions } from "@/lib/db/schema";
 
-export type Knowledge = typeof knowledge.$inferSelect;
 export type Question = typeof questions.$inferSelect;
-export type AnswerLog = typeof answerLogs.$inferSelect;
 
 export interface QuizQuestion {
   id: number;

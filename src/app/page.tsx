@@ -14,20 +14,15 @@ export default async function Home() {
       </header>
 
       <section className="grid gap-4">
-        <NavLink
-          href="/create"
-          className="w-full py-3 px-6 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition bg-primary text-white hover:bg-primary-hover flex items-center justify-center motion-safe:active:scale-[0.98]"
-          pendingClassName="opacity-60"
-        >
+        <NavLink href="/create" pendingClassName="opacity-60">
           問題を作る
         </NavLink>
         <NavLink
           href="/answer"
+          variant="outline"
           aria-disabled={totalQuestions === 0}
           tabIndex={totalQuestions === 0 ? -1 : undefined}
-          className={`w-full py-3 px-6 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition border-2 border-primary text-primary hover:bg-primary/10 flex items-center justify-center motion-safe:active:scale-[0.98] ${
-            totalQuestions === 0 ? "opacity-50 pointer-events-none" : ""
-          }`}
+          className={totalQuestions === 0 ? "opacity-50 pointer-events-none" : undefined}
           pendingClassName="opacity-60"
         >
           問題を解く

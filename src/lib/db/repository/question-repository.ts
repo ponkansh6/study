@@ -71,22 +71,32 @@ export async function getQuestionById(id: number): Promise<Question | null> {
 export async function pickWeightedRandomQuestion(
   excludeIds: number[] = [],
 ): Promise<QuizQuestion | null> {
-  const allQuestions = await db.select().from(questions);
-  if (allQuestions.length === 0) return null;
-
-  const statsRows = await db
-    .select({
-      questionId: answerLogs.questionId,
-      totalAnswers: count(answerLogs.id),
-      incorrectAnswers: sql<number>`sum(case when ${answerLogs.isCorrect} = 0 then 1 else 0 end)`,
-      latestIsCorrect: sql<number>`(
+  // Project only the columns the picker needs instead of pulling every row ×
+  // every column (question text + choices JSON + explanation) from Turso.
+  // The stats query is independent, so run both in parallel.
+  const [allQuestions, statsRows] = await Promise.all([
+    db
+      .select({
+        id: questions.id,
+        question: questions.question,
+        choices: questions.choices,
+      })
+      .from(questions),
+    db
+      .select({
+        questionId: answerLogs.questionId,
+        totalAnswers: count(answerLogs.id),
+        incorrectAnswers: sql<number>`sum(case when ${answerLogs.isCorrect} = 0 then 1 else 0 end)`,
+        latestIsCorrect: sql<number>`(
         SELECT l2.is_correct FROM answer_logs AS l2
         WHERE l2.question_id = ${answerLogs.questionId}
         ORDER BY l2.answered_at DESC LIMIT 1
       )`,
-    })
-    .from(answerLogs)
-    .groupBy(answerLogs.questionId);
+      })
+      .from(answerLogs)
+      .groupBy(answerLogs.questionId),
+  ]);
+  if (allQuestions.length === 0) return null;
 
   const statsMap = new Map<
     number,
