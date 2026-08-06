@@ -662,13 +662,13 @@ client.ts:111  return (await request(...)) as CreatedQuestion;
 
 ## 完了コミット一覧
 
-| コミット  | 内容                                                                                                                                  | 検証                                             |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `94e4657` | 第三次独立検証セクションの追記（検証結果の記録）                                                                                       | —                                                |
-| `4e17464` | 型是正: `request()` を overload 化し `as AnswerResult` / `as CreatedQuestion` を削除                                                  | tsgo 0 / 141 unit / 全 Tier PASS                 |
-| `3e691b9` | ディレクティブ: dead な eslint-disable を平文コメント化                                                                               | lint:fast 0 件（unused-disable 警告ゼロ）        |
-| `cc567ef` | ドキュメント: README / IMPLEMENTATION の ESLint・`eslint.config.mjs` 記述を除去                                                       | —                                                |
-| `(追記コミット)` | 本セクション（第三次独立検証の是正）の追記                                                                                             | —                                                |
+| コミット         | 内容                                                                                 | 検証                                      |
+| ---------------- | ------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `94e4657`        | 第三次独立検証セクションの追記（検証結果の記録）                                     | —                                         |
+| `4e17464`        | 型是正: `request()` を overload 化し `as AnswerResult` / `as CreatedQuestion` を削除 | tsgo 0 / 141 unit / 全 Tier PASS          |
+| `3e691b9`        | ディレクティブ: dead な eslint-disable を平文コメント化                              | lint:fast 0 件（unused-disable 警告ゼロ） |
+| `cc567ef`        | ドキュメント: README / IMPLEMENTATION の ESLint・`eslint.config.mjs` 記述を除去      | —                                         |
+| `f371364` | 本セクション（第三次独立検証の是正）の追記                                                                                             | —                                                |
 
 ## 是正の要点
 
