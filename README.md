@@ -17,7 +17,7 @@ A Next.js 16 application that transforms knowledge text into interactive 4-choic
 - **LLM**: Google Gemini API (`gemini-3.1-flash-lite`)
 - **UI**: React 19, Tailwind CSS v4
 - **Testing**: Vitest, Playwright
-- **Tooling**: pnpm, ESLint, Prettier
+- **Tooling**: pnpm, Oxlint, Prettier
 
 ## Getting Started
 

@@ -7,7 +7,7 @@
 
 Study quiz generator project created from scratch, fully integrated with:
 
-- **nextjstest** configuration (Next.js 16, Turbopack, TypeScript 6, ESLint/Oxlint/Prettier, husky)
+- **nextjstest** configuration (Next.js 16, Turbopack, TypeScript 6, Oxlint/Prettier, husky)
 - **news-watch** patterns (Google Gemini LLM, Drizzle ORM, Turso DB, Zod validation)
 - Custom quiz generation + client-side shuffling + in-browser scoring
 
@@ -29,7 +29,6 @@ Study quiz generator project created from scratch, fully integrated with:
 - ✅ `package.json` (pnpm 11.9.0, node >=24)
 - ✅ `next.config.ts` (Turbopack + ReactCompiler)
 - ✅ `tsconfig.json` (strict, path aliases)
-- ✅ `eslint.config.mjs` (flat config)
 - ✅ `.npmrc` (peerDependencyRules for postcss)
 - ✅ `vitest.config.ts` + `playwright.config.ts`
 - ✅ `drizzle.config.ts`
@@ -86,7 +85,6 @@ study/
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
-├── eslint.config.mjs
 ├── drizzle.config.ts
 ├── vitest.config.ts
 ├── playwright.config.ts
@@ -252,7 +250,7 @@ pnpm build           # Next.js production build
 
 | Source     | Destination       | Changes                                      |
 | ---------- | ----------------- | -------------------------------------------- |
-| nextjstest | study/            | Core config (Next.js, TS, ESLint, Husky, CI) |
+| nextjstest | study/            | Core config (Next.js, TS, Oxlint, Husky, CI) |
 | news-watch | study/src/lib/llm | LLM client, parser, schemas, constants       |
 | news-watch | study/src/lib/db  | DB setup, Drizzle config, schema pattern     |
 | news-watch | study/.env.local  | Credentials (shared Turso + Gemini)          |
