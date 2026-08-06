@@ -43,6 +43,20 @@ async function request<T>(
   init: RequestInit | undefined,
   label: string,
   schema: z.ZodType<T>,
+  options: RequestOptions & { allowNotFound: true },
+): Promise<T | null>;
+async function request<T>(
+  path: string,
+  init: RequestInit | undefined,
+  label: string,
+  schema: z.ZodType<T>,
+  options?: RequestOptions,
+): Promise<T>;
+async function request<T>(
+  path: string,
+  init: RequestInit | undefined,
+  label: string,
+  schema: z.ZodType<T>,
   options?: RequestOptions,
 ): Promise<T | null> {
   const res = await fetch(path, init);
@@ -85,7 +99,7 @@ export async function submitAnswer(
   questionId: number,
   selectedIndex: number,
 ): Promise<AnswerResult> {
-  return (await request(
+  return request(
     "/api/answers",
     {
       method: "POST",
@@ -94,11 +108,11 @@ export async function submitAnswer(
     },
     "submit answer",
     answerResultSchema,
-  )) as AnswerResult;
+  );
 }
 
 export async function createQuestion(sourceText: string): Promise<CreatedQuestion> {
-  return (await request(
+  return request(
     "/api/questions",
     {
       method: "POST",
@@ -108,5 +122,5 @@ export async function createQuestion(sourceText: string): Promise<CreatedQuestio
     "create question",
     createdQuestionSchema,
     { customErrorMsg: "生成に失敗しました" },
-  )) as CreatedQuestion;
+  );
 }
