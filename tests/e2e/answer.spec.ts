@@ -284,7 +284,11 @@ test("Test E: 次の問題へ shows loading and prevents double-fetch", async ({
     question: "質問2",
     choices: ["A2", "B2", "C2", "D2"],
   });
-  const sampleAnswerResult = makeAnswerResult({ isCorrect: true, correctIndex: 0, explanation: "解説1" });
+  const sampleAnswerResult = makeAnswerResult({
+    isCorrect: true,
+    correctIndex: 0,
+    explanation: "解説1",
+  });
 
   let randomCallCount = 0;
   await page.route("/api/questions/random*", async (route) => {

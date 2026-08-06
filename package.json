@@ -20,6 +20,7 @@
     "type-check:fast": "tsgo --noEmit",
     "security-check": "pnpm audit --audit-level=high && secretlint \"**/*\"",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "check-env": "tsx scripts/check-env.ts",

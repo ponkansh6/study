@@ -8,7 +8,9 @@ export function jsonResponse(body: unknown, status = 200): Response {
 }
 
 /** Stub global fetch with a handler that returns either a Response or a body to wrap. */
-export function mockFetch(handler: (url: string, init?: RequestInit) => unknown): ReturnType<typeof vi.fn> {
+export function mockFetch(
+  handler: (url: string, init?: RequestInit) => unknown,
+): ReturnType<typeof vi.fn> {
   const fn = vi.fn(async (url: string, init?: RequestInit) => {
     const result = await handler(url, init);
     return result instanceof Response ? result : jsonResponse(result);

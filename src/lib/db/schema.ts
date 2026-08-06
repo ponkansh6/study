@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm/sql";
+import { sql, desc } from "drizzle-orm";
 
 export const knowledge = sqliteTable("knowledge", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -26,9 +26,6 @@ export const questions = sqliteTable(
       .notNull()
       .default(sql`(unixepoch())`),
   },
-  (t) => ({
-    knowledgeIdIdx: index("questions_knowledge_id_idx").on(t.knowledgeId),
-  }),
 );
 
 export const answerLogs = sqliteTable(
@@ -47,5 +44,6 @@ export const answerLogs = sqliteTable(
   (t) => ({
     questionIdIdx: index("answer_logs_question_id_idx").on(t.questionId),
     answeredAtIdx: index("answer_logs_answered_at_idx").on(t.answeredAt),
+    questionAnsweredAtIdx: index("answer_logs_question_answered_at_idx").on(t.questionId, desc(t.answeredAt)),
   }),
 );
