@@ -527,11 +527,11 @@ bash scripts/check-spec-refs.sh \
 
 ## 完了コミット一覧
 
-| コミット         | 内容                                                                                                                                                     | 検証                                 |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `3cc6f76`        | 課題B+A: `fetchRandomQuestion` を `request()` に統合（`allowNotFound` オプション）、createQuestion のエラーボディ優先を `it.each` テーブルで多重防護     | tsgo 0 / **141 unit** / 全 Tier PASS |
-| `d5b6cab`        | 課題C: ESLint 完全撤去（oxlint 一本化）— `lint` スクリプト・devDeps 4 件・`eslint.config.mjs` 削除、lint-staged / openspec/config.yaml / .gitignore 整理 | lint:fast 0 件 / tsgo 0              |
-| `51e57d7`        | 未コミット差分の取り込み: `next-env.d.ts` / `AGENTS.md` / `NavLink.tsx`                                                                                  | —                                    |
+| コミット  | 内容                                                                                                                                                     | 検証                                 |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `3cc6f76` | 課題B+A: `fetchRandomQuestion` を `request()` に統合（`allowNotFound` オプション）、createQuestion のエラーボディ優先を `it.each` テーブルで多重防護     | tsgo 0 / **141 unit** / 全 Tier PASS |
+| `d5b6cab` | 課題C: ESLint 完全撤去（oxlint 一本化）— `lint` スクリプト・devDeps 4 件・`eslint.config.mjs` 削除、lint-staged / openspec/config.yaml / .gitignore 整理 | lint:fast 0 件 / tsgo 0              |
+| `51e57d7` | 未コミット差分の取り込み: `next-env.d.ts` / `AGENTS.md` / `NavLink.tsx`                                                                                  | —                                    |
 | `952b3a9` | 本セクション（第三次実施結果）の追記                                                                                                                     | —                                    |
 
 ## 是正の要点
