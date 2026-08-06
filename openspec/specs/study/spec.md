@@ -154,9 +154,16 @@ interface AnswerLog {
 
 ## Testing
 
-- **Unit tests:** Vitest (116 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`), and DB repositories (`question-repository`, `answer-repository`).
+- **Unit tests:** Vitest (124 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`, `answer/use-quiz-session`, `answer/quiz-runner`, `answer/page`), and DB repositories (`question-repository`, `answer-repository`).
 - **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
-- **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated.
+- **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated. Tiers that match no files are a hard failure. Tier configuration:
+  - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts` — target 90% statements
+  - **Tier 2: API / LLM orchestration** — `src/app/api/**`, `src/lib/llm/quiz.ts`, `src/lib/llm/client.ts` — target 80% statements
+  - **Tier 2b: API client & utilities** — `src/lib/api/*.ts` — target 85% statements
+  - **Tier 3: Data access** — `src/lib/db/repository/*.ts` — target 75% statements
+  - **Tier 4: UI state management** — `src/app/answer/**` — target 90% statements + 75% branches
+  - **Tier 5: UI components** — `src/components/*.tsx` — target 70% statements
+  - `src/lib/db/schema.ts` and `src/lib/db/migrations/**` are excluded from coverage instrumentation (declarative, zero branches).
 - **E2E tests:** Playwright (28 tests) covering home, create, answer flows.
 
 ## Non-Functional Requirements

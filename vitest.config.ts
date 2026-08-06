@@ -14,7 +14,9 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       reportsDirectory: "coverage",
       include: ["src/**"],
-      exclude: ["src/**/codemap.md"],
+      // Declarative/auto-generated files with no branching logic are excluded:
+      // codemap.md (docs), schema.ts (Drizzle table definitions), migrations/** (generated SQL).
+      exclude: ["src/**/codemap.md", "src/lib/db/schema.ts", "src/lib/db/migrations/**"],
     },
   },
   resolve: {

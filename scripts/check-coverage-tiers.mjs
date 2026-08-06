@@ -47,6 +47,12 @@ const TIERS = [
     patterns: [/\/app\/api\/.+\.ts$/, /\/lib\/llm\/quiz\.ts$/, /\/lib\/llm\/client\.ts$/],
   },
   {
+    name: "Tier 2b: API client & utilities",
+    target: 85,
+    metric: "statements",
+    patterns: [/\/lib\/api\/.+\.ts$/],
+  },
+  {
     name: "Tier 3: Data access",
     target: 75,
     metric: "statements",
@@ -55,8 +61,9 @@ const TIERS = [
   {
     name: "Tier 4: UI state management",
     target: 90,
+    branchTarget: 75,
     metric: "statements",
-    patterns: [/\/app\/answer\/use-quiz-session\.ts$/],
+    patterns: [/\/app\/answer\/.+\.(ts|tsx)$/],
   },
   {
     name: "Tier 5: UI components",
@@ -118,25 +125,46 @@ function main() {
     const matchedFiles = allFiles.filter((f) => tier.patterns.some((p) => p.test(f)));
 
     if (matchedFiles.length === 0) {
-      results.push({ tier: tier.name, status: "⚠️  No files matched" });
+      allPass = false;
+      results.push({
+        tier: tier.name,
+        stmts: "N/A",
+        status: "❌ FAIL (No files matched)",
+        pass: false,
+      });
       continue;
     }
 
     const agg = aggregateCoverage(report, matchedFiles, tier.metric);
     if (!agg) {
+      allPass = false;
       results.push({
         tier: tier.name,
         stmts: "N/A",
-        status: "⚠️  No coverage data",
+        status: "❌ FAIL (No coverage data)",
+        pass: false,
       });
       continue;
     }
 
     const primaryPct = agg.pct;
     let pass = primaryPct >= tier.target;
+
+    // Optional second gate (e.g. branches)
+    let branchAgg = null;
+    if (tier.branchTarget !== undefined) {
+      branchAgg = aggregateCoverage(report, matchedFiles, "branches");
+      if (!branchAgg || branchAgg.pct < tier.branchTarget) {
+        pass = false;
+      }
+    }
+
     if (!pass) allPass = false;
 
     let detail = `(${agg.covered}/${agg.total} ${tier.metric})`;
+    if (branchAgg && tier.branchTarget !== undefined) {
+      detail += ` | branches: ${branchAgg.pct.toFixed(2)}% (target ${tier.branchTarget}%)`;
+    }
 
     results.push({
       tier: tier.name,
