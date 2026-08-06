@@ -80,4 +80,17 @@ describe("api client", () => {
     );
     await expect(createQuestion("test")).rejects.toThrow("生成に失敗しました");
   });
+
+  it.each([
+    ["データベースエラーが発生しました"],
+    ["LLM の応答が不正です"],
+  ])("createQuestion prefers error body message (%s) over customErrorMsg", async (bodyMsg) => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: bodyMsg }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(createQuestion("test")).rejects.toThrow(bodyMsg);
+  });
 });

@@ -24,6 +24,8 @@ export const createdQuestionSchema = z.object({
 
 export type CreatedQuestion = z.infer<typeof createdQuestionSchema>;
 
+type RequestOptions = { customErrorMsg?: string; allowNotFound?: boolean };
+
 async function readErrorMessage(res: Response): Promise<string | null> {
   try {
     const json = await res.json();
@@ -41,12 +43,15 @@ async function request<T>(
   init: RequestInit | undefined,
   label: string,
   schema: z.ZodType<T>,
-  customErrorMsg?: string,
-): Promise<T> {
+  options?: RequestOptions,
+): Promise<T | null> {
   const res = await fetch(path, init);
+  if (res.status === 404 && options?.allowNotFound) {
+    return null;
+  }
   if (!res.ok) {
     const fallback = `Failed to ${label}: status ${res.status}`;
-    const errorMsg = (await readErrorMessage(res)) ?? customErrorMsg ?? fallback;
+    const errorMsg = (await readErrorMessage(res)) ?? options?.customErrorMsg ?? fallback;
     throw new Error(errorMsg);
   }
 
@@ -67,35 +72,20 @@ async function request<T>(
 
 export async function fetchRandomQuestion(excludeIds: number[]): Promise<QuizQuestion | null> {
   const query = excludeIds.length > 0 ? `?exclude=${excludeIds.join(",")}` : "";
-  const res = await fetch(`/api/questions/random${query}`);
-  if (res.status === 404) {
-    return null;
-  }
-  if (!res.ok) {
-    const fallback = `Failed to fetch random question: status ${res.status}`;
-    const errorMsg = (await readErrorMessage(res)) ?? fallback;
-    throw new Error(errorMsg);
-  }
-
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error("Unexpected response");
-  }
-
-  const parsed = quizQuestionSchema.safeParse(data);
-  if (!parsed.success) {
-    throw new Error("Invalid response schema");
-  }
-  return parsed.data;
+  return request(
+    `/api/questions/random${query}`,
+    undefined,
+    "fetch random question",
+    quizQuestionSchema,
+    { allowNotFound: true },
+  );
 }
 
 export async function submitAnswer(
   questionId: number,
   selectedIndex: number,
 ): Promise<AnswerResult> {
-  return request(
+  return (await request(
     "/api/answers",
     {
       method: "POST",
@@ -104,11 +94,11 @@ export async function submitAnswer(
     },
     "submit answer",
     answerResultSchema,
-  );
+  )) as AnswerResult;
 }
 
 export async function createQuestion(sourceText: string): Promise<CreatedQuestion> {
-  return request(
+  return (await request(
     "/api/questions",
     {
       method: "POST",
@@ -117,6 +107,6 @@ export async function createQuestion(sourceText: string): Promise<CreatedQuestio
     },
     "create question",
     createdQuestionSchema,
-    "生成に失敗しました",
-  );
+    { customErrorMsg: "生成に失敗しました" },
+  )) as CreatedQuestion;
 }
