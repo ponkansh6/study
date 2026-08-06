@@ -288,3 +288,38 @@ bash scripts/check-spec-refs.sh \
 | `scripts/migrate.ts`                              | 2         | **削除**(破壊的 DROP)                                                                          |
 | `openspec/specs/study/spec.md`                    | 2,3,4,6,7 | 各 Phase で同期。**テストセクションを新設**                                                    |
 | `tests/helpers/`, `tests/fixtures/`               | 1, 2      | **新規** — 共有 helper と fixture                                                              |
+
+---
+
+# 実施結果（2026-08-06 時点: 全 Phase 完了）
+
+## 完了コミット一覧
+
+| Phase | コミット | 内容 | 検証 |
+|---|---|---|---|
+| 0 | `6f61ff3` | 衛生作業（.eslintcache untrack、未使用依存削除、test:prod 等削除、@server エイリアス削除、config 修正、CI 強化: spec-refs / coverage tier / security-check 追加） | tsgo 0 / 82 unit / 28 e2e |
+| 1 | `4c1c5b4` `5a57719` | テスト基盤整備（helpers/fixtures 新設、tests 型検査・lint 有効化、env helper 堅牢化） | tsgo 0 / 82 unit |
+| 2 | `12d2760` | 実マイグレーション化（冗長 index 削除、複合 index 追加、破壊的 migrate.ts 削除、db:migrate 追加） | tsgo 0 / 82 unit |
+| 3 | `6073ce4` `592d280` | バグ修正 + 重複排除（client.ts 全面書き直し / statusText 廃止 / Zod 検証 / withErrorHandling / parser 修正 / createQuestion 活用） | tsgo 0 / 87 unit / 28 e2e / 全 Tier |
+| 4 | `3d68066` `4659a06` | 純粋ロジック抽出（weighting.ts / choice-state.ts、テスト同一コミット）→ **Tier 3 復活** 93.33% | tsgo 0 / 全 Tier |
+| 5 | `b7f4a3b` `9ab9eb3` | リポジトリ / オーケストレーションのテスト、`INTENTIONALLY_MOCKED` 全削除、テスト用 DB をファイルベース一時 DB に移行 | tsgo 0 / 116 unit / 28 e2e / 全 Tier |
+| 6 | `de08459` | カバレッジ Tier 実効化（空 Tier ハード失敗化、lib/api Tier 追加、Tier 4 を複数ファイル + branches ゲート化、schema.ts 除外） | tsgo 0 / 124 unit / 全 6 Tier PASS |
+| 7 | `42dea27` | UI 重複排除 + 性能（cn.ts / Spinner 抽出、Button variant 再利用、QuestionCard デッドコード削除、クエリ射影 + Promise.all、条件付き集約、phaseRef、create ページ server/client 分割） | tsgo 0 / **136 unit** / 28 e2e / 全 6 Tier PASS（Tier4 94.44 + 90.00 branches） |
+
+## フォローアップ: CI Security Check 失敗の修正（`44702ac`）
+
+- **経緯**: Phase 7 の push（`42dea27`）で GitHub Actions の **Security Check** ステップが初めて実行され失敗（Phase 0 で CI に追加した `security-check` はそれ以前の push では未実行だったため顕在化していなかった）
+- **原因 1（`pnpm audit` 3 high）**: `sharp@0.34.5`（next 16.2.12 optionalDeps 経由、patched ≥0.35.0）、`postcss@8.4.31`（next 16.2.12 deps 経由、patched ≥8.5.12）、`postcss@8.5.16`（直接依存、patched ≥8.5.18）
+- **原因 2（`secretlint` exit 2）**: `.secretlintrc` 設定ファイルが存在せず、ルールパッケージも未導入（CI 追加時に潜伏していたバグ）
+- **修正**:
+  - `next` / `@next/bundle-analyzer` / `eslint-config-next` → `^16.3.0`（next 16.3.0 は postcss 8.5.23 + sharp `^0.35.3` を使用し、next 経由の 2 件が同時に解消）
+  - `postcss` → `^8.5.25`（直接依存分）
+  - `@secretlint/secretlint-rule-preset-recommend@^12.3.1` 追加 + `.secretlintrc` / `.secretlintignore` 新規作成
+- **検証**: `pnpm security-check` exit 0（1 moderate のみ）/ tsgo 0 / lint OK / 136 unit / 28 e2e / CI run `31084890109` 全 12 ステップ green
+
+## 最終状態（全 Phase 完了後）
+
+- **unit 136 / 30 files、e2e 28/28、tsgo 0、lint:fast OK**
+- カバレッジ 6 Tier 全 PASS: Tier1 95.83 / Tier2 97.10 / Tier2b 89.13 / Tier3 87.50 / Tier4 94.44 + 90.00 branches / Tier5 100.00
+- 全 Phase のコミット・push 済み（main ブランチ）
+- spec.md は各 Phase で同期済み（Testing セクション・Components・Data Model 注記含む）
