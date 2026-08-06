@@ -13,5 +13,5 @@ export interface QuizQuestion {
 export interface AnswerResult {
   isCorrect: boolean;
   correctIndex: number;
-  explanation?: string;
+  explanation: string | null;
 }

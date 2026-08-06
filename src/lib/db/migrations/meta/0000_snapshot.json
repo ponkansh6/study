@@ -47,24 +47,17 @@
       "indexes": {
         "answer_logs_question_id_idx": {
           "name": "answer_logs_question_id_idx",
-          "columns": [
-            "question_id"
-          ],
+          "columns": ["question_id"],
           "isUnique": false
         },
         "answer_logs_answered_at_idx": {
           "name": "answer_logs_answered_at_idx",
-          "columns": [
-            "answered_at"
-          ],
+          "columns": ["answered_at"],
           "isUnique": false
         },
         "answer_logs_question_answered_at_idx": {
           "name": "answer_logs_question_answered_at_idx",
-          "columns": [
-            "question_id",
-            "\"answered_at\" desc"
-          ],
+          "columns": ["question_id", "\"answered_at\" desc"],
           "isUnique": false
         }
       },
@@ -73,12 +66,8 @@
           "name": "answer_logs_question_id_questions_id_fk",
           "tableFrom": "answer_logs",
           "tableTo": "questions",
-          "columnsFrom": [
-            "question_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["question_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -183,9 +172,7 @@
       "indexes": {
         "questions_knowledge_id_unique": {
           "name": "questions_knowledge_id_unique",
-          "columns": [
-            "knowledge_id"
-          ],
+          "columns": ["knowledge_id"],
           "isUnique": true
         }
       },
@@ -194,12 +181,8 @@
           "name": "questions_knowledge_id_knowledge_id_fk",
           "tableFrom": "questions",
           "tableTo": "knowledge",
-          "columnsFrom": [
-            "knowledge_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["knowledge_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

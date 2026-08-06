@@ -67,36 +67,6 @@ describe("parseWithRetry", () => {
     consoleWarnSpy.mockRestore();
   });
 
-  it("6. transform throws then retry succeeds -> returns parsed value", async () => {
-    const fetcher = vi.fn().mockResolvedValue(JSON.stringify({ ok: true }));
-    let callCount = 0;
-    const transform = vi.fn((parsed: unknown) => {
-      callCount++;
-      if (callCount === 1) {
-        throw new Error("Transform fail");
-      }
-      return parsed;
-    });
-
-    const result = await parseWithRetry(fetcher, schema, "test-context", transform);
-
-    expect(result).toEqual({ ok: true });
-    expect(fetcher).toHaveBeenCalledTimes(2);
-    expect(transform).toHaveBeenCalledTimes(2);
-  });
-
-  it("7. transform throws always -> returns null after retries", async () => {
-    const fetcher = vi.fn().mockResolvedValue(JSON.stringify({ ok: true }));
-    const transform = vi.fn(() => {
-      throw new Error("Always fail transform");
-    });
-
-    const result = await parseWithRetry(fetcher, schema, "test-context", transform);
-
-    expect(result).toBeNull();
-    expect(fetcher).toHaveBeenCalledTimes(3);
-  });
-
   it("8. Schema validation fails then succeeds on retry -> returns parsed value", async () => {
     const fetcher = vi
       .fn()
@@ -118,5 +88,13 @@ describe("parseWithRetry", () => {
     expect(result).toBeNull();
     expect(fetcher).toHaveBeenCalledTimes(3);
     consoleWarnSpy.mockRestore();
+  });
+
+  it("10. Re-throws error if GOOGLE_API_KEY error occurs", async () => {
+    const fetcher = vi.fn().mockRejectedValueOnce(new Error("GOOGLE_API_KEY environment variable is not set"));
+
+    await expect(parseWithRetry(fetcher, schema, "test-context")).rejects.toThrow(
+      "GOOGLE_API_KEY environment variable is not set"
+    );
   });
 });

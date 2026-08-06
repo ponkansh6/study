@@ -30,9 +30,9 @@ function getDb() {
 }
 
 export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
-  get(_target, prop, receiver) {
+  get(_target, prop) {
     const actualDb = getDb();
-    const value = Reflect.get(actualDb, prop, receiver);
+    const value = Reflect.get(actualDb, prop);
     if (typeof value === "function") {
       return value.bind(actualDb);
     }

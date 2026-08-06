@@ -3,18 +3,28 @@ import { LLM_MAX_PARSE_RETRIES, DEBUG_LOG_TRUNCATE_LENGTH } from "../constants";
 import { backoffMs } from "./client";
 import { sleep } from "../sleep";
 
+async function shouldRetry(attempt: number, maxRetries: number): Promise<boolean> {
+  if (attempt < maxRetries) {
+    await sleep(backoffMs(attempt));
+    return true;
+  }
+  return false;
+}
+
 export async function parseWithRetry<T>(
   fetcher: () => Promise<string | null>,
   schema: z.ZodType<T>,
   contextName: string,
-  transform?: (parsed: unknown) => unknown,
 ): Promise<T | null> {
   const maxParseRetries = LLM_MAX_PARSE_RETRIES;
   for (let attempt = 0; attempt <= maxParseRetries; attempt++) {
     let text: string | null;
     try {
       text = await fetcher();
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("GOOGLE_API_KEY")) {
+        throw err;
+      }
       console.error(`[llm] ${contextName} failed:`, err);
       return null;
     }
@@ -30,23 +40,8 @@ export async function parseWithRetry<T>(
         `[llm] ${contextName} invalid JSON (attempt ${attempt + 1}/${maxParseRetries + 1}):`,
         text.slice(0, DEBUG_LOG_TRUNCATE_LENGTH),
       );
-      if (attempt < maxParseRetries) {
-        await sleep(backoffMs(attempt));
-        continue;
-      }
+      if (await shouldRetry(attempt, maxParseRetries)) continue;
       return null;
-    }
-
-    if (transform) {
-      try {
-        parsed = transform(parsed);
-      } catch {
-        if (attempt < maxParseRetries) {
-          await sleep(backoffMs(attempt));
-          continue;
-        }
-        return null;
-      }
     }
 
     try {
@@ -57,11 +52,10 @@ export async function parseWithRetry<T>(
           `[llm] ${contextName} parse error (attempt ${attempt + 1}/${maxParseRetries + 1}):`,
           err.issues,
         );
+      } else {
+        console.warn(`[llm] ${contextName} unexpected parse error:`, err);
       }
-      if (attempt < maxParseRetries) {
-        await sleep(backoffMs(attempt));
-        continue;
-      }
+      if (await shouldRetry(attempt, maxParseRetries)) continue;
       return null;
     }
   }

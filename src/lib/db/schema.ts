@@ -10,23 +10,20 @@ export const knowledge = sqliteTable("knowledge", {
     .default(sql`(unixepoch())`),
 });
 
-export const questions = sqliteTable(
-  "questions",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    knowledgeId: integer("knowledge_id")
-      .notNull()
-      .unique()
-      .references(() => knowledge.id, { onDelete: "cascade" }),
-    question: text("question").notNull(),
-    choices: text("choices", { mode: "json" }).notNull().$type<string[]>(),
-    correctIndex: integer("correct_index").notNull(),
-    explanation: text("explanation"), // nullable: optional in API
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-  },
-);
+export const questions = sqliteTable("questions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  knowledgeId: integer("knowledge_id")
+    .notNull()
+    .unique()
+    .references(() => knowledge.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  choices: text("choices", { mode: "json" }).notNull().$type<string[]>(),
+  correctIndex: integer("correct_index").notNull(),
+  explanation: text("explanation"), // nullable: optional in API
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
 
 export const answerLogs = sqliteTable(
   "answer_logs",
@@ -44,6 +41,9 @@ export const answerLogs = sqliteTable(
   (t) => ({
     questionIdIdx: index("answer_logs_question_id_idx").on(t.questionId),
     answeredAtIdx: index("answer_logs_answered_at_idx").on(t.answeredAt),
-    questionAnsweredAtIdx: index("answer_logs_question_answered_at_idx").on(t.questionId, desc(t.answeredAt)),
+    questionAnsweredAtIdx: index("answer_logs_question_answered_at_idx").on(
+      t.questionId,
+      desc(t.answeredAt),
+    ),
   }),
 );

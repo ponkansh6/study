@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Question } from "@/types/quiz";
+import { createQuestion, CreatedQuestion } from "@/lib/api/client";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/Button";
 import { ErrorMessage } from "@/components/ErrorMessage";
@@ -12,7 +12,7 @@ export default function CreatePage() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [isNavigating, startTransition] = useTransition();
-  const [result, setResult] = useState<Question | null>(null);
+  const [result, setResult] = useState<CreatedQuestion | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
@@ -20,15 +20,10 @@ export default function CreatePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sourceText: text }),
-      });
-      if (!res.ok) throw new Error("生成に失敗しました");
-      setResult(await res.json());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "エラーが発生しました");
+      const data = await createQuestion(text);
+      setResult(data);
+    } catch {
+      setError("生成に失敗しました");
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,10 @@ export function backoffMs(attempt: number, baseMs = LLM_BACKOFF_BASE_MS): number
   return baseMs * 2 ** attempt + Math.floor(Math.random() * baseMs);
 }
 
+function isApiError(err: unknown): err is { status?: number; message?: string } {
+  return typeof err === "object" && err !== null;
+}
+
 export async function callGemini(
   prompt: string,
   maxTokens: number,
@@ -32,7 +36,10 @@ export async function callGemini(
       const text = response.text();
       return text;
     } catch (err: unknown) {
-      const apiError = err as { status?: number; message?: string };
+      if (!isApiError(err)) {
+        throw err;
+      }
+      const apiError = err;
       const isRateLimit = apiError.status === 429;
       const isTransient = /5\d\d|overloaded|unavailable|timeout/i.test(apiError.message ?? "");
 
