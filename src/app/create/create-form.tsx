@@ -6,6 +6,7 @@ import { createQuestion, CreatedQuestion } from "@/lib/api/client";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/Button";
 import { ErrorMessage } from "@/components/ErrorMessage";
+import { errorMessage } from "@/lib/error-message";
 
 export function CreateForm() {
   const router = useRouter();
@@ -22,8 +23,8 @@ export function CreateForm() {
     try {
       const data = await createQuestion(text);
       setResult(data);
-    } catch {
-      setError("生成に失敗しました");
+    } catch (e) {
+      setError(errorMessage(e, "生成に失敗しました"));
     } finally {
       setLoading(false);
     }

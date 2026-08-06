@@ -24,7 +24,7 @@ export const createdQuestionSchema = z.object({
 
 export type CreatedQuestion = z.infer<typeof createdQuestionSchema>;
 
-async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+async function readErrorMessage(res: Response): Promise<string | null> {
   try {
     const json = await res.json();
     if (json && typeof json === "object" && "error" in json && typeof json.error === "string") {
@@ -33,7 +33,7 @@ async function readErrorMessage(res: Response, fallback: string): Promise<string
   } catch {
     // non-JSON body, fall back
   }
-  return fallback;
+  return null;
 }
 
 async function request<T>(
@@ -46,7 +46,7 @@ async function request<T>(
   const res = await fetch(path, init);
   if (!res.ok) {
     const fallback = `Failed to ${label}: status ${res.status}`;
-    const errorMsg = customErrorMsg ?? (await readErrorMessage(res, fallback));
+    const errorMsg = (await readErrorMessage(res)) ?? customErrorMsg ?? fallback;
     throw new Error(errorMsg);
   }
 
@@ -73,7 +73,7 @@ export async function fetchRandomQuestion(excludeIds: number[]): Promise<QuizQue
   }
   if (!res.ok) {
     const fallback = `Failed to fetch random question: status ${res.status}`;
-    const errorMsg = await readErrorMessage(res, fallback);
+    const errorMsg = (await readErrorMessage(res)) ?? fallback;
     throw new Error(errorMsg);
   }
 
