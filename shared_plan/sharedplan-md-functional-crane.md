@@ -432,13 +432,14 @@ bash scripts/check-spec-refs.sh \
 
 ## 完了コミット一覧
 
-| コミット                                             | 内容                                                                                                                                                                 | 検証                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `fix: read server error body before custom fallback` | 課題2/3: `client.ts` の `readErrorMessage` を `string \| null` 化し `customErrorMsg` をフォールバックに降格、`create-form.tsx` を `errorMessage(e, ...)` 経由に      | tsgo 0 / 139 unit                          |
-| `test: make api client error path tests effective`   | 課題1: 非JSON fallback に具体的メッセージ、createQuestion をボディ別文言で検証、submitAnswer エラー経路 + 非JSON fallback 追加、E2E をサーバ由来メッセージ表示に更新 | 全 Tier PASS（Tier2b 89.13→91.30）/ 28 e2e |
-| `test: unify mock cleanup into global setup`         | 課題5: 6 テストファイルの個別 mock クリーンアップ削除 + `tests/setup.ts` に `vi.clearAllMocks()` 追加                                                                | 139 unit PASS                              |
-| `chore: include tests in lint:fast`                  | 課題4: `lint:fast` から `--ignore-pattern 'tests/**'` を削除                                                                                                         | lint:fast 0 件                             |
-| `refactor: dedupe ChoiceVariant, drop remaining any` | 課題5: `ChoiceButton.tsx` の `ChoiceVariant` を `choice-state` から import、`response.ts` の `any`→`unknown`、空 `src/app/api/stats/` 削除                           | tsgo 0                                     |
+| コミット            | 内容                                                                                                                                                                 | 検証                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `e74856e`           | 課題2/3: `client.ts` の `readErrorMessage` を `string \| null` 化し `customErrorMsg` をフォールバックに降格、`create-form.tsx` を `errorMessage(e, ...)` 経由に      | tsgo 0 / 139 unit                          |
+| `7313753`            | 課題1: 非JSON fallback に具体的メッセージ、createQuestion をボディ別文言で検証、submitAnswer エラー経路 + 非JSON fallback 追加、E2E をサーバ由来メッセージ表示に更新 | 全 Tier PASS（Tier2b 89.13→91.30）/ 28 e2e |
+| `1a0dc08`            | 課題5: 6 テストファイルの個別 mock クリーンアップ削除 + `tests/setup.ts` に `vi.clearAllMocks()` 追加                                                                | 139 unit PASS                              |
+| `032b1d0`            | 課題4: `lint:fast` から `--ignore-pattern 'tests/**'` を削除                                                                                                         | lint:fast 0 件                             |
+| `cf0f726`            | 課題5: `ChoiceButton.tsx` の `ChoiceVariant` を `choice-state` から import、`response.ts` の `any`→`unknown`、空 `src/app/api/stats/` 削除                           | tsgo 0                                     |
+| `b12c62e`            | 本セクション（是正の実施結果）の追記                                                                                                                                | —                                          |
 
 ## 是正の要点
 
