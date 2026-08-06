@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
 import { parseWithRetry } from "@/lib/llm/parser";
 
@@ -11,10 +11,6 @@ vi.mock("@/lib/sleep", () => ({
 }));
 
 describe("parseWithRetry", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   const schema = z.object({ ok: z.boolean() });
 
   it("1. Success: fetcher returns valid JSON -> returns parsed value", async () => {

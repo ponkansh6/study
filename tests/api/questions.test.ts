@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { POST } from "@/app/api/questions/route";
 import { generateQuestion } from "@/lib/llm/quiz";
 import { createKnowledgeWithQuestion } from "@/lib/db/repository/question-repository";
@@ -12,10 +12,6 @@ vi.mock("@/lib/db/repository/question-repository", () => ({
 }));
 
 describe("POST /api/questions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("should create a question successfully and return 201", async () => {
     vi.mocked(generateQuestion).mockResolvedValueOnce({
       question: "What is 2+2?",

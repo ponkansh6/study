@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { GET } from "@/app/api/questions/random/route";
 import { pickWeightedRandomQuestion } from "@/lib/db/repository/question-repository";
 
@@ -7,10 +7,6 @@ vi.mock("@/lib/db/repository/question-repository", () => ({
 }));
 
 describe("GET /api/questions/random", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("1. Normal: pickWeightedRandomQuestion resolves a question -> status 200 and body matches", async () => {
     const mockQuestion = {
       id: 1,

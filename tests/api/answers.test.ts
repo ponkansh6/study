@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { POST } from "@/app/api/answers/route";
 
 // Mock repositories and schemas
@@ -14,10 +14,6 @@ import { getQuestionById } from "@/lib/db/repository/question-repository";
 import { recordAnswer } from "@/lib/db/repository/answer-repository";
 
 describe("POST /api/answers route handler", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("1. Valid request -> 200 with grading", async () => {
     vi.mocked(getQuestionById).mockResolvedValueOnce({
       id: 1,

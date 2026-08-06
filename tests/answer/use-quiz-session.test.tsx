@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useQuizSession } from "@/app/answer/use-quiz-session";
 
@@ -8,10 +8,6 @@ describe("useQuizSession hook", () => {
     question: "Test Question?",
     choices: ["A", "B", "C", "D"],
   };
-
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
 
   afterEach(() => {
     vi.unstubAllGlobals();

@@ -25,7 +25,6 @@ describe("llm/client", () => {
   const originalEnv = process.env.GOOGLE_API_KEY;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     setEnv("GOOGLE_API_KEY", "test-api-key");
   });
 
