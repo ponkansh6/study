@@ -295,16 +295,16 @@ bash scripts/check-spec-refs.sh \
 
 ## 完了コミット一覧
 
-| Phase | コミット | 内容 | 検証 |
-|---|---|---|---|
-| 0 | `6f61ff3` | 衛生作業（.eslintcache untrack、未使用依存削除、test:prod 等削除、@server エイリアス削除、config 修正、CI 強化: spec-refs / coverage tier / security-check 追加） | tsgo 0 / 82 unit / 28 e2e |
-| 1 | `4c1c5b4` `5a57719` | テスト基盤整備（helpers/fixtures 新設、tests 型検査・lint 有効化、env helper 堅牢化） | tsgo 0 / 82 unit |
-| 2 | `12d2760` | 実マイグレーション化（冗長 index 削除、複合 index 追加、破壊的 migrate.ts 削除、db:migrate 追加） | tsgo 0 / 82 unit |
-| 3 | `6073ce4` `592d280` | バグ修正 + 重複排除（client.ts 全面書き直し / statusText 廃止 / Zod 検証 / withErrorHandling / parser 修正 / createQuestion 活用） | tsgo 0 / 87 unit / 28 e2e / 全 Tier |
-| 4 | `3d68066` `4659a06` | 純粋ロジック抽出（weighting.ts / choice-state.ts、テスト同一コミット）→ **Tier 3 復活** 93.33% | tsgo 0 / 全 Tier |
-| 5 | `b7f4a3b` `9ab9eb3` | リポジトリ / オーケストレーションのテスト、`INTENTIONALLY_MOCKED` 全削除、テスト用 DB をファイルベース一時 DB に移行 | tsgo 0 / 116 unit / 28 e2e / 全 Tier |
-| 6 | `de08459` | カバレッジ Tier 実効化（空 Tier ハード失敗化、lib/api Tier 追加、Tier 4 を複数ファイル + branches ゲート化、schema.ts 除外） | tsgo 0 / 124 unit / 全 6 Tier PASS |
-| 7 | `42dea27` | UI 重複排除 + 性能（cn.ts / Spinner 抽出、Button variant 再利用、QuestionCard デッドコード削除、クエリ射影 + Promise.all、条件付き集約、phaseRef、create ページ server/client 分割） | tsgo 0 / **136 unit** / 28 e2e / 全 6 Tier PASS（Tier4 94.44 + 90.00 branches） |
+| Phase | コミット            | 内容                                                                                                                                                                                 | 検証                                                                            |
+| ----- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| 0     | `6f61ff3`           | 衛生作業（.eslintcache untrack、未使用依存削除、test:prod 等削除、@server エイリアス削除、config 修正、CI 強化: spec-refs / coverage tier / security-check 追加）                    | tsgo 0 / 82 unit / 28 e2e                                                       |
+| 1     | `4c1c5b4` `5a57719` | テスト基盤整備（helpers/fixtures 新設、tests 型検査・lint 有効化、env helper 堅牢化）                                                                                                | tsgo 0 / 82 unit                                                                |
+| 2     | `12d2760`           | 実マイグレーション化（冗長 index 削除、複合 index 追加、破壊的 migrate.ts 削除、db:migrate 追加）                                                                                    | tsgo 0 / 82 unit                                                                |
+| 3     | `6073ce4` `592d280` | バグ修正 + 重複排除（client.ts 全面書き直し / statusText 廃止 / Zod 検証 / withErrorHandling / parser 修正 / createQuestion 活用）                                                   | tsgo 0 / 87 unit / 28 e2e / 全 Tier                                             |
+| 4     | `3d68066` `4659a06` | 純粋ロジック抽出（weighting.ts / choice-state.ts、テスト同一コミット）→ **Tier 3 復活** 93.33%                                                                                       | tsgo 0 / 全 Tier                                                                |
+| 5     | `b7f4a3b` `9ab9eb3` | リポジトリ / オーケストレーションのテスト、`INTENTIONALLY_MOCKED` 全削除、テスト用 DB をファイルベース一時 DB に移行                                                                 | tsgo 0 / 116 unit / 28 e2e / 全 Tier                                            |
+| 6     | `de08459`           | カバレッジ Tier 実効化（空 Tier ハード失敗化、lib/api Tier 追加、Tier 4 を複数ファイル + branches ゲート化、schema.ts 除外）                                                         | tsgo 0 / 124 unit / 全 6 Tier PASS                                              |
+| 7     | `42dea27`           | UI 重複排除 + 性能（cn.ts / Spinner 抽出、Button variant 再利用、QuestionCard デッドコード削除、クエリ射影 + Promise.all、条件付き集約、phaseRef、create ページ server/client 分割） | tsgo 0 / **136 unit** / 28 e2e / 全 6 Tier PASS（Tier4 94.44 + 90.00 branches） |
 
 ## フォローアップ: CI Security Check 失敗の修正（`44702ac`）
 
@@ -323,3 +323,132 @@ bash scripts/check-spec-refs.sh \
 - カバレッジ 6 Tier 全 PASS: Tier1 95.83 / Tier2 97.10 / Tier2b 89.13 / Tier3 87.50 / Tier4 94.44 + 90.00 branches / Tier5 100.00
 - 全 Phase のコミット・push 済み（main ブランチ）
 - spec.md は各 Phase で同期済み（Testing セクション・Components・Data Model 注記含む）
+
+---
+
+# 独立検証（2026-08-06）
+
+上記の自己申告を鵜呑みにせず、Phase 0〜7 の全 44 個の個別クレームを実ファイルに対して検証し、ゲートを実際に実行して数値クレームを再現した。
+
+**結論: プランは実質的に完遂されている。** 44 クレーム中 38 が完全 DONE。ただし 5 件の未完了項目が残り、うち 1 件は**本プラン自身の受け入れ基準を満たしていない**（主目的だった本番バグの回帰テストが、実際にはバグを検出できない）。
+
+## 再現できた数値クレーム
+
+| クレーム             | 実測                                                                                                                                        | 判定 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| unit 136 / 30 files  | `136 passed (136)` / `30 passed (30)`                                                                                                       | ✅   |
+| tsgo 0 エラー        | 出力なし                                                                                                                                    | ✅   |
+| `check-spec-refs.sh` | `✅ All spec.md file references are valid`                                                                                                  | ✅   |
+| 6 Tier 全 PASS       | Tier1 95.83 / Tier2 97.10 / Tier2b 89.13 / Tier3 87.50 / Tier4 94.44 + branches 90.00 / Tier5 100.00 → `✅ All tiers meet coverage targets` | ✅   |
+
+Tier 3 は `INTENTIONALLY_MOCKED = []`（空、`scripts/check-coverage-tiers.mjs:26-28`）の状態で 87.50% を実測しており、**プランが狙った「死んだ Tier の復活」は本当に起きている**。"No files matched" のハード失敗化（`:127-136`）、Tier 2b @85%（`:49-54`）、Tier 4 の branches ゲート（`:61-67`、`:155-160` で実際に enforce）もすべて実装済み。
+
+## 未コミット差分（是正不要）
+
+- `next-env.d.ts` — Next.js 自動生成。`44702ac` の Next 16.3 昇格に伴う `.next/dev/types/` パス変更
+- `src/components/NavLink.tsx` — 102 文字行の折り返しのみ。`cn(...)` の引数はバイト同一で意味変化ゼロ
+
+どちらもプランの積み残しではない。
+
+## 残課題
+
+### 1. statusText バグの回帰テストが実際には回帰を検出できない ★最重要
+
+受け入れ基準 3「UI に**空でない**エラーメッセージが出ること（statusText バグの回帰確認）」を守るテストが存在しない。`tests/api/client.test.ts` の該当アサーション 3 件中 2 件が空振りする:
+
+- `:25-28` 非 JSON フォールバック — `await expect(...).rejects.toThrow()` に**メッセージ引数がない**。`res.statusText` に戻しても素通りする
+- `:54-62` "createQuestion throws error body message" — `createQuestion` が `customErrorMsg = "生成に失敗しました"`（`src/lib/api/client.ts:120`）をハードコードしており、これがモックのボディと偶然一致するため、**ボディを一切読まなくても pass する偽陽性**
+
+是正: 非 JSON ケースに具体的なメッセージ引数を渡す、`submitAnswer` のエラー経路を追加、`createQuestion` のテストはボディと異なる文字列を使って本当にどちらが出るか確定させる。
+
+### 2. `createQuestion` のエラーボディが二重に握り潰されている
+
+Phase 3 は「一度も消費されていない `{ error }` エラー契約を消費する」ことを目的にしたが、create 経路だけ 2 箇所で潰れている:
+
+- `src/lib/api/client.ts:49` — `customErrorMsg ?? (await readErrorMessage(...))` の短絡で、`createQuestion` はサーバのボディを読まない
+- `src/app/create/create-form.tsx:25-27` — `catch {` がエラーを束縛せず `setError("生成に失敗しました")` を固定表示
+
+結果として `/create` のエラー表示は Phase 3 以前と実質同じ。`customErrorMsg` をフォールバック側に降格し、`create-form.tsx` を `errorMessage()` 経由にする。
+
+### 3. `errorMessage()` ヘルパーが create ページに未適用（Phase 7 の積み残し）
+
+`src/lib/error-message.ts` は存在し `use-quiz-session.ts:51,83` で使われているが、Phase 7 が名指しした 3 つ目の呼び出し元 `create/page.tsx`（現 `create-form.tsx`）には未適用。課題 2 と同一の修正で解消する。
+
+### 4. `lint:fast` が tests/ を除外し続けており、Phase 1 の lint 有効化が CI で無効
+
+`tsconfig.json:35` の `exclude` からは `tests/**` が外れており**型検査は有効**。しかし:
+
+- `package.json:17` — `"lint:fast": "oxlint --ignore-pattern 'tests/**' ..."`
+- `.github/workflows/main.yml:34` — CI が実行するのは `lint` ではなく `lint:fast`
+
+Phase 1 の「tests/ の型検査・lint 有効化」は**型検査の半分しか効いていない**。
+
+### 5. 小さな一貫性の綻び
+
+- `src/components/ChoiceButton.tsx:3` が `ChoiceVariant` union を宣言しており `src/app/answer/choice-state.ts:1` の逐語コピー。Phase 4 でステートマシンは抽出したが型は 2 箇所に残り黙って乖離しうる
+- `src/lib/api/response.ts:12,15` の `context?: any` — `src/` 唯一の `any` で `openspec/config.yaml:35`「any 禁止」に違反
+- `src/app/api/stats/` が route ファイルのない空ディレクトリ
+- `tests/` 7 ファイルに `vi.clearAllMocks()` / `vi.restoreAllMocks()` の個別呼び出しが残存（`tests/setup.ts:4-6` のグローバル `afterEach` があるため冗長）。Phase 1 が削除を指示していた分
+  - `tests/llm/parser.test.ts:15`, `tests/llm/client.test.ts:28`, `tests/api/questions.test.ts:16`, `tests/api/answers.test.ts:18`, `tests/api/questions-random.test.ts:11`, `tests/answer/use-quiz-session.test.tsx:13`, `tests/api/client.test.ts:6`
+
+## 是正の変更対象
+
+| ファイル                               | 課題 | 変更内容                                                         |
+| -------------------------------------- | ---- | ---------------------------------------------------------------- |
+| `tests/api/client.test.ts`             | 1    | 空振りアサーション 2 件を実効化、`submitAnswer` エラー経路を追加 |
+| `src/lib/api/client.ts:49,120`         | 2    | `customErrorMsg` をボディ読み取りの**フォールバック**に降格      |
+| `src/app/create/create-form.tsx:25-27` | 2, 3 | `catch (e)` で束縛し `errorMessage(e)` を使用                    |
+| `package.json:17`                      | 4    | `lint:fast` から `--ignore-pattern 'tests/**'` を削除            |
+| `src/components/ChoiceButton.tsx:3`    | 5    | `ChoiceVariant` を `@/app/answer/choice-state` から import       |
+| `src/lib/api/response.ts:12,15`        | 5    | `any` → `unknown`                                                |
+| `src/app/api/stats/`                   | 5    | 空ディレクトリ削除                                               |
+| `tests/` 7 ファイル                    | 5    | 個別 `clearAllMocks` / `restoreAllMocks` を削除                  |
+
+再利用する既存資産: `src/lib/error-message.ts`（新規作成しない）、`src/lib/api/client.ts:27` の `readErrorMessage`、`tests/helpers/fetch.ts` の `mockFetch` / `jsonResponse`。
+
+**push 粒度**: 全課題を 1 push にまとめる。コミットは論理単位で分割。`src/` を触るためカバレッジゲートは発火する。課題 1・2 は Tier 2b @85%（現在 89.13%、**マージン 4.13pt**）に着地するので、`client.ts:50,57,62,84,89` の未カバー行がテスト追加で埋まる方向。差分は推論せず計測する。
+
+## 是正の検証
+
+```
+bash scripts/check-spec-refs.sh \
+  && pnpm exec tsgo --noEmit \
+  && pnpm lint:fast \
+  && pnpm test:coverage && node scripts/check-coverage-tiers.mjs \
+  && pnpm test:e2e
+```
+
+加えて、課題 1 が本当に効いていることの確認:
+
+1. `src/lib/api/client.ts` を一時的に `res.statusText` 使用へ戻し、`tests/api/client.test.ts` が**赤くなる**ことを確認してから元に戻す（現状は緑のまま通ってしまう）
+2. `GOOGLE_API_KEY` を外して `/create` から生成 → 画面に固定文言ではなくサーバ由来のメッセージが出ること
+3. `pnpm lint:fast` が tests/ を走査した上で 0 件になること
+
+---
+
+# 是正の実施結果（2026-08-06）
+
+上記 5 残課題の是正を実施し、コミットは論理単位で分割、push は 1 回。
+
+## 完了コミット一覧
+
+| コミット                                             | 内容                                                                                                                                                                 | 検証                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `fix: read server error body before custom fallback` | 課題2/3: `client.ts` の `readErrorMessage` を `string \| null` 化し `customErrorMsg` をフォールバックに降格、`create-form.tsx` を `errorMessage(e, ...)` 経由に      | tsgo 0 / 139 unit                          |
+| `test: make api client error path tests effective`   | 課題1: 非JSON fallback に具体的メッセージ、createQuestion をボディ別文言で検証、submitAnswer エラー経路 + 非JSON fallback 追加、E2E をサーバ由来メッセージ表示に更新 | 全 Tier PASS（Tier2b 89.13→91.30）/ 28 e2e |
+| `test: unify mock cleanup into global setup`         | 課題5: 6 テストファイルの個別 mock クリーンアップ削除 + `tests/setup.ts` に `vi.clearAllMocks()` 追加                                                                | 139 unit PASS                              |
+| `chore: include tests in lint:fast`                  | 課題4: `lint:fast` から `--ignore-pattern 'tests/**'` を削除                                                                                                         | lint:fast 0 件                             |
+| `refactor: dedupe ChoiceVariant, drop remaining any` | 課題5: `ChoiceButton.tsx` の `ChoiceVariant` を `choice-state` から import、`response.ts` の `any`→`unknown`、空 `src/app/api/stats/` 削除                           | tsgo 0                                     |
+
+## 是正の要点
+
+- **課題1（statusText 回帰テスト実効化）**: 検証手順どおり、`client.ts` を一時的に `res.statusText` 使用へ戻して `tests/api/client.test.ts` が**赤くなる**ことを確認済み（`'Failed to fetch random question: '` と空になる）→ 復元。また `createQuestion` テストはボディを `"サーバで問題が発生しました"` に変え、固定文言 `"生成に失敗しました"` との偽陽性一致を排除した。
+- **課題2（エラーボディ二重握り潰し）**: `readErrorMessage` が `null` を返せるようになり、`request()` は `readErrorMessage(res) ?? customErrorMsg ?? fallback` の順で評価。`createQuestion` はサーバボディを読む。`create-form.tsx` は `catch (e) { setError(errorMessage(e, "生成に失敗しました")); }`。
+- **課題4（lint:fast）**: `--ignore-pattern 'tests/**'` を削除し、CI が実行する `lint:fast` が tests/ を走査するようになった。検証手順 3 のとおり 0 件。
+- **課題5（mock クリーンアップの補足）**: `vi.restoreAllMocks()` は module レベルの `vi.fn()` の呼び出し履歴を**リセットしない**ため、個別クリーンアップ削除だけでは `toHaveBeenCalledTimes` 系 10 テストが失敗した。正解はグローバル `tests/setup.ts` に `vi.clearAllMocks()` を追加すること。これにより個別呼び出しは真に冗長となり、削除が安全になる（139 unit で確認）。
+
+## 最終状態
+
+- **unit 139 / 30 files、e2e 28/28、tsgo 0、lint:fast 0 件**
+- カバレッジ 6 Tier 全 PASS: Tier1 95.83 / Tier2 97.10 / Tier2b 91.30 / Tier3 87.50 / Tier4 94.44 + 90.00 branches / Tier5 100.00
+- spec.md は変更なし（テスト/カバレッジセクション・ファイル参照に影響なし）
