@@ -18,7 +18,10 @@ export interface WeightedItem<T> {
 }
 
 /** Weighted random pick. rng returns [0,1). Returns the picked item or null when list is empty. */
-export function pickByWeight<T>(items: WeightedItem<T>[], rng: () => number = Math.random): T | null {
+export function pickByWeight<T>(
+  items: WeightedItem<T>[],
+  rng: () => number = Math.random,
+): T | null {
   const totalWeight = items.reduce((sum, w) => sum + w.weight, 0);
   if (totalWeight <= 0 || items.length === 0) return null;
   let randomVal = rng() * totalWeight;

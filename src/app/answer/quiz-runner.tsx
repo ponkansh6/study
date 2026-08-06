@@ -53,7 +53,9 @@ export default function QuizRunner() {
         <div className="space-y-3">
           {(() => {
             const correctShuffledIndex =
-              isGraded && result ? quiz.shuffled.choiceIndices.indexOf(result.correctIndex) : undefined;
+              isGraded && result
+                ? quiz.shuffled.choiceIndices.indexOf(result.correctIndex)
+                : undefined;
             return quiz.shuffled.choices.map((c, i) => {
               const variant = choiceVariant({
                 isPending,
