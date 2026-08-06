@@ -10,8 +10,6 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:ui": "vitest run -c tests/vitest.ui.config.ts",
-    "test:prod": "vitest run -c tests/vitest.integration.config.ts tests/production",
-    "test:build-parity": "vitest run -c tests/vitest.integration.config.ts tests/build",
     "test:e2e": "playwright test",
     "test:all": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -30,10 +28,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.17.4",
-    "@vercel/config": "^0.5.5",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.9",
-    "p-limit": "^7.3.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "zod": "^4.4.3"

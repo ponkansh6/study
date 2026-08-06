@@ -79,10 +79,6 @@ function loadCoverage(path) {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
-function metricKey(metric) {
-  return metric === "statements" ? "statements" : metric;
-}
-
 /** Compute aggregate coverage for a set of files. */
 function aggregateCoverage(report, files, metric) {
   if (files.length === 0) return null;
@@ -93,9 +89,8 @@ function aggregateCoverage(report, files, metric) {
   for (const file of files) {
     const data = report[file];
     if (!data) continue;
-    const key = metricKey(metric);
-    totalCovered += data[key]?.covered ?? 0;
-    total += data[key]?.total ?? 0;
+    totalCovered += data[metric]?.covered ?? 0;
+    total += data[metric]?.total ?? 0;
   }
 
   if (total === 0) return null;

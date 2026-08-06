@@ -4,36 +4,39 @@ schema: spec-driven
 context: |
   ## 技術スタック
   - Framework: Next.js 16 (App Router, Turbopack)
-  - Language: TypeScript 6 (strict mode)
+  - Language: TypeScript (strict mode)
   - Runtime: Node 24+, Package Manager: pnpm 11.9.0
-  - UI: React 19, CSS Modules (no Tailwind, no component library)
-  - LLM: Google Gemini API (gemini-3.1-flash-lite)
+  - UI: React 19, Tailwind CSS v4
+  - LLM: Google Gemini API
   - Database: Drizzle ORM + Turso (libSQL)
   - Testing: Vitest, Playwright
   - Lint/Format: ESLint (flat config), Oxlint, Oxfmt, Prettier
   - Pre-commit: Husky + lint-staged
 
   ## プロジェクト構造
-  - src/app/ — App Router pages/layouts (RSC)
-  - src/app/page.tsx — Home: text input form + quiz set list
-  - src/app/quiz/[id]/ — Quiz answer page (RSC + client component)
+  - src/app/ — App Router pages/layouts (RSC + Client Components)
+  - src/app/page.tsx — Home: today's JST stats + start learning button
+  - src/app/create/page.tsx — Create knowledge form
+  - src/app/answer/page.tsx — Answer session runner
   - src/app/api/ — API route handlers
-  - src/lib/ — Utilities (db, llm, shuffle, constants)
+  - src/components/ — UI components (Button, ChoiceButton, QuestionCard, etc.)
+  - src/lib/ — Utilities (db, llm, api, shuffle, choice-label, date, sleep, constants)
   - src/types/ — TypeScript type definitions
-  - tests/ — Test suites (unit, integration, e2e)
+  - tests/ — Test suites (unit, e2e)
 
   ## ドメイン知識
-  - LLM ベースのクイズ生成アプリ
-  - ユーザーが知識文章を入力 → LLM がそれを 4 択 10 問に変換
-  - 出題順・選択肢順はクライアント側でシャッフル
-  - クイズ結果はブラウザ内で採点のみ（DB保存しない v1）
+  - LLM ベースのクイズ生成アプリ (1ナレッジ = 1問)
+  - ユーザーが知識文章を入力 → LLM が単一問を生成
+  - endless learning と加重ランダム選択 (weighted random selection)
+  - 解答結果は Turso データベース (`answer_logs`) に永続化
+  - ホーム画面に本日の JST 統計を表示
 
   ## コーディング規約
   - TypeScript strict mode、any 禁止
   - React 関数コンポーネント、明示的な戻り値の型
-  - CSS Modules でスタイリング（.module.css）
+  - Tailwind CSS v4 でスタイリング
   - サーバーコンポーネント優先、クライアントコンポーネントは "use client" を明示
-  - import パスは @/ (src/) と @server/ (server/) のエイリアスを使用
+  - import パスは @/ (src/) エイリアスを使用
 
 # Per-artifact rules
 rules:

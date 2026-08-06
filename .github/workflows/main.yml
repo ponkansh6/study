@@ -36,6 +36,17 @@ jobs:
       - name: Test
         run: pnpm test:all
 
+      - name: Spec References Check
+        run: bash scripts/check-spec-refs.sh
+
+      - name: Coverage Tier Check
+        run: |
+          pnpm test:coverage
+          node scripts/check-coverage-tiers.mjs
+
+      - name: Security Check
+        run: pnpm security-check
+
       - name: Build
         run: pnpm build
         env:
