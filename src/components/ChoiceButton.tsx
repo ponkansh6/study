@@ -1,6 +1,5 @@
 import { Spinner } from "@/components/Spinner";
-
-type ChoiceVariant = "idle" | "correct" | "selectedWrong" | "muted" | "selected";
+import { ChoiceVariant } from "@/app/answer/choice-state";
 
 interface ChoiceButtonProps {
   label: string;

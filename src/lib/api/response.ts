@@ -9,10 +9,10 @@ export function fail(message: string, status: number) {
 }
 
 export function withErrorHandling(
-  handler: (request: Request, context?: any) => Promise<NextResponse>,
+  handler: (request: Request, context?: unknown) => Promise<NextResponse>,
   label: string,
 ) {
-  return async function (request: Request, context?: any): Promise<NextResponse> {
+  return async function (request: Request, context?: unknown): Promise<NextResponse> {
     try {
       return await handler(request, context);
     } catch (error) {
