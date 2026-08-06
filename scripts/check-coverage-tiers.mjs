@@ -23,11 +23,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 
 // ── Tier configuration ─────────────────────────────────────────────────
-const INTENTIONALLY_MOCKED = [
-  /\/lib\/llm\/quiz\.ts$/, // 外部LLM呼び出しのオーケストレーション層（tests/api/questions.test.ts で丸ごとモック）
-  /\/lib\/db\/repository\/question-repository\.ts$/, // 実DBアクセス（tests/api/*.test.ts で丸ごとモック）
-  /\/lib\/db\/repository\/answer-repository\.ts$/, // tests/api/answers.test.ts で丸ごとモック）
-];
+// No modules are exempted from coverage gates: repositories, quiz orchestration,
+// and all other source files are now covered by real tests (tests/db, tests/llm).
+const INTENTIONALLY_MOCKED = [];
 
 const TIERS = [
   {

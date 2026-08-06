@@ -152,6 +152,13 @@ interface AnswerLog {
 - **Tables:** `knowledge`, `questions`, `answerLogs`
 - **Repositories:** `question-repository.ts`, `answer-repository.ts` (with lazy DB init in `src/lib/db/index.ts`)
 
+## Testing
+
+- **Unit tests:** Vitest (116 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`), and DB repositories (`question-repository`, `answer-repository`).
+- **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
+- **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated.
+- **E2E tests:** Playwright (28 tests) covering home, create, answer flows.
+
 ## Non-Functional Requirements
 
 - Mobile-first responsive design (Tailwind v4)
