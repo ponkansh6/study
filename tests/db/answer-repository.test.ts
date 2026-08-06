@@ -72,25 +72,19 @@ describe("answer-repository", () => {
       const dayStart = jstDayStart();
 
       // Today (JST): 2 correct + 1 incorrect = 3 answers.
-      await dbRef
-        .db!
-        .insert(schema.answerLogs)
-        .values([
-          { questionId, selectedIndex: 0, isCorrect: 1, answeredAt: new Date() },
-          { questionId, selectedIndex: 0, isCorrect: 1, answeredAt: new Date() },
-          { questionId, selectedIndex: 1, isCorrect: 0, answeredAt: new Date() },
-        ]);
+      await dbRef.db!.insert(schema.answerLogs).values([
+        { questionId, selectedIndex: 0, isCorrect: 1, answeredAt: new Date() },
+        { questionId, selectedIndex: 0, isCorrect: 1, answeredAt: new Date() },
+        { questionId, selectedIndex: 1, isCorrect: 0, answeredAt: new Date() },
+      ]);
 
       // Before today's JST day start (2 days ago): must NOT be counted.
-      await dbRef
-        .db!
-        .insert(schema.answerLogs)
-        .values({
-          questionId,
-          selectedIndex: 0,
-          isCorrect: 1,
-          answeredAt: new Date(dayStart.getTime() - 2 * 24 * 60 * 60 * 1000),
-        });
+      await dbRef.db!.insert(schema.answerLogs).values({
+        questionId,
+        selectedIndex: 0,
+        isCorrect: 1,
+        answeredAt: new Date(dayStart.getTime() - 2 * 24 * 60 * 60 * 1000),
+      });
 
       const stats = await getStats();
       expect(stats.totalQuestions).toBe(1);
@@ -101,15 +95,12 @@ describe("answer-repository", () => {
     it("returns accuracy 0 when there are no today answers", async () => {
       const questionId = await insertQuestion();
       const dayStart = jstDayStart();
-      await dbRef
-        .db!
-        .insert(schema.answerLogs)
-        .values({
-          questionId,
-          selectedIndex: 0,
-          isCorrect: 1,
-          answeredAt: new Date(dayStart.getTime() - 24 * 60 * 60 * 1000),
-        });
+      await dbRef.db!.insert(schema.answerLogs).values({
+        questionId,
+        selectedIndex: 0,
+        isCorrect: 1,
+        answeredAt: new Date(dayStart.getTime() - 24 * 60 * 60 * 1000),
+      });
 
       const stats = await getStats();
       expect(stats.totalQuestions).toBe(1);
