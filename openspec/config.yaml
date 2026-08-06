@@ -10,7 +10,7 @@ context: |
   - LLM: Google Gemini API
   - Database: Drizzle ORM + Turso (libSQL)
   - Testing: Vitest, Playwright
-  - Lint/Format: ESLint (flat config), Oxlint, Oxfmt, Prettier
+  - Lint/Format: Oxlint, Oxfmt, Prettier
   - Pre-commit: Husky + lint-staged
 
   ## プロジェクト構造
