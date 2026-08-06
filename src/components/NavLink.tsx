@@ -40,7 +40,9 @@ function PendingState({
 }) {
   const { pending } = useLinkStatus();
   return (
-    <span className={cn("inline-flex items-center justify-center gap-2", pending && pendingClassName)}>
+    <span
+      className={cn("inline-flex items-center justify-center gap-2", pending && pendingClassName)}
+    >
       {children}
     </span>
   );
