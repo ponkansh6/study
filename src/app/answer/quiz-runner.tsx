@@ -5,6 +5,7 @@ import { useQuizSession } from "./use-quiz-session";
 import ChoiceButton from "@/components/ChoiceButton";
 import ResultBanner from "@/components/ResultBanner";
 import { choiceLabel } from "@/lib/choice-label";
+import { choiceVariant } from "./choice-state";
 import { LoadingState } from "@/components/LoadingState";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorMessage } from "@/components/ErrorMessage";
@@ -50,34 +51,30 @@ export default function QuizRunner() {
       <div className="flex-1 p-4 space-y-6">
         <p className="text-lg font-bold">{quiz.question.question}</p>
         <div className="space-y-3">
-          {quiz.shuffled.choices.map((c, i) => {
-            let variant: "idle" | "correct" | "selectedWrong" | "muted" | "selected" = "idle";
-            if (isPending && i === selectedIndex) {
-              variant = "selected";
-            } else if (isPending) {
-              variant = "muted";
-            } else if (isGraded && result) {
-              const correctShuffledIdx = quiz.shuffled.choiceIndices.indexOf(result.correctIndex);
-              if (i === correctShuffledIdx) {
-                variant = "correct";
-              } else if (i === selectedIndex) {
-                variant = "selectedWrong";
-              } else {
-                variant = "muted";
-              }
-            }
+          {(() => {
+            const correctShuffledIndex =
+              isGraded && result ? quiz.shuffled.choiceIndices.indexOf(result.correctIndex) : undefined;
+            return quiz.shuffled.choices.map((c, i) => {
+              const variant = choiceVariant({
+                isPending,
+                isGraded,
+                index: i,
+                selectedIndex,
+                correctShuffledIndex,
+              });
 
-            return (
-              <ChoiceButton
-                key={i}
-                label={choiceLabel(i)}
-                text={c}
-                variant={variant}
-                onClick={() => void select(i)}
-                disabled={isPending || isGraded}
-              />
-            );
-          })}
+              return (
+                <ChoiceButton
+                  key={i}
+                  label={choiceLabel(i)}
+                  text={c}
+                  variant={variant}
+                  onClick={() => void select(i)}
+                  disabled={isPending || isGraded}
+                />
+              );
+            });
+          })()}
         </div>
 
         {isGraded && result && (

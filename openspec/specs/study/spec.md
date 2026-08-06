@@ -107,11 +107,12 @@ interface AnswerLog {
 - Client component with textarea input for knowledge text
 - Submits text via API client, generates 1 question, displays result with correct answer highlighted and links to continue
 
-### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`)
+### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`, `src/app/answer/choice-state.ts`)
 
 - Thin page wrapper rendering `QuizRunner`
 - `use-quiz-session.ts`: State machine hook handling fetching, answering, loading, error states, submitting state, and `mountedRef` guard
 - `quiz-runner.tsx`: Display-only component rendering questions, choice buttons, feedback banners, and navigation
+- `src/app/answer/choice-state.ts`: Pure choice variant logic helper function `choiceVariant()`
 
 ### 4. Common UI Components (`src/components/`)
 
@@ -142,6 +143,7 @@ interface AnswerLog {
 - **Weight formula:** `1 + 4 * (incorrectRatio)` for answered questions
 - **Bonus:** +2 weight if latest answer was incorrect
 - **Exclusion:** Last 10 answered question IDs
+- **Pure logic module:** `src/lib/db/repository/weighting.ts` encapsulating `computeWeight()` and `pickByWeight()` functions used by `question-repository.ts`.
 
 ## Database
 

@@ -2,6 +2,7 @@ import { eq, count, sql } from "drizzle-orm";
 import { db } from "../index";
 import { knowledge, questions, answerLogs } from "../schema";
 import { QuizQuestion, Question } from "@/types/quiz";
+import { computeWeight, pickByWeight } from "./weighting";
 
 export interface CreateKnowledgeInput {
   title: string;
@@ -106,43 +107,35 @@ export async function pickWeightedRandomQuestion(
 
   if (candidates.length === 0) return null;
 
-  const weightedList: { question: (typeof allQuestions)[number]; weight: number }[] = [];
-
-  for (const q of candidates) {
+  const weightedList = candidates.map((q) => {
     const stat = statsMap.get(q.id);
-    let weight = 5;
-    if (stat && stat.totalAnswers > 0) {
-      const incorrectRatio = stat.incorrectAnswers / stat.totalAnswers;
-      weight = 1 + 4 * incorrectRatio;
-    }
+    const weight = computeWeight(
+      stat
+        ? {
+            answered: stat.totalAnswers,
+            incorrect: stat.incorrectAnswers,
+            latestIncorrect: !stat.latestCorrect,
+          }
+        : null,
+    );
+    return { item: q, weight };
+  });
 
-    if (stat && stat.latestCorrect === false) {
-      weight += 2;
-    }
-
-    weightedList.push({ question: q, weight });
+  const picked = pickByWeight(weightedList);
+  if (!picked) {
+    const fallback = candidates[0];
+    return fallback
+      ? {
+          id: fallback.id,
+          question: fallback.question,
+          choices: fallback.choices,
+        }
+      : null;
   }
 
-  const totalWeight = weightedList.reduce((sum, item) => sum + item.weight, 0);
-  let randomVal = Math.random() * totalWeight;
-
-  for (const item of weightedList) {
-    if (randomVal < item.weight) {
-      return {
-        id: item.question.id,
-        question: item.question.question,
-        choices: item.question.choices,
-      };
-    }
-    randomVal -= item.weight;
-  }
-
-  const fallback = candidates[0];
-  return fallback
-    ? {
-        id: fallback.id,
-        question: fallback.question,
-        choices: fallback.choices,
-      }
-    : null;
+  return {
+    id: picked.id,
+    question: picked.question,
+    choices: picked.choices,
+  };
 }
