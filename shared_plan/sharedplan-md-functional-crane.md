@@ -432,14 +432,14 @@ bash scripts/check-spec-refs.sh \
 
 ## 完了コミット一覧
 
-| コミット            | 内容                                                                                                                                                                 | 検証                                       |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `e74856e`           | 課題2/3: `client.ts` の `readErrorMessage` を `string \| null` 化し `customErrorMsg` をフォールバックに降格、`create-form.tsx` を `errorMessage(e, ...)` 経由に      | tsgo 0 / 139 unit                          |
-| `7313753`            | 課題1: 非JSON fallback に具体的メッセージ、createQuestion をボディ別文言で検証、submitAnswer エラー経路 + 非JSON fallback 追加、E2E をサーバ由来メッセージ表示に更新 | 全 Tier PASS（Tier2b 89.13→91.30）/ 28 e2e |
-| `1a0dc08`            | 課題5: 6 テストファイルの個別 mock クリーンアップ削除 + `tests/setup.ts` に `vi.clearAllMocks()` 追加                                                                | 139 unit PASS                              |
-| `032b1d0`            | 課題4: `lint:fast` から `--ignore-pattern 'tests/**'` を削除                                                                                                         | lint:fast 0 件                             |
-| `cf0f726`            | 課題5: `ChoiceButton.tsx` の `ChoiceVariant` を `choice-state` から import、`response.ts` の `any`→`unknown`、空 `src/app/api/stats/` 削除                           | tsgo 0                                     |
-| `b12c62e`            | 本セクション（是正の実施結果）の追記                                                                                                                                | —                                          |
+| コミット  | 内容                                                                                                                                                                 | 検証                                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `e74856e` | 課題2/3: `client.ts` の `readErrorMessage` を `string \| null` 化し `customErrorMsg` をフォールバックに降格、`create-form.tsx` を `errorMessage(e, ...)` 経由に      | tsgo 0 / 139 unit                          |
+| `7313753` | 課題1: 非JSON fallback に具体的メッセージ、createQuestion をボディ別文言で検証、submitAnswer エラー経路 + 非JSON fallback 追加、E2E をサーバ由来メッセージ表示に更新 | 全 Tier PASS（Tier2b 89.13→91.30）/ 28 e2e |
+| `1a0dc08` | 課題5: 6 テストファイルの個別 mock クリーンアップ削除 + `tests/setup.ts` に `vi.clearAllMocks()` 追加                                                                | 139 unit PASS                              |
+| `032b1d0` | 課題4: `lint:fast` から `--ignore-pattern 'tests/**'` を削除                                                                                                         | lint:fast 0 件                             |
+| `cf0f726` | 課題5: `ChoiceButton.tsx` の `ChoiceVariant` を `choice-state` から import、`response.ts` の `any`→`unknown`、空 `src/app/api/stats/` 削除                           | tsgo 0                                     |
+| `b12c62e` | 本セクション（是正の実施結果）の追記                                                                                                                                 | —                                          |
 
 ## 是正の要点
 
@@ -453,3 +453,111 @@ bash scripts/check-spec-refs.sh \
 - **unit 139 / 30 files、e2e 28/28、tsgo 0、lint:fast 0 件**
 - カバレッジ 6 Tier 全 PASS: Tier1 95.83 / Tier2 97.10 / Tier2b 91.30 / Tier3 87.50 / Tier4 94.44 + 90.00 branches / Tier5 100.00
 - spec.md は変更なし（テスト/カバレッジセクション・ファイル参照に影響なし）
+
+---
+
+# 第二次独立検証（2026-08-06）
+
+上記「独立検証」と「是正の実施結果」の自己申告を再び鵜呑みにせず、全ゲートを実行して数値を再現し、コードクレームを実ファイルに突き合わせた。
+
+**結論: 実装は正しい。** 数値クレーム 11 項目すべてが誤差ゼロで再現し、コードクレームも全件が実ファイルと一致した。ただし本文書（自己申告・第一次独立検証の両方）が**見落としていた事柄が 3 件**あり、以下に記録する。
+
+## 再現できた数値クレーム（誤差ゼロ）
+
+| クレーム             | 実測                                                           | 判定 |
+| -------------------- | -------------------------------------------------------------- | ---- |
+| unit 139 / 30 files  | `139 passed (139)` / `30 passed (30)`                          | ✅   |
+| tsgo 0 エラー        | 出力なし、exit 0                                               | ✅   |
+| lint:fast 0 件       | `Found 0 warnings and 0 errors.`（93 files / 136 rules 走査）  | ✅   |
+| e2e 28/28            | `28 passed (25.8s)`（chromium + Mobile Chrome、14 unique × 2） | ✅   |
+| `check-spec-refs.sh` | `✅ All spec.md file references are valid`                     | ✅   |
+| Tier1 95.83          | 95.83% (46/48 statements)                                      | ✅   |
+| Tier2 97.10          | 97.10% (67/69)                                                 | ✅   |
+| Tier2b 91.30         | 91.30% (42/46)                                                 | ✅   |
+| Tier3 87.50          | 87.50% (49/56)                                                 | ✅   |
+| Tier4 94.44 + br     | 94.44% (85/90) + branches 90.00% (54/60)                       | ✅   |
+| Tier5 100.00         | 100.00% (25/25)                                                | ✅   |
+
+`INTENTIONALLY_MOCKED = []`（空）の状態で全 6 Tier が実ファイル 3〜9 本を集計して PASS し、"No files matched" は **1 件もない**。Phase 6 の「死んだ Tier の復活」は実測で裏付けられた。
+
+コード側も全件一致: `statusText` は repo 全体で **0 hit** / `src/` の `any` も **0 hit**（`prompts.ts:7` の英文 "any position" のみ）/ `scripts/migrate.ts` 削除済み / `src/lib/db/migrations/` に実マイグレーションあり（`schema.ts` と**ドリフトなし**、`desc()` 順序まで一致）/ `ChoiceVariant` は `choice-state` から import / `src/app/api/stats/` 削除済み / `tests/` の個別 mock クリーンアップは **0 件**（`tests/setup.ts:4-7` のグローバル `afterEach` のみ）。
+
+> 「6 ファイル削除」と「7 ファイル」の食い違いは記録上のズレのみ。`tests/api/client.test.ts` の分は 1 コミット前の `7313753` で既に削除されており、末端状態は 7 ファイルすべて clean。
+
+## 見落とされていた 3 件
+
+### 課題A — 課題2（エラーボディ優先）を守るテストが実質 1 本しかない ★最重要
+
+`tests/api/client.test.ts` の 9 テストのうち、旧バグ `customErrorMsg ?? (await readErrorMessage(res))` に戻したとき**赤くなるのは `:67-75` の 1 本だけ**。構造的な理由:
+
+- `:11-19`（fetchRandomQuestion）と `:52-60`（submitAnswer）は「ボディが勝つ」テストに見えるが、**両呼び出し元が `customErrorMsg` を渡さない**（`client.ts:76` / `:98-107`）。旧実装でも `undefined ?? body` で同じ結果になり**素通りする**
+- `:77-82`（非 JSON → `"生成に失敗しました"`）も旧実装と同一結果 → **優先順位に対して空振り**
+
+つまり `:67-75` を消すと課題2 のバグが無言で復活できる。「エラーボディ経路のテストを 3 本足した」という記録は本数としては正しいが、**優先順位バグに対する実効本数は 1 本**である。
+
+> statusText 回帰の防護自体は健全。`:21-26` と `:62-65` が `statusText` 未設定の `Response`（= HTTP/2 と同じ空文字条件）に対し `"status 502"` を literal で要求しているため、`statusText` へ戻すと確実に赤くなる。「一時的に戻して赤を確認した」という記録と整合する。
+
+### 課題B — Phase 3 の「3 ラッパー → 単一 `request()` に集約」は 2/3 しか達成されていない
+
+`fetchRandomQuestion`（`src/lib/api/client.ts:68-92`）は `request()` を使わず、エラー処理（`:74-78`）とパース + schema 検証（`:80-91`）を `request()` 内部（`:47-65`）と**逐語で重複**させている。404 → `null` の特別扱いが理由だが、`request()` にオプションを足せば吸収できる。
+
+副作用としてメッセージが不統一: `request()` の `Failed to parse response from ${label}` / `Invalid response schema for ${label}: ${詳細}` に対し、`fetchRandomQuestion` は `"Unexpected response"` / `"Invalid response schema"`（`:84`, `:89`）と情報量が落ちる。**この 4 行（`:57`, `:62`, `:84`, `:89`）が Tier 2b の唯一の未カバー箇所**でもある。
+
+### 課題C — ESLint がどこでも実行されていない
+
+課題4 で `lint:fast` から `--ignore-pattern 'tests/**'` は外れた。しかし `.github/workflows/main.yml:33-34` も `.husky/pre-commit:4` も実行するのは `lint:fast`（oxlint）のみで、`package.json:16` の `"lint": "eslint --cache"` と `eslint.config.mjs` には**自動実行経路が 1 つもない**。Phase 1 の「tests/ の lint 有効化」は oxlint 側では達成されているが、eslint 側はそもそも死んでいた。
+
+→ **oxlint 一本化（ESLint 撤去）で解消する**方針を採用。
+
+## 未コミット差分の再評価（第一次検証の「是正不要」を一部訂正）
+
+- `src/components/NavLink.tsx` — oxfmt の行折り返しのみ。**是正不要で正しい**
+- `next-env.d.ts` — `./.next/types/` → `./.next/dev/types/` + `root-params.d.ts` 追加。Next 16.3 昇格に伴う自動生成物だが、**`tsgo --noEmit` にとって load-bearing**。`.next/dev/types/` が未生成のクリーンな clone では未解決モジュールで型検査が落ちる。「是正不要」ではなく **コミットすべき**
+- `AGENTS.md` — 本検証で e2e を実行した際、`next dev` が `<!-- BEGIN:nextjs-agent-rules -->` ブロックを自動追記した（`node_modules/next/dist/server/lib/generate-agent-files.js`）。検証前は clean だった**検証実行の副作用**。消しても `next dev` のたびに再生成されるため**コミットする**
+
+## CI の現状（記録）
+
+`.github/workflows/main.yml` が実行するのは type-check:fast / lint:fast / test:all / check-spec-refs.sh / test:coverage + check-coverage-tiers.mjs / security-check / build。**e2e は CI に入っていない**（Phase 0 の「E2E は CI に入れない」という判断どおりで、意図的）。
+
+---
+
+# 第三次実施結果（2026-08-06）
+
+第二次独立検証で見つかった 3 件（課題A・課題B・課題C）と未コミット差分の是正を実施。コミットは論理単位で分割、push は 1 回。
+
+## 完了コミット一覧
+
+| コミット  | 内容                                                                                                                                                     | 検証                                 |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `3cc6f76` | 課題B+A: `fetchRandomQuestion` を `request()` に統合（`allowNotFound` オプション）、createQuestion のエラーボディ優先を `it.each` テーブルで多重防護     | tsgo 0 / **141 unit** / 全 Tier PASS |
+| `d5b6cab` | 課題C: ESLint 完全撤去（oxlint 一本化）— `lint` スクリプト・devDeps 4 件・`eslint.config.mjs` 削除、lint-staged / openspec/config.yaml / .gitignore 整理 | lint:fast 0 件 / tsgo 0              |
+| `51e57d7` | 未コミット差分の取り込み: `next-env.d.ts` / `AGENTS.md` / `NavLink.tsx`                                                                                  | —                                    |
+| `(追記コミット)` | 本セクションの追記                                                                                                                                       | —                                    |
+
+## 是正の要点
+
+- **課題A（エラーボディ優先の回帰防護を多重化）**: `createQuestion` のボディ別文言テストを `it.each` テーブル（2 行: `データベースエラーが発生しました` / `LLM の応答が不正です`）で追加。旧バグ `customErrorMsg ?? body` に戻したとき赤くなるテストが **1 本 → 3 本** に増加（`createQuestion throws error body message` + テーブル 2 行）。全てボディ文言を `生成に失敗しました` と異ならせ、偽陽性を排除。
+- **課題B（3 ラッパー → 単一 `request()` の完全達成）**: `fetchRandomQuestion`（`client.ts:68-92`）を `request()` 経由に変更。`RequestOptions { customErrorMsg?, allowNotFound? }` を導入し、404→null は `allowNotFound: true` で吸収。`request()` は `readErrorMessage(res) ?? options?.customErrorMsg ?? fallback` の順で評価を維持。メッセージも統一され、情報量の落ちていた `"Unexpected response"` / `"Invalid response schema"`（`:84, :89`）を撤去。
+  - 副産物: **Tier 2b が 91.30% → 94.29%**（`client.ts` 61% → 92.3%）。重複行 2 本（旧 `:84, :89`）が消え、残る未カバーは `request()` のパース/スキーマエラー 2 行のみ（`:62, :67`）。
+- **課題C（ESLint 撤去・oxlint 一本化）**: `pnpm lint`（eslint）は CI（`.github/workflows/main.yml:34`）・husky（`.husky/pre-commit:4`）のどちらからも参照されていなかったため、撤去しても workflow / hook の変更は不要。`eslint.config.mjs` 削除 + devDeps 4 件（eslint / eslint-config-next / eslint-plugin-react / eslint-plugin-react-hooks）削除 + `package.json:16` の `lint` スクリプト削除。あわせて `lint-staged.config.js:1` の eslint ディレクティブ、`openspec/config.yaml:13`、`.gitignore:39` の `.eslintcache` を整理。`pnpm-lock.yaml` から eslint は完全消滅。
+  - `src/app/answer/use-quiz-session.ts:90` の `// eslint-disable-next-line react-hooks/set-state-in-effect` は oxlint が eslint-disable ディレクティブを解釈するため**残置**（`lint:fast` 0 件で確認済み）。
+- **未コミット差分**: 第二次独立検証の結論どおり、`next-env.d.ts`（`.next/dev/types/` パス、tsgo に load-bearing）と `AGENTS.md`（next dev の自動生成ブロック）をコミット。`NavLink.tsx` は oxfmt の行折り返しのみで意味変化ゼロのためそのまま取り込み。
+
+## 検証（全ゲート実測）
+
+```
+bash scripts/check-spec-refs.sh        ✅ All spec.md file references are valid
+pnpm exec tsgo --noEmit                ✅ 0 errors
+pnpm lint:fast                         ✅ 0 warnings / 0 errors
+pnpm test:coverage                     ✅ 141 passed (30 files)
+node scripts/check-coverage-tiers.mjs  ✅ 全 6 Tier PASS（Tier2b 94.29% = 33/35）
+pnpm test:e2e                          ✅ 28 passed
+```
+
+他 Tier は据え置き: Tier1 95.83 / Tier2 97.10 / Tier3 87.50 / Tier4 94.44 + branches 90.00 / Tier5 100.00。
+
+## 最終状態
+
+- **unit 141 / 30 files、e2e 28/28、tsgo 0、lint:fast 0 件**
+- カバレッジ 6 Tier 全 PASS（Tier2b のみ 91.30 → **94.29** に向上）
+- spec.md は変更なし（`check-spec-refs.sh` は 8 件の参照を全て維持、テスト/カバレッジセクションへの影響なし）
