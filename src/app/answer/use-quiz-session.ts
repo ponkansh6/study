@@ -87,7 +87,7 @@ export function useQuizSession() {
 
   useEffect(() => {
     mountedRef.current = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // マウント時に最初の問題を取得する。mountedRef がアンマウント後の setState を防いでいる。
     void loadNext(true);
     return () => {
       mountedRef.current = false;
