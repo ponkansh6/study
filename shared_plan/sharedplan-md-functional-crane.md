@@ -574,12 +574,12 @@ pnpm test:e2e                          ✅ 28 passed
 
 第三次実施結果の 4 項目のうち、**課題A と `51e57d7` は記載どおり**。**課題B・課題C は達成しているが、記述に誤り／未記載の副作用が計 3 件**ある。
 
-| 項目                        | 判定 | 要点                                                          |
-| --------------------------- | ---- | ------------------------------------------------------------- |
-| 課題A（回帰防護 1→3 本）    | ✅   | 記載どおり。実効 3 本・偽陽性なしを 11 ケース個別に確認        |
-| 課題B（`request()` 統合）   | ⚠️   | 統合は達成。ただし `as` cast による型安全の穴を 2 箇所新設     |
-| 課題C（ESLint 撤去）        | ⚠️   | 撤去は完全。ただし :545 の「残置理由」の記述が事実と異なる     |
-| `51e57d7`（未コミット差分） | ✅   | 記載どおり。全て committed・clean                             |
+| 項目                        | 判定 | 要点                                                       |
+| --------------------------- | ---- | ---------------------------------------------------------- |
+| 課題A（回帰防護 1→3 本）    | ✅   | 記載どおり。実効 3 本・偽陽性なしを 11 ケース個別に確認    |
+| 課題B（`request()` 統合）   | ⚠️   | 統合は達成。ただし `as` cast による型安全の穴を 2 箇所新設 |
+| 課題C（ESLint 撤去）        | ⚠️   | 撤去は完全。ただし :545 の「残置理由」の記述が事実と異なる |
+| `51e57d7`（未コミット差分） | ✅   | 記載どおり。全て committed・clean                          |
 
 ## 課題A — ✅ 記載どおり
 
@@ -614,6 +614,7 @@ client.ts:111  return (await request(...)) as CreatedQuestion;
 ## 課題C — ⚠️ 撤去は完全、ただし :545 の記述が誤り
 
 撤去の機械的完全性（確認済み）:
+
 - `eslint.config.mjs` 不在（tracked にも disk にもなし）
 - `package.json` に `lint` スクリプトなし。残るのは `lint:fast` / `format:fast` / `security-check`
 - devDependencies に `eslint*` が 0 件
@@ -632,6 +633,7 @@ client.ts:111  return (await request(...)) as CreatedQuestion;
 「`lint:fast` 0 件で確認済み」という根拠も無効。`--report-unused-disable-directives` が付いていないので、0 件は「他に何も出ていない」ことしか示さない。
 
 **加えて `d5b6cab` が取りこぼしたドキュメント**:
+
 - `README.md:20` — `- **Tooling**: pnpm, ESLint, Prettier`
 - `IMPLEMENTATION.md:10, 32, 89, 255` — `eslint.config.mjs` を現存ファイルとして記載、構成表にも ESLint
 - `openspec/specs/study/spec.md` には eslint 参照なし（spec 側は無傷）
@@ -645,8 +647,53 @@ client.ts:111  return (await request(...)) as CreatedQuestion;
 ## 是正方針
 
 下記 1〜3 を実施する:
+
 1. `request()` の戻り値型を overload で健全化（`as` cast 2 箇所を削除）
 2. dead な eslint-disable ディレクティブを平文コメント化
 3. ドキュメント（README / IMPLEMENTATION）の ESLint 記述を除去
 
 実施後にゲート実測値を追記する。
+
+---
+
+# 第三次独立検証の是正（2026-08-06）
+
+第三次独立検証で見つかった 3 件（型安全リグレッション / dead ディレクティブ / ドキュメント取りこぼし）の是正を実施。コミットは論理単位で分割、push は 1 回。
+
+## 完了コミット一覧
+
+| コミット  | 内容                                                                                                                                  | 検証                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `94e4657` | 第三次独立検証セクションの追記（検証結果の記録）                                                                                       | —                                                |
+| `4e17464` | 型是正: `request()` を overload 化し `as AnswerResult` / `as CreatedQuestion` を削除                                                  | tsgo 0 / 141 unit / 全 Tier PASS                 |
+| `3e691b9` | ディレクティブ: dead な eslint-disable を平文コメント化                                                                               | lint:fast 0 件（unused-disable 警告ゼロ）        |
+| `cc567ef` | ドキュメント: README / IMPLEMENTATION の ESLint・`eslint.config.mjs` 記述を除去                                                       | —                                                |
+| `(追記コミット)` | 本セクション（第三次独立検証の是正）の追記                                                                                             | —                                                |
+
+## 是正の要点
+
+- **型安全リグレッション（`request()` overload 化）**: `request<T>` の戻り値が `Promise<T>` → `Promise<T | null>` に広がったことで新設された unsound な `as` cast 2 箇所（旧 `client.ts:97`, `:111`）を、関数 overload で解消。`allowNotFound: true` のときのみ `Promise<T | null>`、それ以外は `Promise<T>` を返すよう型で表現。`submitAnswer` / `createQuestion` は cast なしの `return request(...)` に、`fetchRandomQuestion` は `T | null` のまま。実装本体は無変更。
+- **dead ディレクティブ**: `use-quiz-session.ts:90` の `// eslint-disable-next-line react-hooks/set-state-in-effect`（oxlint に存在しないルールの no-op）を平文コメント（`mountedRef` による保護の意図）に置換。`--report-unused-disable-directives` 付きで警告ゼロを確認。
+- **ドキュメント取りこぼし**: `README.md:20` を `pnpm, Oxlint, Prettier` に、`IMPLEMENTATION.md:10,32,89,255` の ESLint / `eslint.config.mjs` 記述を除去。`shared_plan/*.md` と `PLAN.md` は歴史的記録として対象外。
+
+## 検証（全ゲート実測）
+
+```
+bash scripts/check-spec-refs.sh        ✅ All spec.md file references are valid
+pnpm exec tsgo --noEmit                ✅ 0 errors
+pnpm lint:fast                         ✅ 0 warnings / 0 errors
+pnpm lint:fast --report-unused-disable-directives  ✅ 警告ゼロ
+pnpm test:coverage                     ✅ 141 passed (30 files)
+node scripts/check-coverage-tiers.mjs  ✅ 全 6 Tier PASS（Tier2b 94.29% = 33/35）
+pnpm test:e2e                          ✅ 28 passed
+```
+
+## 回帰防護の実証（課題A）
+
+`client.ts:68` を一時的に旧バグ順 `options?.customErrorMsg ?? (await readErrorMessage(res)) ?? fallback` へ戻し、`pnpm vitest run tests/api/client.test.ts` を実行 → **PASS 8 / FAIL 3**。想定どおり 3 本（`createQuestion throws error body message` + `it.each` 2 行）が赤くなり、復元後に全 green を確認。
+
+## 最終状態
+
+- **unit 141 / 30 files、e2e 28/28、tsgo 0、lint:fast 0 件**
+- カバレッジ 6 Tier 全 PASS（Tier2b 94.29%）
+- `client.ts` の `as` cast は 0 件（overload 化で解消。`src/lib/db/index.ts:32` の既存 cast は本件とは無関係で残置）
