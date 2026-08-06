@@ -533,6 +533,8 @@ bash scripts/check-spec-refs.sh \
 | `d5b6cab` | 課題C: ESLint 完全撤去（oxlint 一本化）— `lint` スクリプト・devDeps 4 件・`eslint.config.mjs` 削除、lint-staged / openspec/config.yaml / .gitignore 整理 | lint:fast 0 件 / tsgo 0              |
 | `51e57d7` | 未コミット差分の取り込み: `next-env.d.ts` / `AGENTS.md` / `NavLink.tsx`                                                                                  | —                                    |
 | `952b3a9` | 本セクション（第三次実施結果）の追記                                                                                                                     | —                                    |
+| `30cb16a` | 本セクションの追記コミットハッシュの記録                                                                                                                 | —                                    |
+| `3acad7c` | oxfmt 整形の適用（markdown テーブル幅・`it.each` 配列の折り返し）                                                                                        | —                                    |
 
 ## 是正の要点
 
