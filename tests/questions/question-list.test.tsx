@@ -72,6 +72,11 @@ describe("QuestionList", () => {
     expect(btn).toBeDisabled();
     expect(btn).toHaveAttribute("aria-busy", "true");
 
+    // The confirmation prompt and cancel button stay mounted while deleting,
+    // so the row does not collapse and re-expand on failure.
+    expect(screen.getByText("本当に削除しますか？")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "キャンセル" })).toBeDisabled();
+
     resolve!();
     await waitFor(() => expect(screen.queryByText("Q1")).not.toBeInTheDocument());
   });

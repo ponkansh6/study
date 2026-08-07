@@ -28,7 +28,6 @@ function QuestionRow({
   const [error, setError] = useState<string | null>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
   const prevStateRef = useRef(state);
 
   useEffect(() => {
@@ -56,12 +55,14 @@ function QuestionRow({
     }
   };
 
+  const confirming = state !== "idle";
+
   return (
     <li
       className={`bg-surface rounded-card border shadow-card p-4 space-y-3 ${
-        state === "confirming" ? "border-warning/30" : "border-border/60"
+        confirming ? "border-warning/30" : "border-border/60"
       }`}
-      {...(state === "confirming"
+      {...(confirming
         ? {
             role: "group",
             "aria-labelledby": `question-${item.id} confirm-${item.id}`,
@@ -73,19 +74,7 @@ function QuestionRow({
           <p className="font-bold break-words leading-snug">{item.question}</p>
           <p className="text-xs text-muted mt-0.5">{item.createdAt}</p>
         </div>
-        {state === "confirming" ? (
-          <div className="shrink-0 w-24">
-            <Button variant="danger" onClick={handleDelete} loading={false} ref={confirmRef}>
-              削除する
-            </Button>
-          </div>
-        ) : state === "deleting" ? (
-          <div className="shrink-0 w-24">
-            <Button variant="danger" onClick={handleDelete} loading={true} ref={confirmRef}>
-              削除する
-            </Button>
-          </div>
-        ) : (
+        {!confirming && (
           <div className="shrink-0 w-24">
             <Button
               variant="danger"
@@ -99,7 +88,7 @@ function QuestionRow({
         )}
       </div>
 
-      {state === "confirming" && (
+      {confirming && (
         <>
           <p id={`confirm-${item.id}`} className="font-medium text-sm">
             本当に削除しますか？
@@ -113,17 +102,25 @@ function QuestionRow({
             <div className="flex-1">
               <Button
                 variant="ghost"
+                disabled={state === "deleting"}
                 onClick={() => {
                   setState("idle");
                   setError(null);
                 }}
-                ref={cancelRef}
               >
                 キャンセル
               </Button>
             </div>
             <div className="flex-1">
-              <span className="hidden">削除する</span>
+              <Button
+                variant="danger"
+                loading={state === "deleting"}
+                onClick={handleDelete}
+                aria-describedby={`question-${item.id}`}
+                ref={confirmRef}
+              >
+                削除する
+              </Button>
             </div>
           </div>
         </>
