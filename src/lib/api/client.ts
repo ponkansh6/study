@@ -129,13 +129,12 @@ export async function createQuestion(sourceText: string): Promise<CreatedQuestio
   );
 }
 
-export async function deleteQuestion(questionId: number): Promise<boolean> {
-  const result = await request(
+export async function deleteQuestion(questionId: number): Promise<void> {
+  await request(
     `/api/questions/${questionId}`,
     { method: "DELETE" },
     "delete question",
     deleteResultSchema,
     { allowNotFound: true, customErrorMsg: "削除に失敗しました" },
   );
-  return result !== null || true;
 }

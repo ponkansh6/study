@@ -29,8 +29,13 @@ function QuestionRow({
   const deleteRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const prevStateRef = useRef(state);
 
   useEffect(() => {
+    const prev = prevStateRef.current;
+    prevStateRef.current = state;
+    if (prev === state) return;
+
     if (state === "confirming") {
       confirmRef.current?.focus();
     } else if (state === "idle") {
@@ -43,78 +48,87 @@ function QuestionRow({
     setState("deleting");
     setError(null);
     try {
-      const success = await deleteQuestion(item.id);
-      if (success) {
-        onDeleted(item.id);
-      } else {
-        throw new Error("削除失敗");
-      }
+      await deleteQuestion(item.id);
+      onDeleted(item.id);
     } catch (e) {
       setError(errorMessage(e, "削除に失敗しました"));
       setState("confirming");
     }
   };
 
-  if (state === "idle") {
-    return (
-      <div className="bg-surface rounded-card border border-border/60 shadow-card p-4 flex items-center justify-between gap-4">
+  return (
+    <li
+      className={`bg-surface rounded-card border shadow-card p-4 space-y-3 ${
+        state === "confirming" ? "border-warning/30" : "border-border/60"
+      }`}
+      {...(state === "confirming"
+        ? {
+            role: "group",
+            "aria-labelledby": `question-${item.id} confirm-${item.id}`,
+          }
+        : {})}
+    >
+      <div className="flex items-start justify-between gap-4">
         <div id={`question-${item.id}`} className="flex-1 min-w-0">
-          <p className="font-bold truncate">{item.question}</p>
+          <p className="font-bold break-words leading-snug">{item.question}</p>
           <p className="text-xs text-muted mt-0.5">{item.createdAt}</p>
         </div>
-        <div className="shrink-0 w-24">
-          <Button
-            variant="danger"
-            onClick={() => setState("confirming")}
-            aria-describedby={`question-${item.id}`}
-            ref={deleteRef}
-          >
-            削除
-          </Button>
-        </div>
+        {state === "confirming" ? (
+          <div className="shrink-0 w-24">
+            <Button variant="danger" onClick={handleDelete} loading={false} ref={confirmRef}>
+              削除する
+            </Button>
+          </div>
+        ) : state === "deleting" ? (
+          <div className="shrink-0 w-24">
+            <Button variant="danger" onClick={handleDelete} loading={true} ref={confirmRef}>
+              削除する
+            </Button>
+          </div>
+        ) : (
+          <div className="shrink-0 w-24">
+            <Button
+              variant="danger"
+              onClick={() => setState("confirming")}
+              aria-describedby={`question-${item.id}`}
+              ref={deleteRef}
+            >
+              削除
+            </Button>
+          </div>
+        )}
       </div>
-    );
-  }
 
-  return (
-    <div
-      className="bg-surface rounded-card border border-warning/30 shadow-card p-4 space-y-3"
-      role="group"
-      aria-labelledby={`confirm-${item.id}`}
-    >
-      <p id={`confirm-${item.id}`} className="font-medium text-sm">
-        本当に削除しますか？
-      </p>
-      {error && (
-        <p className="text-xs text-error font-bold" role="alert">
-          {error}
-        </p>
+      {state === "confirming" && (
+        <>
+          <p id={`confirm-${item.id}`} className="font-medium text-sm">
+            本当に削除しますか？
+          </p>
+          {error && (
+            <p className="text-xs text-error font-bold" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setState("idle");
+                  setError(null);
+                }}
+                ref={cancelRef}
+              >
+                キャンセル
+              </Button>
+            </div>
+            <div className="flex-1">
+              <span className="hidden">削除する</span>
+            </div>
+          </div>
+        </>
       )}
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setState("idle");
-              setError(null);
-            }}
-            ref={cancelRef}
-          >
-            キャンセル
-          </Button>
-        </div>
-        <div className="flex-1">
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-            loading={state === "deleting"}
-            ref={confirmRef}
-          >
-            削除する
-          </Button>
-        </div>
-      </div>
-    </div>
+    </li>
   );
 }
 
@@ -144,11 +158,11 @@ export function QuestionList({ initialItems }: QuestionListProps) {
         {announcement}
       </div>
       <p className="text-sm font-bold text-muted">{items.length}件</p>
-      <div className="space-y-3">
+      <ul className="space-y-3">
         {items.map((item) => (
           <QuestionRow key={item.id} item={item} onDeleted={handleDeleted} />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

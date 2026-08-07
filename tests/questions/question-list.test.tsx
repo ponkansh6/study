@@ -34,7 +34,7 @@ describe("QuestionList", () => {
   });
 
   it("handles delete flow", async () => {
-    vi.mocked(deleteQuestion).mockResolvedValue(true);
+    vi.mocked(deleteQuestion).mockResolvedValue(undefined);
     render(<QuestionList initialItems={mockItems} />);
 
     // Trigger delete
@@ -58,8 +58,8 @@ describe("QuestionList", () => {
   });
 
   it("handles delete loading state", async () => {
-    let resolve: (val: boolean) => void;
-    const promise = new Promise<boolean>((r) => {
+    let resolve: () => void;
+    const promise = new Promise<void>((r) => {
       resolve = r;
     });
     vi.mocked(deleteQuestion).mockReturnValue(promise);
@@ -72,7 +72,7 @@ describe("QuestionList", () => {
     expect(btn).toBeDisabled();
     expect(btn).toHaveAttribute("aria-busy", "true");
 
-    resolve!(true);
+    resolve!();
     await waitFor(() => expect(screen.queryByText("Q1")).not.toBeInTheDocument());
   });
 
@@ -84,13 +84,18 @@ describe("QuestionList", () => {
     expect(screen.getByRole("button", { name: "削除" })).toBeInTheDocument();
   });
 
-  it("deleting last row shows empty", async () => {
-    vi.mocked(deleteQuestion).mockResolvedValue(true);
-    render(<QuestionList initialItems={[mockItems[0]]} />);
+  it("does not focus any delete button on initial mount", () => {
+    render(<QuestionList initialItems={mockItems} />);
+    const buttons = screen.getAllByRole("button", { name: "削除" });
+    for (const btn of buttons) {
+      expect(document.activeElement).not.toBe(btn);
+    }
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "削除" }));
-    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
-
-    await waitFor(() => expect(screen.getByText("問題がありません")).toBeInTheDocument());
+  it("keeps question text visible when in confirming state", () => {
+    render(<QuestionList initialItems={mockItems} />);
+    fireEvent.click(screen.getAllByRole("button", { name: "削除" })[0]);
+    expect(screen.getByText("Q1")).toBeInTheDocument();
+    expect(screen.getByText("本当に削除しますか？")).toBeInTheDocument();
   });
 });

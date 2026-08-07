@@ -279,4 +279,176 @@ pnpm build                                 # [id] ルートの生成型を検証
 
 ### 4. コミット & プッシュ
 
-- **未コミット**。実装・検証は完了しているが、コミットは明示指示があるまで保留中。
+- ~~**未コミット**。実装・検証は完了しているが、コミットは明示指示があるまで保留中。~~
+- **訂正**: 実際には `95d2560 feat: add question list page with inline-confirm deletion` として**コミット済み**（23 files, +1048 −16）。作業ツリーはクリーン（未追跡の `.claude/summaries/` のみ）。
+
+---
+
+# 第三者検証レポート（2026-08-07）
+
+上記「実装完了・検証記録」の主張を、リポジトリの実状態に対して独立に再検証した記録。
+
+## 1. 主張どおりだった項目
+
+| 項目                        | 主張       | 実測                                                                  | 判定 |
+| --------------------------- | ---------- | --------------------------------------------------------------------- | ---- |
+| `pnpm test`                 | 174 passed | 35 files / **174 passed**                                             | ✅   |
+| `pnpm type-check` (tsc)     | PASS       | エラーなし                                                            | ✅   |
+| `pnpm lint:fast` (oxlint)   | PASS       | エラーなし                                                            | ✅   |
+| `pnpm format:check` (oxfmt) | PASS       | 154 files すべて整形済み                                              | ✅   |
+| `check-spec-refs.sh`        | PASS       | 全参照有効                                                            | ✅   |
+| E2E 38 tests                | 38         | 19 test 関数 × 2 project = **38**                                     | ✅   |
+| Tier 6 = 91.49%             | 91.49%     | `coverage-summary.json`: `page.tsx` 100% / `question-list.tsx` 90.47% | ✅   |
+| 13 ステップの実装           | 完了       | 全ファイル存在・commit diff 確認済み                                  | ✅   |
+
+## 2. 主張と異なった項目
+
+- **コミット状態**: 「未コミット」は誤り（上記 §4 の訂正のとおり）。
+
+## 3. ゲート通過後も残っている欠陥
+
+以下はいずれも**型・lint・既存テストのどれにも引っかからない**種類の欠陥のため、全ゲートが緑でも残存している。
+
+### A. `src/lib/api/client.ts:140` — 常に `true` を返す恒真式（要修正）
+
+```ts
+return result !== null || true; // boolean || true → 常に true
+```
+
+`result !== null` の評価結果は捨てられ、この関数は `Promise<boolean>` を名乗りながら **`true` 以外を返せない**。
+
+波及: `src/app/questions/question-list.tsx:46-51` の
+
+```ts
+const success = await deleteQuestion(item.id);
+if (success) {
+  onDeleted(item.id);
+} else {
+  throw new Error("削除失敗");
+}
+```
+
+の `else` 分岐が**到達不能なデッドコード**になっている（`question-list.tsx` の未カバー 9.53% の実体もここ）。テスト `tests/api/client.test.ts:114`「returns true on 404 (idempotent)」は**通るが検出力がない** — 実装が壊れていても常に true になるため。
+
+**修正方針**: 戻り値を `Promise<void>` にする（404 は冪等成功、失敗は `request` が throw する設計なので boolean を返す意味がない）。`question-list.tsx` の `if (success)/else` を `await deleteQuestion(item.id); onDeleted(item.id);` に簡素化。`tests/api/client.test.ts` の 2 ケースは `await expect(deleteQuestion(42)).resolves.toBeUndefined()` に書き換える。
+
+### B. `src/app/questions/question-list.tsx:33-39` — マウント時にフォーカスを奪う（要修正）
+
+```ts
+useEffect(() => {
+  if (state === "confirming") confirmRef.current?.focus();
+  else if (state === "idle") deleteRef.current?.focus();
+}, [state]);
+```
+
+初期マウント時の `state` は `"idle"` なので、この effect は**ページ読み込み直後に全行で発火**する。結果、`/questions` を開いただけで**最終行の「削除」ボタンにフォーカスが移り、ページが末尾までスクロールする**。破壊的操作のボタンに意図せずフォーカスが乗るため危険でもある。既存テストのフォーカス検証は「キャンセル後」（`tests/questions/question-list.test.tsx:57`）のみで、マウント時を見ていない。
+
+**修正方針**: `useRef` で前回の `state` を保持し、`prev !== state` のときだけフォーカス移動する（初回は `prev === state` で何もしない）。「マウント直後はどの削除ボタンにもフォーカスが乗らない」回帰テストを追加。
+
+### C. `tests/e2e/questions.spec.ts:31-66` — 空 DB で必ず失敗する（要修正）
+
+テスト 4「inline confirmation and cancel」には**空 DB ガードが無い**。`firstBtn.waitFor({ state: "visible" })`（59 行）は問題が 1 件も無いとタイムアウトして落ちる。テスト 5 には `test.skip` ガード（95-99 行）があるがテスト 4 には無い。E2E は pre-push で blocking のため、**クリーンな DB の環境（新規 clone / CI / DB リセット後）で pre-push が通らなくなる**。
+
+さらに、テスト 4・5 冒頭の `/create` 経由の「セットアップ」は **POST `/api/questions` をモックしているため DB には何も作られない**。所要時間だけ増やして 1 件も seed しておらず、その後の `/questions` は実 DB の既存データに依存している（§3「検証中に調整した内容」の「テスト対象が確実にセットアップされるよう」という記述は成立していない）。
+
+**修正方針**: 両テストから `/create` 経由の擬似セットアップ（32-54 行 / 69-91 行）を削除し、アクション実行前に削除ボタン件数を数えて 0 件なら `test.skip(...)` するガードを**両方**に付ける。
+
+### D. `src/app/questions/question-list.tsx:79-118` — 確認時に削除対象が見えない（要修正）
+
+確認状態に入ると行の中身が丸ごと差し替わり、**どの問題を削除しようとしているのかが画面から消える**。`role="group" aria-labelledby={confirm-${id}}` のラベルも「本当に削除しますか？」だけで対象を特定できない。この削除は問題本体に加えて親 `knowledge`（元テキスト）と全 `answerLogs` を消す**取り消し不能な操作**であり、対象が見えない確認画面は誤削除を招く。
+
+**修正方針**: 問題文と作成日は常時表示のまま、下段のみ idle / confirming で切り替える構造にする。`role="group"` の `aria-labelledby` は問題文の id と確認文の id の両方を指す。
+
+### E. `src/app/questions/question-list.tsx:62` — `truncate` で問題文が読めない（要修正）
+
+`<p className="font-bold truncate">` により長い問題文は 1 行で省略される。この画面には詳細ページも展開 UI も無く、**省略された問題文を全文確認する手段が存在しない**。似た問題が並ぶと D と相まって誤削除に直結する。
+
+**修正方針**: `truncate` を `break-words leading-snug` に置換（当初プランの指定どおり）。
+
+### F. `src/app/questions/question-list.tsx:141-152` — リストのセマンティクスが無い（軽微）
+
+行が `<div>` の入れ子で `<ul>` / `<li>` になっておらず、スクリーンリーダーがリスト・件数として読み上げられない。`{items.length}件` を目視表示しているぶん影響は限定的。
+
+**修正方針**: 外側を `<ul className="space-y-3">`、`QuestionRow` のルートを `<li>` にする。
+
+### G. ドキュメント（軽微）
+
+- 本 MD の「未コミット」記載を訂正（対応済み）。
+- A〜F 修正後は `pnpm test` の件数が変わるため `openspec/specs/study/spec.md:189` の `174 tests` を実測値に更新。R7 に「確認時も削除対象を表示する」旨を追記。
+
+## 4. 検証の結果 問題が無く、変更不要と判断したファイル
+
+`src/lib/date.ts` / `src/components/Button.tsx` / `src/lib/db/repository/question-repository.ts` / `src/app/api/questions/[id]/route.ts` / `src/lib/api/schemas.ts` / `scripts/check-coverage-tiers.mjs`
+
+特に、当初プランで「ハマりどころ」として挙げた以下はすべて正しく実装されていることを確認した:
+
+- Next 16 の Promise `params` を `await` してから `safeParse` している
+- `deleteQuestion`（repository）は未存在で `throw` せず `false` を返し、404 を返せている
+- `answerLogs` → `questions` → `knowledge` の child → parent 順で明示削除している
+- `listQuestions` に `desc(createdAt), desc(id)` のタイブレークがある
+- `Button` は `ComponentPropsWithRef<"button">` で `ref` を転送、`danger` variant は base と utility が重複していない
+- `formatJstDate` は `Intl` 非依存で `JST_OFFSET_MS` を再利用している
+
+## 5. 修正の実装順序
+
+1. **A** — `client.ts` の戻り値を `void` 化 → `question-list.tsx` の呼び出し簡素化 → `tests/api/client.test.ts` 更新
+2. **B** — フォーカス effect に前回値ガード → マウント時フォーカスの回帰テスト追加
+3. **D + E + F** — 行のレイアウト再構成（問題文常時表示 / `break-words` / `ul`+`li`）→ 確認状態で問題文が見えるテスト追加
+4. **C** — E2E から擬似セットアップ削除、両テストに件数ガード
+5. **G** — `spec.md` の件数を実測値に更新
+
+A を先にするのは、デッドコードが消えてからレイアウト（D/E/F）を触るほうが差分が読みやすいため。
+
+## 6. 修正後の検証手順
+
+```bash
+pnpm format:check && pnpm lint:fast
+pnpm type-check                      # client.ts の戻り値変更の波及を確認
+pnpm test                            # ← 実測件数を spec.md に反映
+pnpm exec vitest run --coverage && node scripts/check-coverage-tiers.mjs
+#   Tier 6 が 85% 以上を維持。A のデッドコード除去で question-list.tsx は 90.47% から上がるはず。
+#   Tier 2b (lib/api, 85%) の非回帰も確認。
+bash scripts/check-spec-refs.sh
+pnpm test:e2e                        # 38 tests
+pnpm build
+```
+
+### 空 DB での E2E 確認（C の本題）
+
+`TURSO_DATABASE_URL` を空の一時 DB に向けて `pnpm test:e2e tests/e2e/questions.spec.ts` を実行し、**タイムアウト失敗ではなく skip になる**ことを確認する。現状はここでテスト 4 が落ちる。
+
+### 手動確認（`pnpm dev`）
+
+1. `/questions` を開く → **どのボタンにもフォーカスが乗らず、ページ先頭が表示される**（B）
+2. 長い問題文が省略されず折り返して全文表示される（E）
+3. 「削除」を押す → **問題文と作成日が見えたまま**下段に「本当に削除しますか？」+ キャンセル / 削除する が出る（D）。フォーカスは「削除する」
+4. キャンセル → 元に戻り、フォーカスは「削除」
+5. 削除する → 行が消え件数が減る。他の行は無傷
+6. `pnpm db:studio` で `questions` / `knowledge` / 該当 `answer_logs` が消え、残る問題の関連行が無傷であることを確認
+7. リロードしても復活しない。`/` の「問題数」が 1 減る
+8. Pixel 5 幅 + dark mode + `prefers-reduced-motion: reduce` で崩れないこと
+
+## 対応済み（実装反映） — 2026-08-07
+
+第三者検証レポートで指摘された欠陥 A〜G をすべて実装に反映した。
+
+1. **A** — `src/lib/api/client.ts`: `deleteQuestion` の戻り値を `Promise<void>` に変更（恒真式 `result !== null || true` を除去）。`src/app/questions/question-list.tsx` の `if (success)/else` デッドコードを `await deleteQuestion(item.id); onDeleted(item.id);` に簡素化。`tests/api/client.test.ts` の 2 ケースを `resolves.toBeUndefined()` に更新。
+2. **B** — `src/app/questions/question-list.tsx`: `useRef` で前回の `state` を保持し、初回マウント時はフォーカスを移動しないよう修正。マウント時フォーカス未発生の回帰テストを追加。
+3. **C** — `tests/e2e/questions.spec.ts`: `/create` 経由の擬似セットアップを削除し、削除ボタン件数が 0 件なら `test.skip(...)` する空 DB ガードを両テストに付与。
+4. **D** — `src/app/questions/question-list.tsx`: 問題文と作成日を常時表示のまま、下段のみ idle / confirming で切り替える構造に再構成。`role="group"` の `aria-labelledby` は問題文 id と確認文 id の両方を指す。
+5. **E** — `src/app/questions/question-list.tsx`: `truncate` を `break-words leading-snug` に置換（問題文を全文表示）。
+6. **F** — `src/app/questions/question-list.tsx`: 外側を `<ul>`、`QuestionRow` のルートを `<li>` に変更。
+7. **G** — `openspec/specs/study/spec.md`: Unit tests を実測値 **175 tests** に更新。R7 に「確認時も削除対象を表示する」旨を追記。
+
+### 検証結果（全パス）
+
+- `pnpm test`: **175 passed**
+- カバレッジ Tier: **6/6 PASS**（Tier 6 = 93.75%、target 85%）
+- `pnpm test:e2e`: **38/38 passed**
+- `pnpm format:check` / `pnpm lint:fast` / `pnpm type-check` / `check-spec-refs.sh` / `pnpm build`: すべて PASS
+- 空 DB での E2E が skip になることを確認
+
+### コミット
+
+- コミットメッセージ: `fix: address third-party review findings for question list delete`
+- コミットハッシュ: 3574516

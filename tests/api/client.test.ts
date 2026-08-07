@@ -99,22 +99,20 @@ describe("api client", () => {
     },
   );
 
-  it("deleteQuestion calls DELETE with correct URL and returns true on success", async () => {
+  it("deleteQuestion calls DELETE with correct URL and resolves on success", async () => {
     const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
     );
-    const result = await deleteQuestion(42);
+    await expect(deleteQuestion(42)).resolves.toBeUndefined();
     expect(fetchSpy).toHaveBeenCalledWith("/api/questions/42", { method: "DELETE" });
-    expect(result).toBe(true);
   });
 
-  it("deleteQuestion returns true on 404 (idempotent)", async () => {
+  it("deleteQuestion resolves on 404 (idempotent)", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response(null, { status: 404 }));
-    const result = await deleteQuestion(42);
-    expect(result).toBe(true);
+    await expect(deleteQuestion(42)).resolves.toBeUndefined();
   });
 
   it("deleteQuestion throws server message on failure", async () => {
