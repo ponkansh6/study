@@ -122,6 +122,7 @@ interface AnswerLog {
 - `NavLink.tsx`: Link wrapper applying the `Button` design system (via `buttonVariants`) plus `useLinkStatus` pending feedback
 - `Spinner.tsx`: Shared loading spinner (sizes `sm`/`lg`, colors `current`/`primary`) used by `Button`, `ChoiceButton`, and `LoadingState`
 - `QuestionCard.tsx`: Display-only question container card (correct answer highlighting via `correctIndex`; no interactive props)
+- `StatCard.tsx`: Statistics card with optional circular progress ring (`ring?: number` 0..1) for accuracy visualization; SVG is `aria-hidden`, value rendered as text
 - `ResultBanner.tsx`: Correct/incorrect feedback banner
 - `ChoiceButton.tsx`: Choice selection button with state highlights
 - `EmptyState.tsx`: Empty state display
@@ -160,7 +161,7 @@ interface AnswerLog {
 
 ## Testing
 
-- **Unit tests:** Vitest (124 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`, `answer/use-quiz-session`, `answer/quiz-runner`, `answer/page`), and DB repositories (`question-repository`, `answer-repository`).
+- **Unit tests:** Vitest (144 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`, `answer/use-quiz-session`, `answer/quiz-runner`, `answer/page`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`question-repository`, `answer-repository`).
 - **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
 - **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated. Tiers that match no files are a hard failure. Tier configuration:
   - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts` — target 90% statements
@@ -177,6 +178,9 @@ interface AnswerLog {
 - Mobile-first responsive design (Tailwind v4)
 - Touch-friendly buttons (`min-h-12`)
 - WCAG 2.1 AA (focus-visible rings, color contrast)
+- Design tokens (surface / surface-2 / muted / on-primary / shadow-card / shadow-raise / animation) centralized in `src/app/globals.css` `@theme`
+- Dark mode via `prefers-color-scheme` redefining all color tokens (no manual toggle)
+- Animations (`animate-rise` / `animate-pop`) applied only via `motion-safe:` variants to respect `prefers-reduced-motion`
 - No result persistence for scores (in-memory analytics via `answerLogs`)
 
 ## Deployment

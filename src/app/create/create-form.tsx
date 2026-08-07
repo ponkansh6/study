@@ -31,12 +31,12 @@ export function CreateForm() {
   };
 
   return (
-    <main className="py-8 space-y-6 flex-1 flex flex-col">
-      <h1 className="text-xl font-bold">問題を作成</h1>
+    <main className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise">
+      <h1 className="text-2xl font-bold tracking-tight">問題を作成</h1>
       {!result ? (
         <div className="space-y-4">
           <textarea
-            className="w-full min-h-48 p-4 rounded-xl border border-border bg-transparent text-base"
+            className="w-full min-h-48 p-4 rounded-card border border-border bg-surface shadow-sm text-base focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition"
             placeholder="ナレッジを入力してください..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -46,13 +46,15 @@ export function CreateForm() {
               この内容から1問作る
             </Button>
             {loading && (
-              <p className="text-sm text-text/60 text-center">数秒〜数十秒かかる場合があります</p>
+              <p className="text-sm text-muted text-center font-medium">
+                数秒〜数十秒かかる場合があります
+              </p>
             )}
           </div>
           {error && <ErrorMessage message={error} />}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 motion-safe:animate-rise">
           <div className="space-y-4">
             <QuestionCard
               question={result.question}
@@ -60,7 +62,7 @@ export function CreateForm() {
               correctIndex={result.correctIndex}
             />
             {result.explanation && (
-              <p className="text-sm text-text/70 italic px-2">解説: {result.explanation}</p>
+              <p className="text-sm text-muted italic px-2">解説: {result.explanation}</p>
             )}
           </div>
           <div className="grid grid-cols-1 gap-3">

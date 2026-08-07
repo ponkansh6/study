@@ -9,11 +9,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+    <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 bg-surface shadow-card rounded-card border border-border/60 my-auto motion-safe:animate-rise">
       <h2 className="text-xl font-bold">{title}</h2>
-      {description && <p className="text-text/60">{description}</p>}
+      {description && <p className="text-muted">{description}</p>}
       {actionLabel && onAction && (
-        <div className="w-48">
+        <div className="w-48 pt-2">
           <Button onClick={onAction}>{actionLabel}</Button>
         </div>
       )}

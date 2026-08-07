@@ -8,7 +8,7 @@ import { buttonBaseClasses, buttonVariants } from "@/components/Button";
 type NavLinkProps = Omit<ComponentProps<typeof Link>, "children"> & {
   pendingClassName?: string;
   /** Mirrors `Button`'s visual variants so links share the design system. */
-  variant?: keyof typeof buttonVariants;
+  variant?: keyof typeof buttonVariants | "bare";
   children: ReactNode;
 };
 
@@ -23,7 +23,11 @@ export function NavLink({
   return (
     <Link
       href={href}
-      className={cn(buttonBaseClasses, buttonVariants[variant], className)}
+      className={cn(
+        variant === "bare" ? undefined : buttonBaseClasses,
+        variant === "bare" ? undefined : buttonVariants[variant as keyof typeof buttonVariants],
+        className,
+      )}
       {...rest}
     >
       <PendingState pendingClassName={pendingClassName}>{children}</PendingState>

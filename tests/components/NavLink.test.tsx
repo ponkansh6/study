@@ -17,7 +17,7 @@ describe("NavLink", () => {
   it("applies the primary button variant by default", () => {
     render(<NavLink href="/dashboard">Home</NavLink>);
     const link = screen.getByRole("link", { name: "Home" });
-    expect(link).toHaveClass("bg-primary", "text-white");
+    expect(link).toHaveClass("bg-primary", "text-on-primary");
   });
 
   it("applies the outline button variant when requested", () => {
@@ -30,6 +30,18 @@ describe("NavLink", () => {
     expect(link).toHaveClass("border-primary", "text-primary");
   });
 
+  it("omits the button base and variant classes for the bare variant", () => {
+    render(
+      <NavLink href="/" variant="bare" className="text-lg">
+        Home
+      </NavLink>,
+    );
+    const link = screen.getByRole("link", { name: "Home" });
+    expect(link).toHaveClass("text-lg");
+    expect(link).not.toHaveClass("bg-primary");
+    expect(link).not.toHaveClass("w-full");
+  });
+
   it("keeps extra className alongside the button variant", () => {
     render(
       <NavLink href="/dashboard" variant="ghost" className="extra-class">
@@ -38,6 +50,6 @@ describe("NavLink", () => {
     );
     const link = screen.getByRole("link", { name: "Home" });
     expect(link).toHaveClass("extra-class");
-    expect(link).toHaveClass("text-text/60");
+    expect(link).toHaveClass("text-muted");
   });
 });

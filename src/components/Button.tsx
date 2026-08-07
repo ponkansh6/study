@@ -10,12 +10,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 /** Shared design-system classes so NavLink / home links match Button styling. */
 export const buttonBaseClasses =
-  "w-full py-3 rounded-xl font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition disabled:opacity-50 motion-safe:active:scale-[0.98]";
+  "w-full py-3 rounded-card font-bold min-h-12 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition duration-200 ease-[var(--ease-out-soft)] disabled:opacity-50 motion-safe:active:scale-[0.98]";
 
+/**
+ * `cn()` concatenates without merging, so variants must not repeat a utility
+ * the base already sets — the later rule in the stylesheet would win silently.
+ * Hence `shadow-sm` lives here per variant rather than in `buttonBaseClasses`.
+ */
 export const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white hover:bg-primary-hover",
-  outline: "border-2 border-primary text-primary hover:bg-primary/10",
-  ghost: "text-text/60 hover:bg-border/20",
+  primary: "bg-primary text-on-primary hover:bg-primary-hover shadow-card hover:shadow-raise",
+  outline: "border-2 border-primary text-primary hover:bg-primary/10 shadow-sm",
+  ghost: "text-muted hover:bg-surface-2 shadow-sm",
 };
 
 export function Button({
