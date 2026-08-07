@@ -1,8 +1,12 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
-pnpm lint:fast
-pnpm exec oxfmt --write .
-pnpm exec tsgo --noEmit
+# ファイルを書き換える処理は lint-staged に集約する。
+# lint-staged がタスクによる変更を自動で再ステージするので、
+# 整形差分が「次のコミット」に漏れない。
 pnpm exec lint-staged
+
+# 整形後の内容に対してリポジトリ全体のゲートを走らせる。
+pnpm lint:fast
+pnpm exec tsgo --noEmit
+
 bash scripts/check-spec-update.sh

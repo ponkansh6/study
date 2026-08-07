@@ -15,6 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "lint:fast": "oxlint --nextjs-plugin --react-plugin --react-perf-plugin",
     "format:fast": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "type-check": "tsc --noEmit",
     "type-check:fast": "tsgo --noEmit",
     "security-check": "pnpm audit --audit-level=high && secretlint \"**/*\"",

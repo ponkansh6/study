@@ -1,5 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 MERGE_BASE=$(git merge-base --fork-point origin/main HEAD 2>/dev/null || git rev-parse HEAD)
 PUSH_FILES=$(git diff --name-only "$MERGE_BASE"...HEAD 2>/dev/null || true)
