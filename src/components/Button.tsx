@@ -1,12 +1,12 @@
 import { cn } from "@/lib/cn";
 import { Spinner } from "@/components/Spinner";
 
-type ButtonVariant = "primary" | "outline" | "ghost";
+type ButtonVariant = "primary" | "outline" | "ghost" | "danger";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = React.ComponentPropsWithRef<"button"> & {
   variant?: ButtonVariant;
   loading?: boolean;
-}
+};
 
 /** Shared design-system classes so NavLink / home links match Button styling. */
 export const buttonBaseClasses =
@@ -21,6 +21,7 @@ export const buttonVariants: Record<ButtonVariant, string> = {
   primary: "bg-primary text-on-primary hover:bg-primary-hover shadow-card hover:shadow-raise",
   outline: "border-2 border-primary text-primary hover:bg-primary/10 shadow-sm",
   ghost: "text-muted hover:bg-surface-2 shadow-sm",
+  danger: "bg-error text-on-primary hover:bg-error/90 shadow-card hover:shadow-raise",
 };
 
 export function Button({

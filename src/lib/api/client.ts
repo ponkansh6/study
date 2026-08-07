@@ -22,6 +22,10 @@ export const createdQuestionSchema = z.object({
   explanation: z.string().nullable(),
 });
 
+export const deleteResultSchema = z.object({
+  ok: z.literal(true),
+});
+
 export type CreatedQuestion = z.infer<typeof createdQuestionSchema>;
 
 type RequestOptions = { customErrorMsg?: string; allowNotFound?: boolean };
@@ -123,4 +127,15 @@ export async function createQuestion(sourceText: string): Promise<CreatedQuestio
     createdQuestionSchema,
     { customErrorMsg: "生成に失敗しました" },
   );
+}
+
+export async function deleteQuestion(questionId: number): Promise<boolean> {
+  const result = await request(
+    `/api/questions/${questionId}`,
+    { method: "DELETE" },
+    "delete question",
+    deleteResultSchema,
+    { allowNotFound: true, customErrorMsg: "削除に失敗しました" },
+  );
+  return result !== null || true;
 }

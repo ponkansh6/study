@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { fetchRandomQuestion, submitAnswer, createQuestion } from "@/lib/api/client";
+import {
+  fetchRandomQuestion,
+  submitAnswer,
+  createQuestion,
+  deleteQuestion,
+} from "@/lib/api/client";
 
 describe("api client", () => {
   it("fetchRandomQuestion returns null on 404", async () => {
@@ -93,4 +98,42 @@ describe("api client", () => {
       await expect(createQuestion("test")).rejects.toThrow(bodyMsg);
     },
   );
+
+  it("deleteQuestion calls DELETE with correct URL and returns true on success", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const result = await deleteQuestion(42);
+    expect(fetchSpy).toHaveBeenCalledWith("/api/questions/42", { method: "DELETE" });
+    expect(result).toBe(true);
+  });
+
+  it("deleteQuestion returns true on 404 (idempotent)", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response(null, { status: 404 }));
+    const result = await deleteQuestion(42);
+    expect(result).toBe(true);
+  });
+
+  it("deleteQuestion throws server message on failure", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "削除に失敗しました" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(deleteQuestion(42)).rejects.toThrow("削除に失敗しました");
+  });
+
+  it("deleteQuestion throws schema error on invalid response json", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: false }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(deleteQuestion(42)).rejects.toThrow("Invalid response schema");
+  });
 });

@@ -69,12 +69,21 @@ interface AnswerLog {
 ### R5: Dashboard & Stats
 
 **WHEN** user visits `/` (Home)
-**THEN** server component displays today's learning stats (`totalQuestions`, `todayAnswers`, `todayAccuracy`) via direct call to `getStats()` from `answer-repository` (aggregating answer logs from JST day start 00:00 onward via `src/lib/date.ts`), with navigation links to `/create` and `/answer`.
+**THEN** server component displays today's learning stats (`totalQuestions`, `todayAnswers`, `todayAccuracy`) via direct call to `getStats()` from `answer-repository` (aggregating answer logs from JST day start 00:00 onward via `src/lib/date.ts`), with navigation links to `/create`, `/answer`, and `/questions`.
 
 ### R6: Responsive & Accessible Interface
 
 **WHEN** user interacts with any page
 **THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast). All buttons and primary navigation links provide immediate tap feedback: a press animation (`motion-safe:active:scale-[0.98]`) on the shared `Button`, inline loading spinners (`loading` prop with `aria-busy` + `disabled`) for asynchronous actions (question generation, next-question, retry, and `router.push` navigation via `useTransition`), pending-navigation feedback on links via `useLinkStatus`, and double-fire guards on `loadNext` / `handleCreate`.
+
+### R7: Question List & Deletion
+
+**WHEN** user visits `/questions` or interacts with question management
+**THEN** the application displays a list of created questions (showing question text and creation date formatted in JST via `src/lib/date.ts` (`formatJstDate`)) sorted newest-first (`desc(createdAt), desc(id)`), and provides inline confirmation before deletion.
+
+- Deletion removes the question, its parent `knowledge` record, and all associated `answerLogs` within a single explicit transaction (`src/lib/db/repository/question-repository.ts` `deleteQuestion()`, noting `PRAGMA foreign_keys` is not enabled, so schema-level `onDelete: "cascade"` does not fire).
+- If deletion fails, the row remains, an error message is displayed with `role="alert"`, and the user can retry.
+- If no questions are available, an `EmptyState` component (`src/components/EmptyState.tsx`) is rendered with an action to create questions.
 
 ## API Specification
 
@@ -96,12 +105,21 @@ interface AnswerLog {
 - **Response (200):** `{ isCorrect: boolean, correctIndex: number, explanation: string }`
 - **Response (400/404):** `{ error: string }`
 
+### 4. `DELETE /api/questions/[id]` (`src/app/api/questions/[id]/route.ts`)
+
+- **Path Param:** `id` (positive integer)
+- **Response (200):** `{ ok: true }`
+- **Response (400):** `{ error: "Invalid question id" }`
+- **Response (404):** `{ error: "Question not found" }`
+- **Response (500):** `{ error: "Internal server error" }`
+- **Note:** 204 No Content cannot be used because the API client (`src/lib/api/client.ts`) always attempts to parse response JSON.
+
 ## Components
 
 ### 1. `/` (Home - `src/app/page.tsx`)
 
 - Server component displaying learning statistics (問題数 / 本日の解答数 / 本日の正答率) directly fetched via `getStats()` (using JST day start helper `src/lib/date.ts`)
-- Navigation links to `/create` and `/answer`
+- Navigation links to `/create`, `/answer`, and `/questions`
 - Shared header via `src/app/layout.tsx`
 
 ### 2. `/create` (Create - `src/app/create/page.tsx`, `src/app/create/create-form.tsx`)
@@ -116,9 +134,14 @@ interface AnswerLog {
 - `quiz-runner.tsx`: Display-only component rendering questions, choice buttons, feedback banners, and navigation
 - `src/app/answer/choice-state.ts`: Pure choice variant logic helper function `choiceVariant()`
 
-### 4. Common UI Components (`src/components/`)
+### 4. `/questions` (Question List & Deletion - `src/app/questions/page.tsx`, `src/app/questions/question-list.tsx`)
 
-- `Button.tsx`: Unified button styles with shared `buttonBaseClasses` / `buttonVariants` exported for reuse by `NavLink`
+- `page.tsx`: Server component (`dynamic = "force-dynamic"`) fetching questions via `listQuestions()` and formatting creation dates via `src/lib/date.ts` (`formatJstDate`).
+- `question-list.tsx`: Client component managing the list and individual row state machine (`idle` → `confirming` → `deleting`), inline confirmation UI, accessibility live regions (`aria-live="polite"` / `role="alert"`), and focus management.
+
+### 5. Common UI Components (`src/components/`)
+
+- `Button.tsx`: Unified button styles with shared `buttonBaseClasses` / `buttonVariants` (including `danger` variant) and `ref` forwarding (`ComponentPropsWithRef<"button">`)
 - `NavLink.tsx`: Link wrapper applying the `Button` design system (via `buttonVariants`) plus `useLinkStatus` pending feedback
 - `Spinner.tsx`: Shared loading spinner (sizes `sm`/`lg`, colors `current`/`primary`) used by `Button`, `ChoiceButton`, and `LoadingState`
 - `QuestionCard.tsx`: Display-only question container card (correct answer highlighting via `correctIndex`; no interactive props)
@@ -130,6 +153,7 @@ interface AnswerLog {
 - `LoadingState.tsx`: Loading spinner/state (renders `Spinner`)
 - `ErrorMessage.tsx`: Error display banner
 - `src/lib/choice-label.ts`: Choice label formatter (A/B/C/D)
+- `src/lib/date.ts`: JST date boundary and formatting helpers (`jstDayStart`, `formatJstDate`)
 - `src/lib/cn.ts`: Class name combiner used across UI components
 - `src/lib/error-message.ts`: `errorMessage()` helper converting unknown errors to user-facing messages
 
@@ -158,11 +182,11 @@ interface AnswerLog {
 - **Provider:** SQLite via Turso (libSQL)
 - **ORM:** Drizzle ORM
 - **Tables:** `knowledge`, `questions`, `answerLogs`
-- **Repositories:** `question-repository.ts`, `answer-repository.ts` (with lazy DB init in `src/lib/db/index.ts`)
+- **Repositories:** `src/lib/db/repository/question-repository.ts` (`listQuestions`, `deleteQuestion`, `createKnowledgeWithQuestion`, `getQuestionById`, `pickWeightedRandomQuestion`), `src/lib/db/repository/answer-repository.ts` (with lazy DB init in `src/lib/db/index.ts`). Cascade policy: explicit child→parent transaction (`answerLogs` → `questions` → `knowledge`), as `PRAGMA foreign_keys` is not enabled.
 
 ## Testing
 
-- **Unit tests:** Vitest (147 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`api/client`, `api/questions`, `llm/quiz`, `answer/use-quiz-session`, `answer/quiz-runner`, `answer/page`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`question-repository`, `answer-repository`).
+- **Unit tests:** Vitest (174 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`src/lib/api/client.ts`, `src/app/api/questions/route.ts`, `src/app/api/questions/[id]/route.ts`, `src/lib/llm/quiz.ts`, `src/app/answer/use-quiz-session.ts`, `src/app/answer/quiz-runner.tsx`, `src/app/answer/page.tsx`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`src/lib/db/repository/question-repository.ts`, `src/lib/db/repository/answer-repository.ts`). Extended modules include `tests/date.test.ts`, `tests/components/Button.test.tsx`, `tests/api/client.test.ts`, `tests/db/question-repository.test.ts`, `tests/api/questions-id.test.ts`, `tests/questions/question-list.test.tsx`, `tests/questions/page.test.tsx`.
 - **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
 - **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated. Tiers that match no files are a hard failure. Tier configuration:
   - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts` — target 90% statements
@@ -171,8 +195,9 @@ interface AnswerLog {
   - **Tier 3: Data access** — `src/lib/db/repository/*.ts` — target 75% statements
   - **Tier 4: UI state management** — `src/app/answer/**` — target 90% statements + 75% branches
   - **Tier 5: UI components** — `src/components/*.tsx` — target 70% statements
+  - **Tier 6: Question management UI** — `src/app/questions/**` — target 85% statements (Note: removing `/questions` requires removing Tier 6 as zero-file-match Tiers are hard errors).
   - `src/lib/db/schema.ts` and `src/lib/db/migrations/**` are excluded from coverage instrumentation (declarative, zero branches).
-- **E2E tests:** Playwright (28 tests) covering home, create, answer flows.
+- **E2E tests:** Playwright (38 tests across chromium and mobile chrome) covering home, create, answer, and questions (`tests/e2e/questions.spec.ts`) flows.
 
 ## Non-Functional Requirements
 
@@ -183,6 +208,7 @@ interface AnswerLog {
 - Dark mode via `prefers-color-scheme` redefining all color tokens (no manual toggle)
 - Animations (`animate-rise` / `animate-pop`) applied only via `motion-safe:` variants to respect `prefers-reduced-motion`
 - No result persistence for scores (in-memory analytics via `answerLogs`)
+- Destructive operations use inline confirmation, `danger` variant, and `role="alert"` for error messaging.
 
 ## Deployment
 

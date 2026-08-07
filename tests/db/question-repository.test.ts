@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { eq } from "drizzle-orm";
 import { createTestDb, type TestDb } from "../helpers/db";
 import * as schema from "@/lib/db/schema";
 
@@ -20,6 +21,8 @@ import {
   pickWeightedRandomQuestion,
   getQuestionById,
   createKnowledgeWithQuestion,
+  listQuestions,
+  deleteQuestion,
 } from "@/lib/db/repository/question-repository";
 
 async function insertQuestion(overrides: Partial<typeof schema.questions.$inferInsert> = {}) {
@@ -134,6 +137,77 @@ describe("question-repository", () => {
       expect(q!.question).toBe("Q?");
       expect(q!.correctIndex).toBe(2);
       expect(q!.explanation).toBe("E");
+    });
+  });
+
+  describe("listQuestions", () => {
+    it("returns empty array when none", async () => {
+      const list = await listQuestions();
+      expect(list).toEqual([]);
+    });
+
+    it("returns fields (id/question/createdAt) and orders newest-first", async () => {
+      const olderDate = new Date(Date.now() - 10000);
+      const newerDate = new Date(Date.now());
+
+      await insertQuestion({ question: "Older question", createdAt: olderDate });
+      await insertQuestion({ question: "Newer question", createdAt: newerDate });
+
+      const list = await listQuestions();
+      expect(list).toHaveLength(2);
+      expect(list[0]!.question).toBe("Newer question");
+      expect(list[1]!.question).toBe("Older question");
+      expect(list[0]).toHaveProperty("id");
+      expect(list[0]).toHaveProperty("createdAt");
+    });
+  });
+
+  describe("deleteQuestion", () => {
+    it("returns false for non-existent id", async () => {
+      const result = await deleteQuestion(9999);
+      expect(result).toBe(false);
+    });
+
+    it("deletes the question AND its knowledge AND its answerLogs, leaving other questions intact", async () => {
+      const q1 = await insertQuestion({ question: "Q1" });
+      const q2 = await insertQuestion({ question: "Q2" });
+
+      // Add answer logs to both
+      await dbRef.db!.insert(schema.answerLogs).values([
+        { questionId: q1.questionId, selectedIndex: 0, isCorrect: 1 },
+        { questionId: q2.questionId, selectedIndex: 0, isCorrect: 0 },
+      ]);
+
+      const success = await deleteQuestion(q1.questionId);
+      expect(success).toBe(true);
+
+      // Verify q1 and its knowledge are deleted
+      expect(await getQuestionById(q1.questionId)).toBeNull();
+      const [k1] = await dbRef
+        .db!.select()
+        .from(schema.knowledge)
+        .where(eq(schema.knowledge.id, q1.knowledgeId));
+      expect(k1).toBeUndefined();
+
+      // Verify q1's answer logs are deleted
+      const logs1 = await dbRef
+        .db!.select()
+        .from(schema.answerLogs)
+        .where(eq(schema.answerLogs.questionId, q1.questionId));
+      expect(logs1).toEqual([]);
+
+      // Verify q2 and its knowledge and logs remain intact
+      expect(await getQuestionById(q2.questionId)).not.toBeNull();
+      const [k2] = await dbRef
+        .db!.select()
+        .from(schema.knowledge)
+        .where(eq(schema.knowledge.id, q2.knowledgeId));
+      expect(k2).toBeDefined();
+      const logs2 = await dbRef
+        .db!.select()
+        .from(schema.answerLogs)
+        .where(eq(schema.answerLogs.questionId, q2.questionId));
+      expect(logs2).toHaveLength(1);
     });
   });
 });

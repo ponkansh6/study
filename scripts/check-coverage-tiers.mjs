@@ -71,6 +71,12 @@ const TIERS = [
     metric: "statements",
     patterns: [/\/components\/.+\.tsx$/],
   },
+  {
+    name: "Tier 6: Question management UI",
+    target: 85,
+    metric: "statements",
+    patterns: [/\/app\/questions\/.+\.(ts|tsx)$/],
+  },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────

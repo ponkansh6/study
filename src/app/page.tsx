@@ -35,6 +35,9 @@ export default async function Home() {
             まず問題を作ってください
           </p>
         )}
+        <NavLink href="/questions" variant="ghost" pendingClassName="opacity-60">
+          問題一覧
+        </NavLink>
       </section>
 
       <section className="space-y-4 max-w-md mx-auto w-full">

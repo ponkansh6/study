@@ -30,4 +30,12 @@ describe("Button", () => {
     );
     expect(screen.getByRole("button", { name: "作成" })).toBeDisabled();
   });
+
+  it("renders danger variant with error-token classes and without primary classes", () => {
+    render(<Button variant="danger">削除</Button>);
+    const button = screen.getByRole("button", { name: "削除" });
+    expect(button).toHaveClass("bg-error");
+    expect(button).toHaveClass("text-on-primary");
+    expect(button).not.toHaveClass("bg-primary");
+  });
 });

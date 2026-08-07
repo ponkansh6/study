@@ -13,3 +13,7 @@ export const submitAnswerSchema = z.object({
 export const createQuestionSchema = z.object({
   sourceText: z.string().trim().min(1),
 });
+
+export const questionIdParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});

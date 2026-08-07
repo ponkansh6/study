@@ -1,4 +1,4 @@
-import { eq, count, sql } from "drizzle-orm";
+import { eq, count, sql, desc } from "drizzle-orm";
 import { db } from "../index";
 import { knowledge, questions, answerLogs } from "../schema";
 import { QuizQuestion, Question } from "@/types/quiz";
@@ -148,4 +148,37 @@ export async function pickWeightedRandomQuestion(
     question: picked.question,
     choices: picked.choices,
   };
+}
+
+export interface QuestionListItem {
+  id: number;
+  question: string;
+  createdAt: Date;
+}
+
+export async function listQuestions(): Promise<QuestionListItem[]> {
+  return db
+    .select({
+      id: questions.id,
+      question: questions.question,
+      createdAt: questions.createdAt,
+    })
+    .from(questions)
+    .orderBy(desc(questions.createdAt), desc(questions.id));
+}
+
+export async function deleteQuestion(id: number): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const [q] = await tx
+      .select({ id: questions.id, knowledgeId: questions.knowledgeId })
+      .from(questions)
+      .where(eq(questions.id, id));
+    if (!q) return false;
+
+    await tx.delete(answerLogs).where(eq(answerLogs.questionId, id));
+    await tx.delete(questions).where(eq(questions.id, id));
+    await tx.delete(knowledge).where(eq(knowledge.id, q.knowledgeId));
+
+    return true;
+  });
 }
