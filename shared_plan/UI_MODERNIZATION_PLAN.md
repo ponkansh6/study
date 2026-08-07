@@ -300,12 +300,12 @@ Props: `{ label: string; value: string; ring?: number }`
 
 ### B. 計画の未実装 → 解決済み
 
-| #   | 計画箇所                                                   | 状態                                                                                                                                                                                                                                                                                                                                           |
-| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B-1 | §9「`<header>` を細いプログレスストリップ + 正答率横バー」 | **解決**。`src/app/answer/quiz-runner.tsx:47` を細いプログレスストリップに変更。`<header>` タグと `正解 {correct} / {total}` は維持し、`score.total > 0 ? score.correct / score.total : 0` を幅に反映した `aria-hidden` 横バーを併置。Context の課題 #5（ヘッダー二重）を解消                                                                  |
-| B-2 | §8「`LoadingState.tsx` の `text-text/60` → `text-muted`」  | **解決**。`src/components/LoadingState.tsx:11` を `text-muted` に変更。コードベースから `text-text/60` が消滅                                                                                                                                                                                                                                  |
+| #   | 計画箇所                                                   | 状態                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B-1 | §9「`<header>` を細いプログレスストリップ + 正答率横バー」 | **解決**。`src/app/answer/quiz-runner.tsx:47` を細いプログレスストリップに変更。`<header>` タグと `正解 {correct} / {total}` は維持し、`score.total > 0 ? score.correct / score.total : 0` を幅に反映した `aria-hidden` 横バーを併置。Context の課題 #5（ヘッダー二重）を解消                                                                                                                                                                              |
+| B-2 | §8「`LoadingState.tsx` の `text-text/60` → `text-muted`」  | **解決**。`src/components/LoadingState.tsx:11` を `text-muted` に変更。コードベースから `text-text/60` が消滅                                                                                                                                                                                                                                                                                                                                              |
 | B-3 | §5「`buttonBaseClasses` に `shadow-sm`」                   | **解決（F-2 の対処）**。当初 `src/components/Button.tsx:13` に `shadow-sm` を追加したが、`cn()` が単なる `join()` で tailwind-merge ではないため primary に `shadow-sm` と `shadow-card` が併存し、CSS 出力順（`.shadow-card` 20850 / `.shadow-sm` 21702、同一詳細度）で **`shadow-sm` が勝ち §5 の `primary: shadow-card` を無効化**していた。対処として `shadow-sm` を `buttonBaseClasses` から外し `outline` / `ghost` に個別付与した（詳細は F-2 / G） |
-| B-4 | 全体で `rounded-card` を使う前提                           | **解決**。`--radius-card: 1rem` トークンを `globals.css` の `@theme` に追加。カード級要素の `rounded-2xl` / `buttonBaseClasses` の `rounded-xl` を `rounded-card` に集約（小さいバッジの `rounded-xl` は意図的に維持）                                                                                                                         |
+| B-4 | 全体で `rounded-card` を使う前提                           | **解決**。`--radius-card: 1rem` トークンを `globals.css` の `@theme` に追加。カード級要素の `rounded-2xl` / `buttonBaseClasses` の `rounded-xl` を `rounded-card` に集約（小さいバッジの `rounded-xl` は意図的に維持）                                                                                                                                                                                                                                     |
 
 ### C. 計画に無い変更（動作はするが記録されていなかった）→ 是正済み
 
@@ -401,27 +401,27 @@ F で指摘した残課題（B-3 の `shadow-sm` 衝突、`bare` 回帰テスト
 
 ### 2. 自動ゲート（全緑）
 
-| ゲート                                              | 結果                                                          |
-| --------------------------------------------------- | ------------------------------------------------------------- |
-| `pnpm type-check`                                   | ✅ クリーン                                                    |
-| `pnpm lint:fast` (oxlint)                           | ✅ クリーン                                                    |
-| `pnpm format:fast` (oxfmt)                          | ✅ クリーン                                                    |
-| `pnpm test`                                         | ✅ 31 files / **144 passed**（`bare` 回帰テスト追加で 143→144）|
-| `pnpm test:coverage` + `check-coverage-tiers.mjs`   | ✅ 全 Tier PASS（**Tier 5 = 100%**）                           |
-| `pnpm test:e2e`                                     | ✅ **28/28 passed**（chromium + Mobile Chrome）                |
-| `pnpm build`                                        | ✅ 成功                                                        |
+| ゲート                                            | 結果                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------- |
+| `pnpm type-check`                                 | ✅ クリーン                                                     |
+| `pnpm lint:fast` (oxlint)                         | ✅ クリーン                                                     |
+| `pnpm format:fast` (oxfmt)                        | ✅ クリーン                                                     |
+| `pnpm test`                                       | ✅ 31 files / **144 passed**（`bare` 回帰テスト追加で 143→144） |
+| `pnpm test:coverage` + `check-coverage-tiers.mjs` | ✅ 全 Tier PASS（**Tier 5 = 100%**）                            |
+| `pnpm test:e2e`                                   | ✅ **28/28 passed**（chromium + Mobile Chrome）                 |
+| `pnpm build`                                      | ✅ 成功                                                         |
 
 ### 3. 実描画検証（§検証 手順6 相当、Playwright で 375px × light/dark を DOM/計算スタイルで検査）
 
 画像を直接目視できない環境のため、スクリーンショットに加えて **DOM ジオメトリ + `getComputedStyle`** で計画の確認項目を機械的に検証した。
 
-| 確認項目                                                       | 結果                                                                                                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `StatCard` 3枚のラベルが切れていないか（360 / 375 / 393px）    | ✅ 全幅で `scrollWidth ≤ clientWidth` かつ `scrollHeight ≤ clientHeight`（ラベルは1行のまま）                                     |
+| 確認項目                                                       | 結果                                                                                                                                                                                            |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StatCard` 3枚のラベルが切れていないか（360 / 375 / 393px）    | ✅ 全幅で `scrollWidth ≤ clientWidth` かつ `scrollHeight ≤ clientHeight`（ラベルは1行のまま）                                                                                                   |
 | リングが数値を潰していないか                                   | ✅ 数値・ラベルは `z-10` でリング（`aria-hidden` 装飾）より前面に描画。リング帯（外半径≈33px）と数値ボックスは幾何的に交差するが、数値が上に乗るため読める（「数値中央 + リング」の意図どおり） |
-| ヘッダーの「ホームへ」がテキストリンクか（全幅青ボタンでない） | ✅ `width≈71px`、`bg: rgba(0,0,0,0)`、`bg-primary` クラスなし（light / dark 両方）                                                |
-| ヘッダーの `backdrop-blur` ガラス                             | ✅ `backdrop-filter: blur(12px)`、背景 `oklab(... / 0.8)`（light / dark 両方）                                                    |
-| `/answer` のスコアヘッダーが細く正答率バーが出ているか        | ✅ `<header>` 高さ 32px、`aria-hidden` の横バー（`h-1.5`）を確認。`正解 0 / 0` 時は幅 0（`score.total > 0` ガードどおり）          |
-| `prefers-reduced-motion: reduce` でアニメーションが止まるか   | ✅ `h1` の `animation-name: none`                                                                                                 |
+| ヘッダーの「ホームへ」がテキストリンクか（全幅青ボタンでない） | ✅ `width≈71px`、`bg: rgba(0,0,0,0)`、`bg-primary` クラスなし（light / dark 両方）                                                                                                              |
+| ヘッダーの `backdrop-blur` ガラス                              | ✅ `backdrop-filter: blur(12px)`、背景 `oklab(... / 0.8)`（light / dark 両方）                                                                                                                  |
+| `/answer` のスコアヘッダーが細く正答率バーが出ているか         | ✅ `<header>` 高さ 32px、`aria-hidden` の横バー（`h-1.5`）を確認。`正解 0 / 0` 時は幅 0（`score.total > 0` ガードどおり）                                                                       |
+| `prefers-reduced-motion: reduce` でアニメーションが止まるか    | ✅ `h1` の `animation-name: none`                                                                                                                                                               |
 
 **結論**: F-2 / F-3 の残課題はすべて解決。全自動ゲート + 実描画検証が緑。UI モダン化計画は全項目完了。
