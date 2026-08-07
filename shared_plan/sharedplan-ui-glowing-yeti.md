@@ -132,4 +132,59 @@ export function ProgressBar({ value, className }: ProgressBarProps) {
 ### 3. コミット & プッシュ
 
 - コミットメッセージ: `feat: center home nav labels and unify accuracy as shared ProgressBar`
-- コミットハッシュ: `(commit hash: created in subsequent step)`
+- コミットハッシュ: `6ab10a3`
+
+---
+
+## 第三者検証記録（2026-08-07）
+
+上記「実装完了・検証記録」の記載を、別セッションで実リポジトリに対して再検証した。
+
+### 実測で確認できたもの
+
+| 記載                              | 実測                                                                                                                     | 判定       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `pnpm test` 147 passed            | 32 files / 147 passed                                                                                                    | ✅         |
+| `pnpm lint:fast` クリーン         | oxlint 出力なし                                                                                                          | ✅         |
+| コミット & プッシュ               | `6ab10a3`、`main...origin/main` = `0 0`                                                                                  | ✅         |
+| E2E 20/20・カバレッジ Tier 全PASS | 未再実行。ただし `.husky/pre-push` が spec-refs / E2E / coverage-tiers を blocking で実行しており、push 成功が通過の証左 | ✅（間接） |
+| `Button.tsx` に `text-center`     | `buttonBaseClasses` に追加済み。`buttonVariants` と重複 utility なし（`cn()` 非マージ問題を回避）                        | ✅         |
+| `StatCard.tsx` 刷新               | SVG 全削除、`progress?: number`、不可視スペーサー `h-1.5 mt-3`、不要な `relative overflow-hidden` / `z-10` 除去          | ✅         |
+| `page.tsx` の prop 追随           | `progress={todayAccuracy}`                                                                                               | ✅         |
+| `spec.md` 更新                    | `ProgressBar` 追加・`StatCard` 記述変更・テスト件数 144→147                                                              | ✅         |
+
+### 検出した不具合: `quiz-runner.tsx` の置換漏れ
+
+`src/app/answer/quiz-runner.tsx:55-57` で旧トラック div が残存し、その内側に `ProgressBar` が入れ子になっていた。
+
+```tsx
+<div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden" aria-hidden="true">
+  <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
+</div>
+```
+
+`ProgressBar` 自体が同一の `h-1.5 w-full rounded-full bg-surface-2 overflow-hidden` + `aria-hidden` を描画するため、トラックが二重。
+
+- 現状の描画結果は変更前と同一のため、ユニットテストも E2E も検知できなかった。
+- 共通コンポーネント化の目的を潰す潜在バグ: `ProgressBar` の高さを変更すると外側の `h-1.5 overflow-hidden` にクリップされる。`aria-hidden` の二重指定も冗長。
+
+**修正**: 外側ラッパーを削除し `<ProgressBar value={...} />` を直接配置。`score.total === 0` のゼロ除算ガードは呼び出し側に残す。
+
+### 検出したドキュメント上の問題
+
+- 完了記録のコミットハッシュがプレースホルダのままだった（実ハッシュ `6ab10a3`）。本追記で修正。
+- `6ab10a3` に `.claude/summaries/20260807-135718-*.md`（セッション成果物）が混入。`.gitignore` に `.claude/` が無いため機能変更コミットに紛れ込んだ。push 済みのため本件では追わない。
+
+### テスト側の改善
+
+`tests/components/StatCard.test.tsx` の `progress={0.75}` ケースがテキストしか検証しておらず、リング→バーの置換を検知できなかった。`ProgressBar.test.tsx` と同様に `container.querySelector(".bg-primary")` の `style.width` が `75%` であることを確認するアサーションを追加し、同種の置換漏れを次回捕捉できるようにする。
+
+---
+
+### 対応済み（実装反映） — 2026-08-07
+
+第三者検証で指摘された上記不具合およびテスト改善を実装に反映した。
+
+1. **`src/app/answer/quiz-runner.tsx`**: 外側の重複していたラッパー `<div>` を削除し、`<ProgressBar>` を直接 `<header>` 直下に配置。
+2. **`tests/components/StatCard.test.tsx`**: `container.querySelector(".bg-primary")` の `style.width` が `75%` であることを検証するアサーションを追加。
+3. **仕様・検証確認**: `pnpm test`（147件パス）、E2E テスト（20/20パス）、`pnpm lint:fast` をすべて確認済み。

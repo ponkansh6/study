@@ -52,9 +52,7 @@ export default function QuizRunner() {
             正解 {score.correct} / {score.total}
           </span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden" aria-hidden="true">
-          <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
-        </div>
+        <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
       </header>
 
       <div key={quiz.question.id} className="flex-1 space-y-6 motion-safe:animate-rise pb-24">

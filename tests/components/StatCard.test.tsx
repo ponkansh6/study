@@ -10,8 +10,11 @@ describe("StatCard", () => {
   });
 
   it("renders with progress bar when progress prop is provided", () => {
-    render(<StatCard label="本日の正答率" value="75%" progress={0.75} />);
+    const { container } = render(<StatCard label="本日の正答率" value="75%" progress={0.75} />);
     expect(screen.getByText("75%")).toBeInTheDocument();
     expect(screen.getByText("本日の正答率")).toBeInTheDocument();
+    const bar = container.querySelector(".bg-primary") as HTMLElement;
+    expect(bar).not.toBeNull();
+    expect(bar.style.width).toBe("75%");
   });
 });
