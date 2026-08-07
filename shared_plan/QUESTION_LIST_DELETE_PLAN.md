@@ -451,4 +451,4 @@ pnpm build
 ### コミット
 
 - コミットメッセージ: `fix: address third-party review findings for question list delete`
-- コミットハッシュ: 3574516
+- コミットハッシュ: `0775637`
