@@ -9,8 +9,8 @@ describe("StatCard", () => {
     expect(screen.getByText("問題数")).toBeInTheDocument();
   });
 
-  it("renders with progress ring when ring prop is provided", () => {
-    render(<StatCard label="本日の正答率" value="75%" ring={0.75} />);
+  it("renders with progress bar when progress prop is provided", () => {
+    render(<StatCard label="本日の正答率" value="75%" progress={0.75} />);
     expect(screen.getByText("75%")).toBeInTheDocument();
     expect(screen.getByText("本日の正答率")).toBeInTheDocument();
   });

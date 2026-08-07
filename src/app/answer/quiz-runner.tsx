@@ -10,6 +10,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
+import { ProgressBar } from "@/components/ProgressBar";
 
 export default function QuizRunner() {
   const router = useRouter();
@@ -52,10 +53,7 @@ export default function QuizRunner() {
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden" aria-hidden="true">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500 ease-[var(--ease-out-soft)]"
-            style={{ width: `${score.total > 0 ? (score.correct / score.total) * 100 : 0}%` }}
-          />
+          <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
         </div>
       </header>
 

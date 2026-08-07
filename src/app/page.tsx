@@ -45,7 +45,7 @@ export default async function Home() {
           <StatCard
             label="本日の正答率"
             value={`${Math.round(todayAccuracy * 100)}%`}
-            ring={todayAccuracy}
+            progress={todayAccuracy}
           />
         </div>
       </section>
