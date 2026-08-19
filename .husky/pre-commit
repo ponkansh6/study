@@ -12,6 +12,19 @@ pnpm exec tsgo --noEmit
 
 bash scripts/check-spec-update.sh
 
+# Non-blocking unstaged src/ changes warning
+UNSTAGED_SRC=$(git diff --name-only 2>/dev/null | grep "^src/" || true)
+if [ -n "$UNSTAGED_SRC" ]; then
+  echo ""
+  echo "┌─────────────────────────────────────────────────────────────┐"
+  echo "│  ⚠  src/ に未ステージの変更が存在します                       │"
+  echo "│                                                             │"
+  echo "│  コミットに含まれない変更がワークツリーに残っています。         │"
+  echo "│  コミット漏れがないか確認してください（pre-push時に検証されます）。│"
+  echo "└─────────────────────────────────────────────────────────────┘"
+  echo ""
+fi
+
 # Non-blocking lockfile simultaneity warning
 STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
 HAS_PKG=0

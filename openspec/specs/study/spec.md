@@ -237,7 +237,7 @@ interface AnswerLog {
 - No result persistence for scores (in-memory analytics via `answerLogs`)
 - Destructive operations use inline confirmation, `danger` variant, and `role="alert"` for error messaging.
 - **Dependency Updates:** When updating dependencies, `package.json` and `pnpm-lock.yaml` must always be included in the same commit to prevent CI `frozen-lockfile` failures.
-- **CI / Git Hooks Invariant:** CI is the source of truth; pre-push is its superset. Pre-push runs lockfile-sync, format:check, security (audit + secretlint), spec-refs, unit tests, E2E, coverage tiers, production build, and schema drift detection. Pre-commit runs lint-staged, lint:fast, type-check:fast, spec-update warn, and a non-blocking lockfile simultaneity warn.
+- **CI / Git Hooks Invariant:** CI is the source of truth; pre-push is its superset. Pre-push runs against the **committed/HEAD tree** (via `scripts/check-head-typecheck.sh` in Stage 0 to prevent partial-commit accidents like uncommitted repository helper modules) alongside lockfile-sync (`scripts/check-lockfile-sync.sh`), format:check, security (`scripts/check-security.sh`: audit + secretlint), spec-refs, unit tests, E2E, coverage tiers, production build, and schema drift detection. Pre-commit runs lint-staged, lint:fast, type-check:fast, spec-update warn, an unstaged src/ changes warn, and a non-blocking lockfile simultaneity warn.
 
 ## Deployment
 

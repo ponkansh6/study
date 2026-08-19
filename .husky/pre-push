@@ -1,10 +1,14 @@
 #!/bin/sh
 set -e
 
+# Read push refs from stdin (local ref, local sha, remote ref, remote sha)
+read -r _ LOCAL_SHA _ _ 2>/dev/null || true
+
 MERGE_BASE=$(git merge-base --fork-point origin/main HEAD 2>/dev/null || git rev-parse HEAD)
 PUSH_FILES=$(git diff --name-only "$MERGE_BASE"...HEAD 2>/dev/null || true)
 
 # --- Stage 0: Preflight (always runs, ~6s) ---
+bash scripts/check-head-typecheck.sh "${LOCAL_SHA:-HEAD}"
 bash scripts/check-lockfile-sync.sh
 pnpm format:check
 bash scripts/check-security.sh
