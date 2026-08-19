@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # ファイルを書き換える処理は lint-staged に集約する。
 # lint-staged がタスクによる変更を自動で再ステージするので、
@@ -10,3 +11,28 @@ pnpm lint:fast
 pnpm exec tsgo --noEmit
 
 bash scripts/check-spec-update.sh
+
+# Non-blocking lockfile simultaneity warning
+STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+HAS_PKG=0
+HAS_LOCK=0
+if echo "$STAGED" | grep -q "^package.json$"; then
+  HAS_PKG=1
+fi
+if echo "$STAGED" | grep -q "^pnpm-lock.yaml$"; then
+  HAS_LOCK=1
+fi
+
+if [ $((HAS_PKG + HAS_LOCK)) -eq 1 ]; then
+  echo ""
+  echo "┌─────────────────────────────────────────────────────────────┐"
+  echo "│  ⚠  package.json と pnpm-lock.yaml の同時コミットを確認してください │"
+  echo "│                                                             │"
+  echo "│  片方だけが staged されています。依存更新時は両方を同じコミットに  │"
+  echo "│  含めてください（CI の frozen-lockfile が落ちます）。          │"
+  echo "│  次の push 時の Stage 0 で厳密に検証されます。                 │"
+  echo "└─────────────────────────────────────────────────────────────┘"
+  echo ""
+fi
+
+exit 0

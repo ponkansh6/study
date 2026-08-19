@@ -172,11 +172,15 @@ interface AnswerLog {
 
 ## Weighted Random Selection
 
-- **Base weight:** 5 for unanswered questions
-- **Weight formula:** `1 + 4 * (incorrectRatio)` for answered questions
-- **Bonus:** +2 weight if latest answer was incorrect
-- **Exclusion:** Last 10 answered question IDs
-- **Pure logic module:** `src/lib/db/repository/weighting.ts` encapsulating `computeWeight()` and `pickByWeight()` functions used by `question-repository.ts`.
+- **Unanswered:** Fixed `UNSEEN_WEIGHT = 12`
+- **Answered:** `clamp(accuracyTerm × missBonus × masteryDecay × recency × latestMissMult, 0.1, 30)`
+  - `accuracyTerm = 1 + 4 * (incorrect / answered)` — ratio axis (legacy)
+  - `missBonus = 1 + 0.5 * min(incorrect, 4)` — absolute miss count bonus (1.0–3.0)
+  - `masteryDecay = 1 / (1 + 0.35 * min(correct, 5))` — absolute correct count decay (1.0–0.364)
+  - `recency = 0.2 → 3.0` linear ramp from `answered_at` elapsed days (caps at 7 days). Floor 1.0 when latest answer was incorrect
+  - `latestMissMult = 2` (applied when latest answer was incorrect)
+- **Exclusion:** Last 10 answered question IDs (unchanged)
+- **Pure logic module:** `src/lib/db/repository/weighting.ts` (`computeWeight(stats, now)` / `pickByWeight()`). `now` is determined once per pick by the caller
 
 ## Database
 
@@ -187,10 +191,10 @@ interface AnswerLog {
 
 ## Testing
 
-- **Unit tests:** Vitest (175 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`src/lib/api/client.ts`, `src/app/api/questions/route.ts`, `src/app/api/questions/[id]/route.ts`, `src/lib/llm/quiz.ts`, `src/app/answer/use-quiz-session.ts`, `src/app/answer/quiz-runner.tsx`, `src/app/answer/page.tsx`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`src/lib/db/repository/question-repository.ts`, `src/lib/db/repository/answer-repository.ts`). Extended modules include `tests/date.test.ts`, `tests/components/Button.test.tsx`, `tests/api/client.test.ts`, `tests/db/question-repository.test.ts`, `tests/api/questions-id.test.ts`, `tests/questions/question-list.test.tsx`, `tests/questions/page.test.tsx`.
+- **Unit tests:** Vitest (183 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`src/lib/api/client.ts`, `src/app/api/questions/route.ts`, `src/app/api/questions/[id]/route.ts`, `src/lib/llm/quiz.ts`, `src/app/answer/use-quiz-session.ts`, `src/app/answer/quiz-runner.tsx`, `src/app/answer/page.tsx`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`src/lib/db/repository/question-repository.ts`, `src/lib/db/repository/answer-repository.ts`). Extended modules include `tests/date.test.ts`, `tests/components/Button.test.tsx`, `tests/api/client.test.ts`, `tests/db/question-repository.test.ts`, `tests/api/questions-id.test.ts`, `tests/questions/question-list.test.tsx`, `tests/questions/page.test.tsx`.
 - **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
 - **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated. Tiers that match no files are a hard failure. Tier configuration:
-  - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts` — target 90% statements
+  - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts`, `src/lib/db/repository/weighting.ts` (also matched by Tier 3 — dual-counted intentionally) — target 90% statements
   - **Tier 2: API / LLM orchestration** — `src/app/api/**`, `src/lib/llm/quiz.ts`, `src/lib/llm/client.ts` — target 80% statements
   - **Tier 2b: API client & utilities** — `src/lib/api/*.ts` — target 85% statements
   - **Tier 3: Data access** — `src/lib/db/repository/*.ts` — target 75% statements
@@ -210,6 +214,8 @@ interface AnswerLog {
 - Animations (`animate-rise` / `animate-pop`) applied only via `motion-safe:` variants to respect `prefers-reduced-motion`
 - No result persistence for scores (in-memory analytics via `answerLogs`)
 - Destructive operations use inline confirmation, `danger` variant, and `role="alert"` for error messaging.
+- **Dependency Updates:** When updating dependencies, `package.json` and `pnpm-lock.yaml` must always be included in the same commit to prevent CI `frozen-lockfile` failures.
+- **CI / Git Hooks Invariant:** CI is the source of truth; pre-push is its superset. Pre-push runs lockfile-sync, format:check, security (audit + secretlint), spec-refs, unit tests, E2E, coverage tiers, production build, and schema drift detection. Pre-commit runs lint-staged, lint:fast, type-check:fast, spec-update warn, and a non-blocking lockfile simultaneity warn.
 
 ## Deployment
 

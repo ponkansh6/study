@@ -15,6 +15,8 @@
   - 設計判断/デバッグ → `@oracle`
   - UI実装 → `@designer`
   - 実装作業 → `@fixer`
+- **テスト実装とテスト実行は分離する**: テストの実装は `@fixer` に委譲し、テストの実行・検証は Orchestrator 自身が行う。サブエージェントが自分の実装したテストを自ら実行して検証結果を報告する運用は禁止し、Orchestrator が検証ゲート（lint, type-check, test, coverage, spec-refs, smoke-test）を走らせて結果を確認する。
+- **実装内容の一致確認**: サブエージェントの実装完了時は、Orchestrator が実装内容（変更差分・成果物）と委譲時の指示内容が一致していることを確認する。乖離があった場合は、指摘して修正を再委譲してから検証ゲートを通過させる。
 
 ## 仕様書管理
 
@@ -23,7 +25,7 @@
 - **更新ルール**:
   - コンポーネント追加/削除・データモデル変更・API変更・アーキテクチャ変更は仕様書に反映する。
   - Requirements と API セクションを実装と同期させる。
-  - 自動チェック: コミット時に spec 関連パスの変更で spec.md 未更新なら警告（`scripts/check-spec-update.sh`、non-blocking）、push 時に spec.md のファイル参照の有効性を検証（`scripts/check-spec-refs.sh`、blocking）・E2E テストを実行（blocking）・カバレッジ Tier チェックを実行（`scripts/check-coverage-tiers.mjs`、blocking。外部サービス直結で意図的にモックされるモジュールは判定対象外）。
+  - 自動チェック: コミット時に spec 関連パスの変更で spec.md 未更新なら警告（`scripts/check-spec-update.sh`、non-blocking）および package.json / pnpm-lock.yaml の片方のみ staged の場合の警告（non-blocking）、push 時に lockfile 同期検証（`scripts/check-lockfile-sync.sh`、blocking）・format チェック（`pnpm format:check`、blocking）・セキュリティチェック（`scripts/check-security.sh`: audit + secretlint、blocking）・spec.md のファイル参照有効性検証（`scripts/check-spec-refs.sh`、blocking）・単体テスト・E2E テスト・カバレッジ Tier チェック・本番ビルド（関連パス変更時）・スキーマドリフト検出を実行。
 
 ## 実行モード
 
