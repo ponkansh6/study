@@ -86,6 +86,16 @@ interface AnswerLog {
 - If deletion fails, the row remains, an error message is displayed with `role="alert"`, and the user can retry.
 - If no questions are available, an `EmptyState` component (`src/components/EmptyState.tsx`) is rendered with an action to create questions.
 
+### R8: Difficulty Escalation & Discard
+
+**WHEN** user views a newly generated question on `/create`
+**THEN** the application offers "難易度を上げて再作成" (Regenerate at higher difficulty) and "破棄" (Discard) actions.
+
+- **Regenerate:** Submits `POST /api/questions/[id]/regenerate` with `difficulty` (ranging from 2 to 5). The server fetches the source text of the old question, calls Gemini with the corresponding difficulty directive and hard token limit (1024), and atomically replaces the old question, knowledge, and answer logs with the new ones in a single transaction. If LLM generation fails, the old question is preserved untouched. Upon success, the client updates the displayed question and increments the active difficulty (displaying a `難易度 Lv.N` badge). When the maximum difficulty (5) is reached, the button is disabled with an explanatory note.
+- **Discard:** Submits `DELETE /api/questions/[id]`, which deletes the question, its parent `knowledge`, and its `answerLogs`. Upon success, the client returns to the input form with the original source text retained in the textarea and difficulty reset to Lv1.
+- **Confirmation & Non-Symmetry:** Unlike the question management page (`/questions`), no confirmation dialog is prompted for discard because the question was generated mere seconds ago with zero answer history, and the source text is preserved in the textarea for easy re-creation.
+- **Error Handling:** If either action fails, an error message is displayed via `ErrorMessage` and the result screen remains intact. Both buttons are disabled during pending operations.
+
 ## API Specification
 
 ### 1. `POST /api/questions`
@@ -115,6 +125,16 @@ interface AnswerLog {
 - **Response (500):** `{ error: "Internal server error" }`
 - **Note:** 204 No Content cannot be used because the API client (`src/lib/api/client.ts`) always attempts to parse response JSON.
 
+### 5. `POST /api/questions/[id]/regenerate` (`src/app/api/questions/[id]/regenerate/route.ts`)
+
+- **Path Param:** `id` (positive integer)
+- **Request:** `{ difficulty: number }` (2 to 5)
+- **Response (200):** `{ id, knowledgeId, question, choices, correctIndex, explanation }`
+- **Response (400):** `{ error: "Invalid question id" }` or `{ error: "Invalid difficulty" }`
+- **Response (404):** `{ error: "Question not found" }`
+- **Response (500):** `{ error: string }`
+- **Note:** Returns 200 (not 201) because it replaces an existing resource atomically. `maxDuration = 300` to accommodate LLM timeouts.
+
 ## Components
 
 ### 1. `/` (Home - `src/app/page.tsx`)
@@ -126,7 +146,7 @@ interface AnswerLog {
 ### 2. `/create` (Create - `src/app/create/page.tsx`, `src/app/create/create-form.tsx`)
 
 - Server component shell (`page.tsx`) rendering a `"use client"` form component (`create-form.tsx`) with textarea input for knowledge text
-- Submits text via API client, generates 1 question, displays result with correct answer highlighted and links to continue
+- Submits text via API client, generates 1 question, displays result with correct answer highlighted, active difficulty badge (`難易度 Lv.N`), live region announcements, "難易度を上げて再作成", "破棄" (danger variant), and demoted `ghost` "続けてもう1問作る" buttons.
 
 ### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`, `src/app/answer/choice-state.ts`)
 
@@ -162,7 +182,8 @@ interface AnswerLog {
 
 - **Model:** `gemini-3.1-flash-lite`
 - **Output:** Exactly 1 question with 4 choices
-- **Parameters:** Temperature 0.1, Max Tokens 512, Timeout 45s
+- **Parameters:** Temperature 0.1, Max Tokens 512 (difficulty 1) / 1024 (difficulty ≥ 2), Timeout 45s
+- **Directives:** Level-specific directives (Levels 1–5) and common constraint ("The correct answer MUST be uniquely determinable from the provided text alone. Never require outside knowledge, even at high difficulty."). Lv1 prompt byte-identically matches original base prompt.
 - **Resilience:** 3 retries with exponential backoff, 2 parse retries
 
 ## Shuffle Algorithm
@@ -187,11 +208,11 @@ interface AnswerLog {
 - **Provider:** SQLite via Turso (libSQL)
 - **ORM:** Drizzle ORM
 - **Tables:** `knowledge`, `questions`, `answerLogs`
-- **Repositories:** `src/lib/db/repository/question-repository.ts` (`listQuestions`, `deleteQuestion`, `createKnowledgeWithQuestion`, `getQuestionById`, `pickWeightedRandomQuestion`), `src/lib/db/repository/answer-repository.ts` (with lazy DB init in `src/lib/db/index.ts`). Cascade policy: explicit child→parent transaction (`answerLogs` → `questions` → `knowledge`), as `PRAGMA foreign_keys` is not enabled.
+- **Repositories:** `src/lib/db/repository/question-repository.ts` (`listQuestions`, `deleteQuestion`, `createKnowledgeWithQuestion`, `getQuestionById`, `pickWeightedRandomQuestion`, `getQuestionSource`, `replaceKnowledgeWithQuestion`), `src/lib/db/repository/answer-repository.ts` (with lazy DB init in `src/lib/db/index.ts`). Cascade policy: explicit child→parent transaction (`answerLogs` → `questions` → `knowledge`), noting that replacement via `replaceKnowledgeWithQuestion()` deletes old `answerLogs` alongside old question/knowledge and creates new ones atomically. `PRAGMA foreign_keys` is not enabled.
 
 ## Testing
 
-- **Unit tests:** Vitest (183 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`), API orchestration (`src/lib/api/client.ts`, `src/app/api/questions/route.ts`, `src/app/api/questions/[id]/route.ts`, `src/lib/llm/quiz.ts`, `src/app/answer/use-quiz-session.ts`, `src/app/answer/quiz-runner.tsx`, `src/app/answer/page.tsx`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`src/lib/db/repository/question-repository.ts`, `src/lib/db/repository/answer-repository.ts`). Extended modules include `tests/date.test.ts`, `tests/components/Button.test.tsx`, `tests/api/client.test.ts`, `tests/db/question-repository.test.ts`, `tests/api/questions-id.test.ts`, `tests/questions/question-list.test.tsx`, `tests/questions/page.test.tsx`.
+- **Unit tests:** Vitest (218 tests) covering pure logic (`weighting`, `choice-state`, `shuffle`, `choice-label`, `date`, `llm/parser`, `llm/schemas`, `llm/prompts`), API orchestration (`src/lib/api/client.ts`, `src/app/api/questions/route.ts`, `src/app/api/questions/[id]/route.ts`, `src/app/api/questions/[id]/regenerate/route.ts`, `src/lib/llm/quiz.ts`, `src/app/answer/use-quiz-session.ts`, `src/app/answer/quiz-runner.tsx`, `src/app/answer/page.tsx`), UI components (`Button`, `NavLink`, `ChoiceButton`, `QuestionCard`, `ResultBanner`, `StatCard`, `ProgressBar`, `EmptyState`, `LoadingState`, `ErrorMessage`, `Spinner`), and DB repositories (`src/lib/db/repository/question-repository.ts`, `src/lib/db/repository/answer-repository.ts`). Extended modules include `tests/date.test.ts`, `tests/components/Button.test.tsx`, `tests/api/client.test.ts`, `tests/db/question-repository.test.ts`, `tests/api/questions-id.test.ts`, `tests/api/questions-regenerate.test.ts`, `tests/questions/question-list.test.tsx`, `tests/questions/page.test.tsx`, `tests/create/create-form.test.tsx`, `tests/create/page.test.tsx`, `tests/llm/prompts.test.ts`.
 - **Repository tests:** Run against a real, migration-applied libSQL DB via `tests/helpers/db.ts` (`createTestDb()`), with `@/lib/db` mocked to lazily return the current test DB. File-backed temp DB (not `:memory:`) so `db.transaction()` connections share the same database.
 - **Coverage gates:** `scripts/check-coverage-tiers.mjs` validates per-tier statement coverage targets from `coverage/coverage-summary.json`. No `INTENTIONALLY_MOCKED` exemptions — all files including repositories are gated. Tiers that match no files are a hard failure. Tier configuration:
   - **Tier 1: Core domain logic** — `src/lib/shuffle.ts`, `src/lib/choice-label.ts`, `src/lib/date.ts`, `src/lib/llm/schemas.ts`, `src/lib/llm/parser.ts`, `src/lib/db/repository/weighting.ts` (also matched by Tier 3 — dual-counted intentionally) — target 90% statements
@@ -201,8 +222,9 @@ interface AnswerLog {
   - **Tier 4: UI state management** — `src/app/answer/**` — target 90% statements + 75% branches
   - **Tier 5: UI components** — `src/components/*.tsx` — target 70% statements
   - **Tier 6: Question management UI** — `src/app/questions/**` — target 85% statements (Note: removing `/questions` requires removing Tier 6 as zero-file-match Tiers are hard errors).
+  - **Tier 7: Question creation UI** — `src/app/create/**` — target 85% statements
   - `src/lib/db/schema.ts` and `src/lib/db/migrations/**` are excluded from coverage instrumentation (declarative, zero branches).
-- **E2E tests:** Playwright (38 tests across chromium and mobile chrome) covering home, create, answer, and questions (`tests/e2e/questions.spec.ts`) flows.
+- **E2E tests:** Playwright (40 tests across chromium and mobile chrome) covering home, create, answer, and questions (`tests/e2e/questions.spec.ts`) flows.
 
 ## Non-Functional Requirements
 

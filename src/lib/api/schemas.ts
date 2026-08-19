@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { QUIZ_CHOICES_PER_QUESTION } from "@/lib/constants";
+import {
+  QUIZ_CHOICES_PER_QUESTION,
+  QUIZ_MIN_DIFFICULTY,
+  QUIZ_MAX_DIFFICULTY,
+} from "@/lib/constants";
 
 export const submitAnswerSchema = z.object({
   questionId: z.number().int().positive(),
@@ -12,6 +16,14 @@ export const submitAnswerSchema = z.object({
 
 export const createQuestionSchema = z.object({
   sourceText: z.string().trim().min(1),
+});
+
+export const regenerateQuestionSchema = z.object({
+  difficulty: z
+    .number()
+    .int()
+    .min(QUIZ_MIN_DIFFICULTY + 1)
+    .max(QUIZ_MAX_DIFFICULTY),
 });
 
 export const questionIdParamSchema = z.object({

@@ -4,6 +4,7 @@ import {
   submitAnswer,
   createQuestion,
   deleteQuestion,
+  regenerateQuestion,
 } from "@/lib/api/client";
 
 describe("api client", () => {
@@ -133,5 +134,54 @@ describe("api client", () => {
       }),
     );
     await expect(deleteQuestion(42)).rejects.toThrow("Invalid response schema");
+  });
+
+  it("regenerateQuestion calls POST with correct URL and body, and resolves on success", async () => {
+    const created = {
+      id: 2,
+      knowledgeId: 20,
+      question: "New Q",
+      choices: ["1", "2", "3", "4"],
+      correctIndex: 0,
+      explanation: null,
+    };
+    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify(created), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const result = await regenerateQuestion(1, 2);
+    expect(result).toEqual(created);
+    expect(fetchSpy).toHaveBeenCalledWith("/api/questions/1/regenerate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ difficulty: 2 }),
+    });
+  });
+
+  it("regenerateQuestion rejects on 404 (unlike deleteQuestion)", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response(null, { status: 404 }));
+    await expect(regenerateQuestion(1, 2)).rejects.toThrow("再作成に失敗しました");
+  });
+
+  it("regenerateQuestion throws server message on 500", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "再作成エラー" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(regenerateQuestion(1, 2)).rejects.toThrow("再作成エラー");
+  });
+
+  it("regenerateQuestion throws schema mismatch error", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: "not-a-number" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(regenerateQuestion(1, 2)).rejects.toThrow("Invalid response schema");
   });
 });

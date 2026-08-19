@@ -103,3 +103,76 @@ test("create page shows loading feedback on the button during generation", async
 
   await expect(page.locator("h2", { hasText: "テスト問題です。" })).toBeVisible({ timeout: 15000 });
 });
+
+test("create page supports regenerate and discard actions", async ({ page }) => {
+  // Register routes in generic -> specific order
+  await page.route("**/api/questions", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 1,
+          knowledgeId: 10,
+          question: "初級問題です。",
+          choices: ["A", "B", "C", "D"],
+          correctIndex: 0,
+          explanation: "解説1",
+        }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.route("**/api/questions/*", async (route) => {
+    if (route.request().method() === "DELETE") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.route("**/api/questions/*/regenerate", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 2,
+          knowledgeId: 11,
+          question: "難易度2の問題です。",
+          choices: ["A", "B", "C", "D"],
+          correctIndex: 1,
+          explanation: "解説2",
+        }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.goto("/create");
+  await page.locator("textarea").fill("テスト用ナレッジテキスト");
+  await page.locator("button", { hasText: "この内容から1問作る" }).click();
+
+  await expect(page.locator("h2", { hasText: "初級問題です。" })).toBeVisible();
+
+  // Click regenerate
+  await page.locator("button", { hasText: "難易度を上げて再作成" }).click();
+
+  await expect(page.locator("h2", { hasText: "難易度2の問題です。" })).toBeVisible();
+  await expect(page.getByText("難易度 Lv.2", { exact: true })).toBeVisible();
+
+  // Click discard
+  await page.locator("button", { hasText: "破棄" }).click();
+
+  // Should return to form with textarea text retained
+  await expect(page.locator("button", { hasText: "この内容から1問作る" })).toBeVisible();
+  const textareaValue = await page.locator("textarea").inputValue();
+  expect(textareaValue).toBe("テスト用ナレッジテキスト");
+});

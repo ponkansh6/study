@@ -38,6 +38,7 @@ const TIERS = [
       /\/lib\/date\.ts$/,
       /\/lib\/llm\/schemas\.ts$/,
       /\/lib\/llm\/parser\.ts$/,
+      /\/lib\/db\/repository\/weighting\.ts$/,
     ],
   },
   {
@@ -76,6 +77,12 @@ const TIERS = [
     target: 85,
     metric: "statements",
     patterns: [/\/app\/questions\/.+\.(ts|tsx)$/],
+  },
+  {
+    name: "Tier 7: Question creation UI",
+    target: 85,
+    metric: "statements",
+    patterns: [/\/app\/create\/.+\.(ts|tsx)$/],
   },
 ];
 

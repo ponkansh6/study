@@ -9,6 +9,11 @@ export const LLM_BACKOFF_BASE_MS = 2000;
 
 // ── Quiz defaults ──
 export const QUIZ_CHOICES_PER_QUESTION = 4;
+export const QUIZ_MIN_DIFFICULTY = 1;
+export const QUIZ_MAX_DIFFICULTY = 5;
+
+// ── LLM ──
+export const LLM_QUIZ_MAX_TOKENS_HARD = 1024; // difficulty >= 2 用
 
 // ── Debug / Log ──
 export const DEBUG_LOG_TRUNCATE_LENGTH = 100;

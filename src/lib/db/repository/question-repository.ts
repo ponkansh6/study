@@ -15,35 +15,85 @@ export interface CreateKnowledgeInput {
   };
 }
 
+export interface QuestionSource {
+  title: string;
+  sourceText: string;
+}
+
+export interface ReplaceKnowledgeInput extends CreateKnowledgeInput {
+  replaceQuestionId: number;
+}
+
+async function insertKnowledgeAndQuestion(tx: any, input: CreateKnowledgeInput) {
+  const [kResult] = await tx
+    .insert(knowledge)
+    .values({
+      title: input.title,
+      sourceText: input.sourceText,
+    })
+    .returning({ id: knowledge.id });
+
+  if (!kResult) throw new Error("Failed to create knowledge");
+
+  const [qResult] = await tx
+    .insert(questions)
+    .values({
+      knowledgeId: kResult.id,
+      question: input.question.question,
+      choices: input.question.choices,
+      correctIndex: input.question.correctIndex,
+      explanation: input.question.explanation || null,
+    })
+    .returning({ id: questions.id });
+
+  if (!qResult) throw new Error("Failed to create question");
+
+  return {
+    knowledgeId: kResult.id,
+    questionId: qResult.id,
+  };
+}
+
 export async function createKnowledgeWithQuestion(input: CreateKnowledgeInput) {
   return db.transaction(async (tx) => {
-    const [kResult] = await tx
-      .insert(knowledge)
-      .values({
-        title: input.title,
-        sourceText: input.sourceText,
-      })
-      .returning({ id: knowledge.id });
+    return insertKnowledgeAndQuestion(tx, input);
+  });
+}
 
-    if (!kResult) throw new Error("Failed to create knowledge");
+export async function getQuestionSource(questionId: number): Promise<QuestionSource | null> {
+  const rows = await db
+    .select({
+      title: knowledge.title,
+      sourceText: knowledge.sourceText,
+    })
+    .from(questions)
+    .innerJoin(knowledge, eq(questions.knowledgeId, knowledge.id))
+    .where(eq(questions.id, questionId));
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    title: row.title,
+    sourceText: row.sourceText,
+  };
+}
 
-    const [qResult] = await tx
-      .insert(questions)
-      .values({
-        knowledgeId: kResult.id,
-        question: input.question.question,
-        choices: input.question.choices,
-        correctIndex: input.question.correctIndex,
-        explanation: input.question.explanation || null,
-      })
-      .returning({ id: questions.id });
+export async function replaceKnowledgeWithQuestion(
+  input: ReplaceKnowledgeInput,
+): Promise<{ knowledgeId: number; questionId: number } | null> {
+  return db.transaction(async (tx) => {
+    const [q] = await tx
+      .select({ id: questions.id, knowledgeId: questions.knowledgeId })
+      .from(questions)
+      .where(eq(questions.id, input.replaceQuestionId));
+    if (!q) return null;
 
-    if (!qResult) throw new Error("Failed to create question");
+    const newRes = await insertKnowledgeAndQuestion(tx, input);
 
-    return {
-      knowledgeId: kResult.id,
-      questionId: qResult.id,
-    };
+    await tx.delete(answerLogs).where(eq(answerLogs.questionId, input.replaceQuestionId));
+    await tx.delete(questions).where(eq(questions.id, input.replaceQuestionId));
+    await tx.delete(knowledge).where(eq(knowledge.id, q.knowledgeId));
+
+    return newRes;
   });
 }
 
@@ -65,12 +115,13 @@ export async function getQuestionById(id: number): Promise<Question | null> {
  * Scale note:
  * 苦手優先ランダムのアルゴリズムは、問題数が数千件規模になったら SQL 側での抽選に切り替える必要がある。
  * プロトタイプ規模では全件取得で問題ない。
- * また、現行の実装では各問題の統計情報および相関サブクエリによる最新の解答状況を SQL 側（answerLogs の集計およびサブクエリ）
- * で効率的に取得するように最適化されている。
+ * 統計情報は answer_logs の集計（正誤比率 + 絶対回数 + max(answered_at)）および相関サブクエリで取得する。
+ * 重み付けは 4 軸の乗算（accuracy × miss bonus × mastery decay × recency）で計算する。
  */
 export async function pickWeightedRandomQuestion(
   excludeIds: number[] = [],
 ): Promise<QuizQuestion | null> {
+  const now = new Date();
   // Project only the columns the picker needs instead of pulling every row ×
   // every column (question text + choices JSON + explanation) from Turso.
   // The stats query is independent, so run both in parallel.
@@ -90,8 +141,9 @@ export async function pickWeightedRandomQuestion(
         latestIsCorrect: sql<number>`(
         SELECT l2.is_correct FROM answer_logs AS l2
         WHERE l2.question_id = ${answerLogs.questionId}
-        ORDER BY l2.answered_at DESC LIMIT 1
+        ORDER BY l2.answered_at DESC, l2.id DESC LIMIT 1
       )`,
+        lastAnsweredAt: sql<number>`max(${answerLogs.answeredAt})`,
       })
       .from(answerLogs)
       .groupBy(answerLogs.questionId),
@@ -100,13 +152,20 @@ export async function pickWeightedRandomQuestion(
 
   const statsMap = new Map<
     number,
-    { totalAnswers: number; incorrectAnswers: number; latestCorrect: boolean }
+    {
+      totalAnswers: number;
+      incorrectAnswers: number;
+      latestCorrect: boolean;
+      lastAnsweredAt: Date | null;
+    }
   >();
   for (const row of statsRows) {
+    const ts = Number(row.lastAnsweredAt);
     statsMap.set(row.questionId, {
       totalAnswers: Number(row.totalAnswers),
       incorrectAnswers: Number(row.incorrectAnswers),
       latestCorrect: Number(row.latestIsCorrect) === 1,
+      lastAnsweredAt: Number.isFinite(ts) ? new Date(ts * 1000) : null,
     });
   }
 
@@ -125,8 +184,10 @@ export async function pickWeightedRandomQuestion(
             answered: stat.totalAnswers,
             incorrect: stat.incorrectAnswers,
             latestIncorrect: !stat.latestCorrect,
+            lastAnsweredAt: stat.lastAnsweredAt,
           }
         : null,
+      now,
     );
     return { item: q, weight };
   });

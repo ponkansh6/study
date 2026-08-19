@@ -138,3 +138,20 @@ export async function deleteQuestion(questionId: number): Promise<void> {
     { allowNotFound: true, customErrorMsg: "削除に失敗しました" },
   );
 }
+
+export async function regenerateQuestion(
+  questionId: number,
+  difficulty: number,
+): Promise<CreatedQuestion> {
+  return request(
+    `/api/questions/${questionId}/regenerate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ difficulty }),
+    },
+    "regenerate question",
+    createdQuestionSchema,
+    { customErrorMsg: "再作成に失敗しました" },
+  );
+}

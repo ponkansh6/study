@@ -23,6 +23,8 @@ import {
   createKnowledgeWithQuestion,
   listQuestions,
   deleteQuestion,
+  getQuestionSource,
+  replaceKnowledgeWithQuestion,
 } from "@/lib/db/repository/question-repository";
 
 async function insertQuestion(overrides: Partial<typeof schema.questions.$inferInsert> = {}) {
@@ -94,6 +96,70 @@ describe("question-repository", () => {
         // The question with an incorrect answer has weight 1+4*1+2 = 7,
         // the untouched one has weight 5. With rng=0 the first candidate wins.
         expect(q).not.toBeNull();
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("favors the question answered longer ago (recency differentiation via answered_at)", async () => {
+      const { questionId: idA } = await insertQuestion({ question: "Old answer" });
+      const { questionId: idB } = await insertQuestion({ question: "Recent answer" });
+
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const now = new Date();
+
+      // Both have 1 correct answer, but A was answered 30 days ago, B just now.
+      await dbRef
+        .db!.insert(schema.answerLogs)
+        .values({ questionId: idA, selectedIndex: 0, isCorrect: 1, answeredAt: thirtyDaysAgo });
+      await dbRef
+        .db!.insert(schema.answerLogs)
+        .values({ questionId: idB, selectedIndex: 0, isCorrect: 1, answeredAt: now });
+
+      // A (30 days ago) has recency=3.0 → weight 3.0; B (just now) has recency=0.2 → weight 0.1 (clamped).
+      // Mock rng=0.5: falls within A's [0, 3.0) range → A is picked.
+      // If seconds→ms conversion is broken (no ×1000), both get recency=3.0 and equal weight,
+      // so result depends on SQLite ordering → test becomes non-deterministic.
+      const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+      try {
+        const q = await pickWeightedRandomQuestion();
+        expect(q!.question).toBe("Old answer");
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("uses id as tiebreaker when answered_at is identical", async () => {
+      const { questionId: idA } = await insertQuestion({ question: "First inserted" });
+      const { questionId: idB } = await insertQuestion({ question: "Second inserted" });
+
+      const fixedDate = new Date("2025-06-01T12:00:00Z");
+
+      // Insert order: A is incorrect first, B is correct second (same timestamp).
+      // Without tiebreaker (id DESC), SQLite may return A first (higher weight 30.0)
+      // and pick it. With tiebreaker, B (higher id) is "latest", so B has low weight
+      // (0.0833) and A has high weight (30.0).
+      await dbRef.db!.insert(schema.answerLogs).values({
+        questionId: idA,
+        selectedIndex: 1,
+        isCorrect: 0,
+        answeredAt: fixedDate,
+      });
+      await dbRef.db!.insert(schema.answerLogs).values({
+        questionId: idB,
+        selectedIndex: 0,
+        isCorrect: 1,
+        answeredAt: fixedDate,
+      });
+
+      // With tiebreaker: A has weight 30.0, B has weight 0.0833. Total = 30.0833.
+      // To pick B (the second item), randomVal must fall in B's range [30.0, 30.0833].
+      // rng = randomVal / totalWeight. For totalWeight = 30.0833, choosing rng = 0.9999
+      // gives randomVal = 30.0803 > 30.0 (skips A) and < 30.0833 (picks B).
+      const spy = vi.spyOn(Math, "random").mockReturnValue(0.9999);
+      try {
+        const q = await pickWeightedRandomQuestion();
+        expect(q!.question).toBe("Second inserted");
       } finally {
         spy.mockRestore();
       }
@@ -208,6 +274,85 @@ describe("question-repository", () => {
         .from(schema.answerLogs)
         .where(eq(schema.answerLogs.questionId, q2.questionId));
       expect(logs2).toHaveLength(1);
+    });
+  });
+
+  describe("getQuestionSource and replaceKnowledgeWithQuestion", () => {
+    it("getQuestionSource returns title and sourceText or null", async () => {
+      const { questionId } = await insertQuestion({ question: "Source Test" });
+      const src = await getQuestionSource(questionId);
+      expect(src).toEqual({
+        title: "Title",
+        sourceText: "Source",
+      });
+
+      expect(await getQuestionSource(9999)).toBeNull();
+    });
+
+    it("replaceKnowledgeWithQuestion replaces old question/knowledge/logs with new ones and keeps other questions untouched", async () => {
+      const q1 = await insertQuestion({ question: "Old Q1" });
+      const q2 = await insertQuestion({ question: "Q2 Untouched" });
+
+      await dbRef.db!.insert(schema.answerLogs).values([
+        { questionId: q1.questionId, selectedIndex: 0, isCorrect: 1 },
+        { questionId: q2.questionId, selectedIndex: 0, isCorrect: 0 },
+      ]);
+
+      const res = await replaceKnowledgeWithQuestion({
+        replaceQuestionId: q1.questionId,
+        title: "New Title",
+        sourceText: "New Source",
+        question: {
+          question: "New Q1 Refined",
+          choices: ["1", "2", "3", "4"],
+          correctIndex: 1,
+          explanation: "New Exp",
+        },
+      });
+
+      expect(res).not.toBeNull();
+      expect(res!.questionId).not.toBe(q1.questionId);
+      expect(res!.knowledgeId).not.toBe(q1.knowledgeId);
+
+      // Old Q1 and its knowledge/logs are gone
+      expect(await getQuestionById(q1.questionId)).toBeNull();
+      const [oldK] = await dbRef
+        .db!.select()
+        .from(schema.knowledge)
+        .where(eq(schema.knowledge.id, q1.knowledgeId));
+      expect(oldK).toBeUndefined();
+      const oldLogs = await dbRef
+        .db!.select()
+        .from(schema.answerLogs)
+        .where(eq(schema.answerLogs.questionId, q1.questionId));
+      expect(oldLogs).toEqual([]);
+
+      // New Q1 exists with correct fields
+      const newQ = await getQuestionById(res!.questionId);
+      expect(newQ!.question).toBe("New Q1 Refined");
+      expect(newQ!.knowledgeId).toBe(res!.knowledgeId);
+
+      // Q2 and its logs remain untouched
+      expect(await getQuestionById(q2.questionId)).not.toBeNull();
+      const q2Logs = await dbRef
+        .db!.select()
+        .from(schema.answerLogs)
+        .where(eq(schema.answerLogs.questionId, q2.questionId));
+      expect(q2Logs).toHaveLength(1);
+    });
+
+    it("replaceKnowledgeWithQuestion returns null for missing id", async () => {
+      const res = await replaceKnowledgeWithQuestion({
+        replaceQuestionId: 9999,
+        title: "Title",
+        sourceText: "Source",
+        question: {
+          question: "Q",
+          choices: ["1", "2", "3", "4"],
+          correctIndex: 0,
+        },
+      });
+      expect(res).toBeNull();
     });
   });
 });

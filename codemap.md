@@ -23,7 +23,7 @@ Study is a Next.js 16 application that transforms knowledge text into interactiv
 **Abstractions**:
 
 - `src/lib/llm/quiz.ts`: LLM orchestration (prompt → validation → response)
-- `src/lib/db/repository/question-repository.ts`: Question creation and weighted random picking
+- `src/lib/db/repository/question-repository.ts`: Question creation and weighted random picking (4-axis: accuracy, miss bonus, mastery decay, recency)
 - `src/lib/db/repository/answer-repository.ts`: Answer logging and stats calculation
 - `src/app/answer/use-quiz-session.ts`: Quiz session state machine hook
 - `src/components/`: Reusable design system components
