@@ -243,3 +243,4 @@ interface AnswerLog {
 
 - Platform: Vercel / Turso
 - Framework: Next.js
+- Production build: Webpack (`next build --webpack`), including the pre-push build gate via `pnpm build`.
