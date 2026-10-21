@@ -241,6 +241,7 @@ interface AnswerLog {
 
 ## Deployment
 
+- Runtime: Node.js 24.22.1
 - Platform: Vercel / Turso
 - Framework: Next.js
 - Production build: Webpack (`next build --webpack`), including the pre-push build gate via `pnpm build`.

@@ -5,7 +5,7 @@ context: |
   ## 技術スタック
   - Framework: Next.js 16 (App Router, Turbopack)
   - Language: TypeScript (strict mode)
-  - Runtime: Node 24+, Package Manager: pnpm 11.9.0
+  - Runtime: Node.js 24.22.1, Package Manager: pnpm 11.9.0
   - UI: React 19, Tailwind CSS v4
   - LLM: Google Gemini API
   - Database: Drizzle ORM + Turso (libSQL)

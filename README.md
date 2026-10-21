@@ -23,7 +23,7 @@ A Next.js 16 application that transforms knowledge text into interactive 4-choic
 
 ### Prerequisites
 
-- Node 24+
+- Node.js 24.22.1
 - pnpm 11.9.0
 - Google API key (https://aistudio.google.com/app/apikey)
 - Turso database (https://turso.tech)
