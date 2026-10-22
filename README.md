@@ -88,7 +88,7 @@ tests/              # Test suites (Vitest & Playwright)
 openspec/           # Specification documents (openspec/specs/study/spec.md)
 ```
 
-> **Note on Design Documents**: Historical design records (`IMPLEMENTATION.md`, `PLAN.md`, `shared_plan/IMPLEMENTATION_PLAN.md`) represent past planning phases. The authoritative specification for the current implementation is located at `openspec/specs/study/spec.md`.
+> **Note on Design Documents**: Historical design records (`IMPLEMENTATION.md`, `PLAN.md`) represent past planning phases. The authoritative specification for the current implementation is located at `openspec/specs/study/spec.md`.
 
 ## License
 

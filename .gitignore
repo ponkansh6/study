@@ -39,3 +39,10 @@ yarn-error.log*
 
 # Deepwork state
 .slim/deepwork/
+
+# Claude session summaries
+.claude/
+
+# Local working artifacts
+/shared_plan/
+/log/
