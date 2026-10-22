@@ -9,7 +9,9 @@ Next.js App Router pages and REST API routes for the 1-knowledge-1-question endl
 - `layout.tsx` — Root layout with global navigation header and Tailwind CSS v4 styling
 - `page.tsx` — Home page (server component displaying today's JST learning stats via `getStats()`)
 - `globals.css` — Global CSS and Tailwind imports
-- `create/page.tsx` — Knowledge creation and question generation client form
+- `create/` — Knowledge creation flow
+  - `page.tsx` — Server shell
+  - `create-form.tsx` — Client form with post-creation actions (難易度を上げて再作成 / 破棄), difficulty badge (Lv1-5), and live region announcements
 - `answer/` — Endless quiz answer flow
   - `page.tsx` — Page wrapper
   - `quiz-runner.tsx` — Display component for question, choices, immediate feedback, and button-level loading for next/retry
@@ -20,5 +22,6 @@ Next.js App Router pages and REST API routes for the 1-knowledge-1-question endl
 - `api/` — REST API routes
   - `questions/route.ts` — POST (generate question from knowledge text)
   - `questions/[id]/route.ts` — DELETE (delete question, parent knowledge, and associated answer logs)
+  - `questions/[id]/regenerate/route.ts` — POST (regenerate at a higher difficulty; LLM call runs outside the transaction so a generation failure leaves the old question intact)
   - `questions/random/route.ts` — GET (fetch weighted random question with exclusion)
   - `answers/route.ts` — POST (submit answer, record answer log, return feedback)
