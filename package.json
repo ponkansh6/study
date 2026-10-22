@@ -11,7 +11,6 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest run -c tests/vitest.ui.config.ts",
     "test:e2e": "playwright test",
-    "test:all": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint:fast": "oxlint --nextjs-plugin --react-plugin --react-perf-plugin",
     "format:fast": "oxfmt --write .",
