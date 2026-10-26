@@ -2,6 +2,7 @@
 
 - **`git --no-verify` / `git commit -n` の使用禁止**: pre-commit/pre-push hooks を強制実行。
 - **`HUSKY=0` の使用禁止**: husky hook runner 無効化を禁止。
+- **依存監査・更新での昇格実行**: 依存監査・更新に必要な `pnpm audit` / `pnpm update` の外向き通信が通常権限で失敗する場合は、対象コマンドだけを `sandbox_permissions=require_escalated` で実行する。昇格は本依頼の依存監査・更新に必要な通信に限り、任意の外部通信や永続的な sandbox / 承認設定の変更を許可しない。
 
 ## リソース制約
 
