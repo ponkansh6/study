@@ -10,6 +10,14 @@ test("create page displays textarea and submit button", async ({ page }) => {
 });
 
 test("create page form submission and post-creation navigation", async ({ page }) => {
+  await page.route("**/api/questions/random*", async (route) => {
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "No questions found" }),
+    });
+  });
+
   // Mock POST /api/questions to return a sample question
   await page.route("**/api/questions", async (route) => {
     if (route.request().method() === "POST") {
