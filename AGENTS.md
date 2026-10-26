@@ -2,6 +2,7 @@
 
 - **`git --no-verify` / `git commit -n` の使用禁止**: pre-commit/pre-push hooks を強制実行。
 - **`HUSKY=0` の使用禁止**: husky hook runner 無効化を禁止。
+- **正規のpush先**: このリポジトリの正規リモートは `origin` (`https://github.com/ponkansh6/study.git`)。依頼された通常のpushはこの送信先に限定し、別のリモートやURLへ送信しない。
 - **依存監査・更新での昇格実行**: 依存監査・更新に必要な `pnpm audit` / `pnpm update` の外向き通信が通常権限で失敗する場合は、対象コマンドだけを `sandbox_permissions=require_escalated` で実行する。昇格は本依頼の依存監査・更新に必要な通信に限り、任意の外部通信や永続的な sandbox / 承認設定の変更を許可しない。
 
 ## リソース制約
@@ -41,7 +42,7 @@
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
