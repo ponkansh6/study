@@ -3,7 +3,8 @@
 - **`git --no-verify` / `git commit -n` の使用禁止**: pre-commit/pre-push hooks を強制実行。
 - **`HUSKY=0` の使用禁止**: husky hook runner 無効化を禁止。
 - **正規のpush先**: このリポジトリの正規リモートは `origin` (`https://github.com/ponkansh6/study.git`)。依頼された通常のpushはこの送信先に限定し、別のリモートやURLへ送信しない。
-- **依存監査・更新での昇格実行**: 依存監査・更新に必要な `pnpm audit` / `pnpm update` の外向き通信が通常権限で失敗する場合は、対象コマンドだけを `sandbox_permissions=require_escalated` で実行する。昇格は本依頼の依存監査・更新に必要な通信に限り、任意の外部通信や永続的な sandbox / 承認設定の変更を許可しない。
+- **依頼に伴う通常pushの昇格実行**: pushが依頼され、通常権限で外部通信が利用できない場合、正規の `origin` (`https://github.com/ponkansh6/study.git`) への通常の `git push origin <branch>` だけを `sandbox_permissions=require_escalated` で実行する。別の送信先、force push、ref削除、hook無効化は許可しない。
+- **pre-push E2E用Chromium取得の昇格実行**: pre-push E2EがPlaywright管理のChromium未導入で失敗し、通常権限での取得もネットワークエラーになる場合、`pnpm exec playwright install chromium` だけを `sandbox_permissions=require_escalated` で実行し、このプロジェクトに必要なChromiumを取得する。任意の外部通信や永続的なsandbox / 承認設定の変更は許可しない。
 
 ## リソース制約
 
