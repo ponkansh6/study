@@ -50,9 +50,7 @@ test("answer page displays question, choices, score header, and handles interact
   await page.goto("/answer");
 
   // Check score header and question
-  await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("0 正解 / 0 問", {
-    timeout: 15000,
-  });
+  await expect(page.locator("header", { hasText: "正解 0 / 0" })).toBeVisible({ timeout: 15000 });
   await expect(
     page.locator("text=TypeScriptのデフォルトの挙動ではないものはどれか？"),
   ).toBeVisible();
@@ -65,7 +63,7 @@ test("answer page displays question, choices, score header, and handles interact
   await choiceButtons.nth(1).click();
 
   // Check feedback and score update
-  await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("1 正解 / 1 問");
+  await expect(page.locator("header", { hasText: "正解 1 / 1" })).toBeVisible();
   await expect(page.locator("text=解説: TypeScriptは静的型付け言語です。")).toBeVisible({
     timeout: 15000,
   });
@@ -104,9 +102,7 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
 
   await page.goto("/answer");
 
-  await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("0 正解 / 0 問", {
-    timeout: 15000,
-  });
+  await expect(page.locator("header", { hasText: "正解 0 / 0" })).toBeVisible({ timeout: 15000 });
 
   const choiceButtons = page.locator("main button");
   await expect(choiceButtons).toHaveCount(4);
@@ -116,7 +112,7 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
 
   // Assertions
   await expect(page.locator("text=不正解")).toBeVisible();
-  await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("0 正解 / 1 問");
+  await expect(page.locator("header", { hasText: "正解 0 / 1" })).toBeVisible();
   await expect(page.locator("text=解説: 正解は選択肢Bです。")).toBeVisible();
 
   // Correct choice ("選択肢B") should show ✓ mark, wrong choice ("選択肢A") should show ✗ mark
