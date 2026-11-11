@@ -7,7 +7,7 @@ export default function ResultBanner({ isCorrect }: ResultBannerProps) {
     <div
       role="status"
       aria-live="polite"
-      className={`flex items-center gap-3 rounded-card border-l-4 px-4 py-3 font-bold motion-safe:animate-rise ${
+      className={`flex items-center justify-center gap-3 rounded-card border p-4 font-bold shadow-card motion-safe:animate-pop ${
         isCorrect
           ? "border-success/40 bg-success/15 text-success"
           : "border-error/40 bg-error/15 text-error"

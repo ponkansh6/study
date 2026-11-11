@@ -73,33 +73,19 @@ export function CreateForm() {
   };
 
   return (
-    <main className="py-8 space-y-7 flex-1 flex flex-col motion-safe:animate-rise">
+    <main className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise">
       <div className="sr-only" role="status" aria-live="polite">
         {announceMsg}
       </div>
-      <header className="space-y-2 border-b border-border pb-5">
-        <p className="text-xs font-bold tracking-[0.16em] text-primary">STUDY / CREATE</p>
-        <h1 className="text-3xl font-bold tracking-tight">問題を作成</h1>
-        <p className="text-sm text-muted leading-relaxed">
-          学びたい内容から、復習に使う問題を作ります。
-        </p>
-      </header>
+      <h1 className="text-2xl font-bold tracking-tight">問題を作成</h1>
       {!result ? (
-        <div className="space-y-5">
-          <label htmlFor="knowledge" className="block text-sm font-semibold">
-            問題にしたい内容
-          </label>
+        <div className="space-y-4">
           <textarea
-            id="knowledge"
-            className="w-full min-h-56 p-4 rounded-card border border-border bg-surface text-base leading-relaxed focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition"
-            aria-describedby="knowledge-help"
-            placeholder="学びたい内容を入力してください"
+            className="w-full min-h-48 p-4 rounded-card border border-border bg-surface shadow-sm text-base focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition"
+            placeholder="ナレッジを入力してください..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <p id="knowledge-help" className="-mt-3 text-xs text-muted">
-            要点や説明文を貼り付けてください。内容から選択式の問題を1問作成します。
-          </p>
           <div className="space-y-2">
             <Button onClick={handleCreate} disabled={!text.trim()} loading={loading}>
               この内容から1問作る
@@ -115,7 +101,6 @@ export function CreateForm() {
       ) : (
         <div className="space-y-6 motion-safe:animate-rise">
           <div className="space-y-4">
-            <p className="text-xs font-bold tracking-[0.16em] text-primary">PREVIEW / QUESTION</p>
             {difficulty > 1 && (
               <div className="inline-block px-3 py-1 rounded-card bg-surface-2 text-muted text-sm font-medium">
                 難易度 Lv.{difficulty}
@@ -127,10 +112,7 @@ export function CreateForm() {
               correctIndex={result.correctIndex}
             />
             {result.explanation && (
-              <div className="border-l-2 border-primary pl-4 py-1 text-sm text-muted leading-relaxed">
-                <p className="mb-1 text-xs font-bold tracking-wide text-text">解説</p>
-                <p>{result.explanation}</p>
-              </div>
+              <p className="text-sm text-muted italic px-2">解説: {result.explanation}</p>
             )}
           </div>
           {error && <ErrorMessage message={error} />}

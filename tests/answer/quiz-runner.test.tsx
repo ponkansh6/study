@@ -86,8 +86,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("What is the capital of France?")).toBeInTheDocument();
-    const score = screen.getByText(/正解.*問/, { selector: "p" });
-    expect(score.textContent).toMatch(/0\s*正解\s*\/\s*0\s*問/);
+    expect(screen.getByText("正解 0 / 0")).toBeInTheDocument();
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(4);
     expect(screen.getByText("Paris")).toBeInTheDocument();
@@ -144,10 +143,8 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("正解！")).toBeInTheDocument();
-    expect(screen.getByText("解説")).toBeInTheDocument();
-    expect(screen.getByText("Paris is the capital.")).toBeInTheDocument();
-    const score = screen.getByText(/正解.*問/, { selector: "p" });
-    expect(score.textContent).toMatch(/1\s*正解\s*\/\s*1\s*問/);
+    expect(screen.getByText(/解説: Paris is the capital\./)).toBeInTheDocument();
+    expect(screen.getByText("正解 1 / 1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "次の問題へ" }));
     expect(loadNext).toHaveBeenCalled();
   });

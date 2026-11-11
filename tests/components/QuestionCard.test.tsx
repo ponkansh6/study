@@ -16,15 +16,15 @@ describe("QuestionCard", () => {
   it("highlights the correct choice and not the others", () => {
     render(<QuestionCard question="What is 2+2?" choices={choices} correctIndex={1} />);
     const choiceEls = choices.map((c) => screen.getByText(c).parentElement!);
-    expect(choiceEls[1].className).toContain("bg-success/10");
-    expect(choiceEls[0].className).not.toContain("bg-success/10");
-    expect(choiceEls[2].className).not.toContain("bg-success/10");
-    expect(choiceEls[3].className).not.toContain("bg-success/10");
+    expect(choiceEls[1].className).toContain("bg-success/20");
+    expect(choiceEls[0].className).not.toContain("bg-success/20");
+    expect(choiceEls[2].className).not.toContain("bg-success/20");
+    expect(choiceEls[3].className).not.toContain("bg-success/20");
   });
 
   it("renders without highlighting when correctIndex is undefined", () => {
     render(<QuestionCard question="What is 2+2?" choices={choices} />);
     const choiceEls = choices.map((c) => screen.getByText(c).parentElement!);
-    choiceEls.forEach((el) => expect(el.className).not.toContain("bg-success/10"));
+    choiceEls.forEach((el) => expect(el.className).not.toContain("bg-success/20"));
   });
 });

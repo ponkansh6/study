@@ -22,7 +22,7 @@ describe("CreateForm", () => {
 
   it("renders textarea and initial create button, and does not show regenerate/discard buttons before generation", () => {
     render(<CreateForm />);
-    expect(screen.getByLabelText("問題にしたい内容")).toBeDefined();
+    expect(screen.getByPlaceholderText("ナレッジを入力してください...")).toBeDefined();
     expect(screen.getByRole("button", { name: "この内容から1問作る" })).toBeDefined();
     expect(screen.queryByRole("button", { name: "難易度を上げて再作成" })).toBeNull();
     expect(screen.queryByRole("button", { name: "破棄" })).toBeNull();
@@ -39,7 +39,7 @@ describe("CreateForm", () => {
     });
 
     render(<CreateForm />);
-    const textarea = screen.getByLabelText("問題にしたい内容");
+    const textarea = screen.getByPlaceholderText("ナレッジを入力してください...");
     fireEvent.change(textarea, { target: { value: "Some source knowledge" } });
 
     const btn = screen.getByRole("button", { name: "この内容から1問作る" });
@@ -73,7 +73,7 @@ describe("CreateForm", () => {
     });
 
     render(<CreateForm />);
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
@@ -104,7 +104,7 @@ describe("CreateForm", () => {
     vi.mocked(client.regenerateQuestion).mockRejectedValueOnce(new Error("LLM timeout"));
 
     render(<CreateForm />);
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
@@ -168,7 +168,7 @@ describe("CreateForm", () => {
       });
 
     render(<CreateForm />);
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
@@ -203,7 +203,7 @@ describe("CreateForm", () => {
     vi.mocked(client.deleteQuestion).mockResolvedValueOnce(undefined);
 
     render(<CreateForm />);
-    const textarea = screen.getByLabelText("問題にしたい内容");
+    const textarea = screen.getByPlaceholderText("ナレッジを入力してください...");
     fireEvent.change(textarea, { target: { value: "Retained knowledge text" } });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
 
@@ -214,7 +214,7 @@ describe("CreateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "破棄" }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText("問題にしたい内容")).toBeDefined();
+      expect(screen.getByPlaceholderText("ナレッジを入力してください...")).toBeDefined();
     });
 
     expect(client.deleteQuestion).toHaveBeenCalledWith(1);
@@ -233,7 +233,7 @@ describe("CreateForm", () => {
     vi.mocked(client.deleteQuestion).mockRejectedValueOnce(new Error("Network delete error"));
 
     render(<CreateForm />);
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
@@ -270,7 +270,7 @@ describe("CreateForm", () => {
     });
 
     render(<CreateForm />);
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));
@@ -287,7 +287,7 @@ describe("CreateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "続けてもう1問作る" }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText("問題にしたい内容")).toBeDefined();
+      expect(screen.getByPlaceholderText("ナレッジを入力してください...")).toBeDefined();
     });
 
     // Create another question -> should start at Lv1 (no badge)
@@ -299,7 +299,7 @@ describe("CreateForm", () => {
       correctIndex: 0,
       explanation: null,
     });
-    fireEvent.change(screen.getByLabelText("問題にしたい内容"), {
+    fireEvent.change(screen.getByPlaceholderText("ナレッジを入力してください..."), {
       target: { value: "new text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "この内容から1問作る" }));

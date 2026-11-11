@@ -10,6 +10,6 @@ describe("CreatePage", () => {
   it("renders CreateForm", () => {
     render(<CreatePage />);
     expect(screen.getByText("問題を作成")).toBeDefined();
-    expect(screen.getByLabelText("問題にしたい内容")).toBeDefined();
+    expect(screen.getByPlaceholderText("ナレッジを入力してください...")).toBeDefined();
   });
 });
