@@ -44,20 +44,29 @@ export default function QuizRunner() {
   const result = isGraded ? phase.result : undefined;
 
   return (
-    <main className="flex-1 flex flex-col relative py-6">
-      <header className="mb-4">
-        <div className="flex items-center justify-between text-sm font-bold tracking-wide mb-1.5">
-          <span>スコア</span>
-          <span>
-            正解 {score.correct} / {score.total}
-          </span>
+    <main className="flex-1 flex flex-col relative py-7">
+      <header className="mb-8 border-b border-border pb-4">
+        <div className="flex items-end justify-between gap-4 mb-3">
+          <div>
+            <p className="text-xs font-bold tracking-[0.16em] text-primary mb-1">STUDY / REVIEW</p>
+            <h1 className="text-2xl font-bold tracking-tight">問題に答える</h1>
+          </div>
+          <p className="text-sm tabular-nums text-muted shrink-0">
+            <span className="font-bold text-text">{score.correct}</span> 正解{" "}
+            <span className="mx-1">/</span> {score.total} 問
+          </p>
         </div>
         <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
       </header>
 
-      <div key={quiz.question.id} className="flex-1 space-y-6 motion-safe:animate-rise pb-24">
-        <h2 className="text-xl font-bold tracking-tight leading-snug">{quiz.question.question}</h2>
-        <div className="space-y-3">
+      <div key={quiz.question.id} className="flex-1 space-y-7 motion-safe:animate-rise pb-28">
+        <section aria-labelledby="current-question" className="space-y-5">
+          <p className="text-xs font-bold tracking-wide text-muted">次の問いを考えてください</p>
+          <h2 id="current-question" className="text-2xl font-bold tracking-tight leading-relaxed">
+            {quiz.question.question}
+          </h2>
+        </section>
+        <div className="space-y-3" role="group" aria-labelledby="current-question">
           {(() => {
             const correctShuffledIndex =
               isGraded && result
@@ -90,8 +99,9 @@ export default function QuizRunner() {
           <div className="space-y-4 pt-2">
             <ResultBanner isCorrect={result.isCorrect} />
             {result.explanation && (
-              <div className="p-4 bg-surface-2 rounded-card text-sm italic border border-border/60 shadow-sm leading-relaxed">
-                解説: {result.explanation}
+              <div className="border-l-2 border-primary pl-4 py-1 text-sm leading-relaxed">
+                <p className="mb-1 text-xs font-bold tracking-wide">解説</p>
+                <p className="text-muted">{result.explanation}</p>
               </div>
             )}
           </div>
@@ -99,7 +109,7 @@ export default function QuizRunner() {
       </div>
 
       {isGraded && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-bg/85 backdrop-blur-md border-t border-border z-20">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-bg border-t border-border z-20">
           <div className="max-w-2xl mx-auto w-full">
             <Button onClick={() => void loadNext()} loading={loading}>
               次の問題へ

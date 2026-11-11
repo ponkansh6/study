@@ -10,9 +10,11 @@ export function StatCard({ label, value, progress }: StatCardProps) {
   const hasProgress = progress !== undefined;
 
   return (
-    <div className="bg-surface shadow-card rounded-card p-3 sm:p-5 flex flex-col items-center justify-center transition duration-200 ease-[var(--ease-out-soft)]">
-      <div className="text-2xl sm:text-3xl font-bold tracking-tight">{value}</div>
-      <div className="text-xs font-medium text-muted mt-1">{label}</div>
+    <div className="px-2 flex flex-col items-center justify-center text-center">
+      <div className="text-2xl sm:text-3xl font-semibold tabular-nums tracking-tight">{value}</div>
+      <div className="text-[0.68rem] sm:text-xs leading-snug font-medium text-muted mt-1">
+        {label}
+      </div>
       {hasProgress ? (
         <ProgressBar value={progress} className="mt-3" />
       ) : (

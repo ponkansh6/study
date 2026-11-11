@@ -59,8 +59,8 @@ function QuestionRow({
 
   return (
     <li
-      className={`bg-surface rounded-card border shadow-card p-4 space-y-3 ${
-        confirming ? "border-warning/30" : "border-border/60"
+      className={`bg-surface rounded-card border p-4 space-y-3 ${
+        confirming ? "border-warning" : "border-border"
       }`}
       {...(confirming
         ? {
@@ -71,8 +71,8 @@ function QuestionRow({
     >
       <div className="flex items-start justify-between gap-4">
         <div id={`question-${item.id}`} className="flex-1 min-w-0">
-          <p className="font-bold break-words leading-snug">{item.question}</p>
-          <p className="text-xs text-muted mt-0.5">{item.createdAt}</p>
+          <p className="font-semibold break-words leading-relaxed">{item.question}</p>
+          <p className="text-xs text-muted mt-2">作成日 · {item.createdAt}</p>
         </div>
         {!confirming && (
           <div className="shrink-0 w-24">
@@ -154,8 +154,10 @@ export function QuestionList({ initialItems }: QuestionListProps) {
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
-      <p className="text-sm font-bold text-muted">{items.length}件</p>
-      <ul className="space-y-3">
+      <p className="text-sm text-muted border-l-2 border-primary pl-3">
+        <span className="font-bold text-text tabular-nums">{items.length}</span> 件を保存しています
+      </p>
+      <ul className="space-y-2">
         {items.map((item) => (
           <QuestionRow key={item.id} item={item} onDeleted={handleDeleted} />
         ))}

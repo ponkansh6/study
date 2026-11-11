@@ -21,7 +21,8 @@ describe("QuestionList", () => {
   it("renders list and count", () => {
     render(<QuestionList initialItems={mockItems} />);
     expect(screen.getByText("Q1")).toBeInTheDocument();
-    expect(screen.getByText("2件")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("件を保存しています")).toBeInTheDocument();
   });
 
   it("renders EmptyState when empty", () => {
