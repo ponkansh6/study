@@ -66,8 +66,7 @@ test("answer page displays question, choices, score header, and handles interact
 
   // Check feedback and score update
   await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("1 正解 / 1 問");
-  await expect(page.getByText("解説", { exact: true })).toBeVisible();
-  await expect(page.getByText("TypeScriptは静的型付け言語です。", { exact: true })).toBeVisible({
+  await expect(page.locator("text=解説: TypeScriptは静的型付け言語です。")).toBeVisible({
     timeout: 15000,
   });
   await expect(page.locator("button", { hasText: "次の問題へ" })).toBeVisible();
@@ -118,8 +117,7 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
   // Assertions
   await expect(page.locator("text=不正解")).toBeVisible();
   await expect(page.locator("header p").filter({ hasText: "正解" })).toHaveText("0 正解 / 1 問");
-  await expect(page.getByText("解説", { exact: true })).toBeVisible();
-  await expect(page.getByText("正解は選択肢Bです。", { exact: true })).toBeVisible();
+  await expect(page.locator("text=解説: 正解は選択肢Bです。")).toBeVisible();
 
   // Correct choice ("選択肢B") should show ✓ mark, wrong choice ("選択肢A") should show ✗ mark
   await expect(page.locator("button", { hasText: "選択肢B" })).toContainText("✓");

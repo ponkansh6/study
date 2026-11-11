@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 test("home page displays title and navigation buttons", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("h1")).toHaveText(/知識を、\s*一問ずつ身につける。/);
+  await expect(page.locator("h1")).toHaveText("Study");
   await expect(page.locator("text=問題を作る")).toBeVisible();
-  await expect(page.getByRole("link", { name: /学習をはじめる/ })).toBeVisible();
-  await expect(page.locator("h2:has-text('学習の記録')")).toBeVisible();
+  await expect(page.locator("text=問題を解く")).toBeVisible();
+  await expect(page.locator("h2:has-text('統計')")).toBeVisible();
   await expect(page.locator("text=問題数")).toBeVisible();
   await expect(page.locator("text=本日の解答数")).toBeVisible();
   await expect(page.locator("text=本日の正答率")).toBeVisible();

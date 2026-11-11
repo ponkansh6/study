@@ -46,8 +46,7 @@ test("create page form submission and post-creation navigation", async ({ page }
 
   // Check generated question display
   await expect(page.locator("h2", { hasText: "テスト問題です。" })).toBeVisible();
-  await expect(page.getByText("解説", { exact: true })).toBeVisible();
-  await expect(page.getByText("テストの解説です。", { exact: true })).toBeVisible();
+  await expect(page.locator("text=解説: テストの解説です。")).toBeVisible();
 
   // Check post-creation buttons
   await expect(page.locator("button", { hasText: "続けてもう1問作る" })).toBeVisible();
