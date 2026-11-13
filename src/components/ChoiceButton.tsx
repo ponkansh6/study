@@ -37,7 +37,7 @@ export default function ChoiceButton({
       onClick={onClick}
       disabled={disabled}
       aria-busy={variant === "selected"}
-      className={`flex w-full min-h-14 items-center gap-3 rounded-card border p-4 text-left transition duration-200 ease-[var(--ease-out-soft)] motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getStyles()}`}
+      className={`flex w-full min-h-14 items-center gap-3 rounded-card border p-4 text-left transition duration-200 ease-[var(--ease-out-soft)] motion-reduce:transition-none motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getStyles()}`}
     >
       <span className="font-bold shrink-0 w-8 h-8 rounded-xl bg-surface-2 flex items-center justify-center text-sm">
         {label}

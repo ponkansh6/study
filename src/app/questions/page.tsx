@@ -12,7 +12,11 @@ export default async function QuestionsPage() {
   }));
 
   return (
-    <main className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise focus:outline-none"
+    >
       <h1 className="text-2xl font-bold tracking-tight">問題一覧</h1>
       <QuestionList initialItems={formattedItems} />
     </main>

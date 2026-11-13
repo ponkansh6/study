@@ -73,21 +73,37 @@ export function CreateForm() {
   };
 
   return (
-    <main className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="py-8 space-y-6 flex-1 flex flex-col motion-safe:animate-rise focus:outline-none"
+    >
       <div className="sr-only" role="status" aria-live="polite">
         {announceMsg}
       </div>
       <h1 className="text-2xl font-bold tracking-tight">問題を作成</h1>
       {!result ? (
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleCreate();
+          }}
+        >
+          <label htmlFor="knowledge-text" className="block text-sm font-medium">
+            問題にしたい知識
+          </label>
           <textarea
-            className="w-full min-h-48 p-4 rounded-card border border-border bg-surface shadow-sm text-base focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition"
+            id="knowledge-text"
+            name="sourceText"
+            required
+            className="w-full min-h-48 p-4 rounded-card border border-border bg-surface shadow-sm text-base focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition motion-reduce:transition-none"
             placeholder="ナレッジを入力してください..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <div className="space-y-2">
-            <Button onClick={handleCreate} disabled={!text.trim()} loading={loading}>
+            <Button type="submit" disabled={!text.trim()} loading={loading}>
               この内容から1問作る
             </Button>
             {loading && (
@@ -97,7 +113,7 @@ export function CreateForm() {
             )}
           </div>
           {error && <ErrorMessage message={error} />}
-        </div>
+        </form>
       ) : (
         <div className="space-y-6 motion-safe:animate-rise">
           <div className="space-y-4">

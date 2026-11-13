@@ -5,8 +5,6 @@ interface ResultBannerProps {
 export default function ResultBanner({ isCorrect }: ResultBannerProps) {
   return (
     <div
-      role="status"
-      aria-live="polite"
       className={`flex items-center justify-center gap-3 rounded-card border p-4 font-bold shadow-card motion-safe:animate-pop ${
         isCorrect
           ? "border-success/40 bg-success/15 text-success"

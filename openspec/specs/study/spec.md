@@ -22,7 +22,7 @@ interface Question {
   knowledgeId: number; // 1:1 with knowledge
   question: string;
   choices: string[]; // JSON string[]
-  correctIndex: number;
+  correctIndex: number; // Integer index into choices (0..choices.length - 1)
   explanation?: string;
   createdAt: Date;
 }
@@ -45,7 +45,10 @@ interface AnswerLog {
 
 - Title auto-generated from the first 100 characters of input
 - JSON validated via Zod schema
+- Generated `correctIndex` must be an integer within the four-choice range.
 - On parse failure or API error, retry with exponential backoff (max 3 retries)
+- All Gemini and parse retries share a 240-second generation time budget. Each Gemini request timeout is capped by the remaining budget; when the deadline expires, generation stops and follows the existing failure response path.
+- Generation errors are shown in an alert live region.
 
 ### R2: Endless Learning Question Retrieval
 
@@ -59,7 +62,7 @@ interface AnswerLog {
 ### R3: Answer Submission & Feedback
 
 **WHEN** user selects a choice and clicks submit on `/answer`
-**THEN** `POST /api/answers` validates the answer, records an `answerLogs` entry, and returns feedback (`isCorrect`, `correctIndex`, `explanation`). The UI displays a clear 正解! / 不正解 banner, marks the user's selected wrong answer, and highlights the correct answer. When a choice is selected, the UI immediately shows a sending state (spinner on the selected choice, other choices disabled) while awaiting server response. Double-submission is structurally prevented.
+**THEN** `POST /api/answers` validates the answer, records an `answerLogs` entry, and returns feedback (`isCorrect`, `correctIndex`, `explanation`). The UI displays a clear 正解! / 不正解 banner, marks the user's selected wrong answer, and highlights the correct answer. A persistent polite live region announces the result and, for an incorrect answer, identifies the correct choice. When a choice is selected, the UI immediately shows a sending state (spinner on the selected choice, other choices disabled) while awaiting server response. Double-submission is structurally prevented.
 
 ### R4: Client-Side Choice Shuffle
 
@@ -74,7 +77,7 @@ interface AnswerLog {
 ### R6: Responsive & Accessible Interface
 
 **WHEN** user interacts with any page
-**THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast). All buttons and primary navigation links provide immediate tap feedback: a press animation (`motion-safe:active:scale-[0.98]`) on the shared `Button`, inline loading spinners (`loading` prop with `aria-busy` + `disabled`) for asynchronous actions (question generation, next-question, retry, and `router.push` navigation via `useTransition`), pending-navigation feedback on links via `useLinkStatus`, and double-fire guards on `loadNext` / `handleCreate`.
+**THEN** UI provides mobile-first responsive design (Tailwind v4), touch-friendly buttons (`min-h-12`), and WCAG 2.1 AA compliance (focus rings, contrast). A keyboard-accessible skip link targets the unique `#main-content` landmark on every route and answer state. The answer result is announced through a persistent polite live region. Decorative animation and transitions respect `prefers-reduced-motion`. All buttons and primary navigation links provide immediate tap feedback: a press animation (`motion-safe:active:scale-[0.98]`) on the shared `Button`, inline loading spinners (`loading` prop with `aria-busy` + `disabled`) for asynchronous actions (question generation, next-question, retry, and `router.push` navigation via `useTransition`), pending-navigation feedback on links via `useLinkStatus`, and double-fire guards on `loadNext` / `handleCreate`.
 
 ### R7: Question List & Deletion
 
@@ -84,6 +87,7 @@ interface AnswerLog {
 - Deletion removes the question, its parent `knowledge` record, and all associated `answerLogs` within a single explicit transaction (`src/lib/db/repository/question-repository.ts` `deleteQuestion()`, noting `PRAGMA foreign_keys` is not enabled, so schema-level `onDelete: "cascade"` does not fire).
 - When entering the confirmation state, the question text and creation date remain continuously visible, and the row container provides appropriate ARIA labeling (`role="group"` with `aria-labelledby`).
 - If deletion fails, the row remains, an error message is displayed with `role="alert"`, and the user can retry.
+- After deletion, focus moves to the next remaining row's delete action, or the previous row if there is no next row. When the list becomes empty, focus moves to the create action. Focus is preserved if the user moves elsewhere while deletion is pending.
 - If no questions are available, an `EmptyState` component (`src/components/EmptyState.tsx`) is rendered with an action to create questions.
 
 ### R8: Difficulty Escalation & Discard
@@ -145,14 +149,14 @@ interface AnswerLog {
 
 ### 2. `/create` (Create - `src/app/create/page.tsx`, `src/app/create/create-form.tsx`)
 
-- Server component shell (`page.tsx`) rendering a `"use client"` form component (`create-form.tsx`) with textarea input for knowledge text
+- Server component shell (`page.tsx`) rendering a `"use client"` form component (`create-form.tsx`) with a labeled, required textarea for knowledge text. The input is submitted through a semantic form and submit button; Enter in the textarea continues to insert a newline.
 - Submits text via API client, generates 1 question, displays result with correct answer highlighted, active difficulty badge (`難易度 Lv.N`), live region announcements, "難易度を上げて再作成", "破棄" (danger variant), and demoted `ghost` "続けてもう1問作る" buttons.
 
 ### 3. `/answer` (Answer - `src/app/answer/page.tsx`, `use-quiz-session.ts`, `quiz-runner.tsx`, `src/app/answer/choice-state.ts`)
 
 - Thin page wrapper rendering `QuizRunner`
 - `use-quiz-session.ts`: State machine hook handling fetching, answering, loading, error states, submitting state, and `mountedRef` guard
-- `quiz-runner.tsx`: Display-only component rendering questions, choice buttons, feedback banners, and navigation
+- `quiz-runner.tsx`: Display-only component rendering questions, choice buttons, feedback banners, and navigation. A persistent polite live region announces grading feedback, including the correct choice after an incorrect answer.
 - `src/app/answer/choice-state.ts`: Pure choice variant logic helper function `choiceVariant()`
 
 ### 4. `/questions` (Question List & Deletion - `src/app/questions/page.tsx`, `src/app/questions/question-list.tsx`)
@@ -164,7 +168,7 @@ interface AnswerLog {
 
 - `Button.tsx`: Unified button styles with shared `buttonBaseClasses` / `buttonVariants` (including `danger` variant) and `ref` forwarding (`ComponentPropsWithRef<"button">`)
 - `NavLink.tsx`: Link wrapper applying the `Button` design system (via `buttonVariants`) plus `useLinkStatus` pending feedback
-- `Spinner.tsx`: Shared loading spinner (sizes `sm`/`lg`, colors `current`/`primary`) used by `Button`, `ChoiceButton`, and `LoadingState`
+- `Spinner.tsx`: Shared loading spinner (sizes `sm`/`lg`, colors `current`/`primary`) used by `Button`, `ChoiceButton`, and `LoadingState`; its decorative rotation is disabled when reduced motion is preferred.
 - `QuestionCard.tsx`: Display-only question container card (correct answer highlighting via `correctIndex`; no interactive props)
 - `StatCard.tsx`: Statistics card with optional linear progress bar (`progress?: number` 0..1) for accuracy visualization; value rendered as text.
 - `ProgressBar.tsx`: Shared linear progress bar component used by `StatCard` and answer screen score bar.

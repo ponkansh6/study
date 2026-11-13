@@ -35,6 +35,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("読み込み中...")).toBeInTheDocument();
+    expect(document.querySelector("#main-content")).toBeInTheDocument();
   });
 
   it("renders EmptyState when phase is empty and pushes to /create", () => {
@@ -47,6 +48,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("問題がまだありません。")).toBeInTheDocument();
+    expect(document.querySelector("#main-content")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "問題作成へ" }));
     expect(mockPush).toHaveBeenCalledWith("/create");
   });
@@ -62,6 +64,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("Something broke")).toBeInTheDocument();
+    expect(document.querySelector("#main-content")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "再試行" }));
     expect(loadNext).toHaveBeenCalled();
   });
@@ -143,6 +146,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("正解！")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("正解です。");
     expect(screen.getByText(/解説: Paris is the capital\./)).toBeInTheDocument();
     expect(screen.getByText("正解 1 / 1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "次の問題へ" }));
@@ -170,6 +174,7 @@ describe("QuizRunner", () => {
     });
     render(<QuizRunner />);
     expect(screen.getByText("不正解")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("不正解です。正解はLondonです。");
     expect(screen.queryByText(/解説:/)).not.toBeInTheDocument();
   });
 });

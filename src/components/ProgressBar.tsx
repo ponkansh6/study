@@ -14,7 +14,7 @@ export function ProgressBar({ value, className }: ProgressBarProps) {
       aria-hidden="true"
     >
       <div
-        className="h-full rounded-full bg-primary transition-all duration-500 ease-[var(--ease-out-soft)]"
+        className="h-full rounded-full bg-primary transition-all duration-500 ease-[var(--ease-out-soft)] motion-reduce:transition-none"
         style={{ width: `${pct}%` }}
       />
     </div>

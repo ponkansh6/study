@@ -3,6 +3,10 @@ import { test, expect } from "@playwright/test";
 test("home page displays title and navigation buttons", async ({ page }) => {
   await page.goto("/");
 
+  const skipLink = page.getByRole("link", { name: "本文へ移動" });
+  await expect(skipLink).toHaveAttribute("href", "#main-content");
+  await expect(page.locator("#main-content")).toHaveCount(1);
+
   await expect(page.locator("h1")).toHaveText("Study");
   await expect(page.locator("text=問題を作る")).toBeVisible();
   await expect(page.locator("text=問題を解く")).toBeVisible();

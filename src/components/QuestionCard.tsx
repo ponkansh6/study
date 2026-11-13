@@ -19,7 +19,7 @@ export function QuestionCard({ question, choices, correctIndex }: QuestionCardPr
             <div
               key={i}
               className={cn(
-                "w-full p-4 rounded-xl text-left transition duration-200 ease-[var(--ease-out-soft)] flex gap-3 items-center break-words border",
+                "w-full p-4 rounded-xl text-left transition duration-200 ease-[var(--ease-out-soft)] motion-reduce:transition-none flex gap-3 items-center break-words border",
                 isCorrect
                   ? "bg-success/20 border-success/40 ring-1 ring-success/40 font-semibold"
                   : "bg-surface-2 border-transparent",

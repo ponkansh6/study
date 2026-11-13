@@ -19,7 +19,9 @@ describe("Button", () => {
 
   it("when loading, renders an inline spinner", () => {
     const { container } = render(<Button loading>作成</Button>);
-    expect(container.querySelector('span[aria-hidden="true"].animate-spin')).not.toBeNull();
+    expect(
+      container.querySelector('span[aria-hidden="true"].motion-safe\\:animate-spin'),
+    ).not.toBeNull();
   });
 
   it("loading overrides an explicit disabled prop", () => {

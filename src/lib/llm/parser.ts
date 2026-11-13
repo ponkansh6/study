@@ -3,9 +3,20 @@ import { LLM_MAX_PARSE_RETRIES, DEBUG_LOG_TRUNCATE_LENGTH } from "../constants";
 import { backoffMs } from "./client";
 import { sleep } from "../sleep";
 
-async function shouldRetry(attempt: number, maxRetries: number): Promise<boolean> {
+async function shouldRetry(
+  attempt: number,
+  maxRetries: number,
+  deadlineAt?: number,
+): Promise<boolean> {
   if (attempt < maxRetries) {
-    await sleep(backoffMs(attempt));
+    const waitMs = backoffMs(attempt);
+    if (deadlineAt === undefined) {
+      await sleep(waitMs);
+      return true;
+    }
+    const remainingMs = deadlineAt - performance.now();
+    if (remainingMs <= 0) return false;
+    await sleep(Math.min(waitMs, remainingMs));
     return true;
   }
   return false;
@@ -15,9 +26,11 @@ export async function parseWithRetry<T>(
   fetcher: () => Promise<string | null>,
   schema: z.ZodType<T>,
   contextName: string,
+  deadlineAt?: number,
 ): Promise<T | null> {
   const maxParseRetries = LLM_MAX_PARSE_RETRIES;
   for (let attempt = 0; attempt <= maxParseRetries; attempt++) {
+    if (deadlineAt !== undefined && deadlineAt - performance.now() <= 0) return null;
     let text: string | null;
     try {
       text = await fetcher();
@@ -28,6 +41,7 @@ export async function parseWithRetry<T>(
       console.error(`[llm] ${contextName} failed:`, err);
       return null;
     }
+    if (deadlineAt !== undefined && deadlineAt - performance.now() <= 0) return null;
     if (!text) {
       return null;
     }
@@ -40,7 +54,7 @@ export async function parseWithRetry<T>(
         `[llm] ${contextName} invalid JSON (attempt ${attempt + 1}/${maxParseRetries + 1}):`,
         text.slice(0, DEBUG_LOG_TRUNCATE_LENGTH),
       );
-      if (await shouldRetry(attempt, maxParseRetries)) continue;
+      if (await shouldRetry(attempt, maxParseRetries, deadlineAt)) continue;
       return null;
     }
 
@@ -55,7 +69,7 @@ export async function parseWithRetry<T>(
       } else {
         console.warn(`[llm] ${contextName} unexpected parse error:`, err);
       }
-      if (await shouldRetry(attempt, maxParseRetries)) continue;
+      if (await shouldRetry(attempt, maxParseRetries, deadlineAt)) continue;
       return null;
     }
   }

@@ -6,6 +6,7 @@ export const QuizQuestionSchema = z.object({
   choices: z.array(z.string()).length(QUIZ_CHOICES_PER_QUESTION),
   correctIndex: z
     .number()
+    .int()
     .min(0)
     .max(QUIZ_CHOICES_PER_QUESTION - 1),
   explanation: z.string().optional(),

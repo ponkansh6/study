@@ -32,4 +32,14 @@ describe("QuizQuestionSchema", () => {
     const result = QuizQuestionSchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
+
+  it("rejects a fractional correctIndex", () => {
+    const invalid = {
+      question: "What is the capital of France?",
+      choices: ["London", "Berlin", "Paris", "Madrid"],
+      correctIndex: 1.5,
+      explanation: "Berlin is not the capital.",
+    };
+    expect(QuizQuestionSchema.safeParse(invalid).success).toBe(false);
+  });
 });

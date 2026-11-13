@@ -17,23 +17,43 @@ export default function QuizRunner() {
   const { phase, score, loadNext, select, loading } = useQuizSession();
 
   if (phase.kind === "loading") {
-    return <LoadingState />;
+    return (
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 flex flex-col py-6 focus:outline-none"
+      >
+        <LoadingState />
+      </main>
+    );
   }
 
   if (phase.kind === "empty") {
     return (
-      <EmptyState
-        title="問題がまだありません。"
-        description="まず問題を作ってください。"
-        actionLabel="問題作成へ"
-        onAction={() => router.push("/create")}
-      />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 flex flex-col py-6 focus:outline-none"
+      >
+        <EmptyState
+          title="問題がまだありません。"
+          description="まず問題を作ってください。"
+          actionLabel="問題作成へ"
+          onAction={() => router.push("/create")}
+        />
+      </main>
     );
   }
 
   if (phase.kind === "error") {
     return (
-      <ErrorMessage message={phase.message} onRetry={() => void loadNext()} loading={loading} />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 flex flex-col py-6 focus:outline-none"
+      >
+        <ErrorMessage message={phase.message} onRetry={() => void loadNext()} loading={loading} />
+      </main>
     );
   }
 
@@ -44,7 +64,11 @@ export default function QuizRunner() {
   const result = isGraded ? phase.result : undefined;
 
   return (
-    <main className="flex-1 flex flex-col relative py-6">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="flex-1 flex flex-col relative py-6 focus:outline-none"
+    >
       <header className="mb-4">
         <div className="flex items-center justify-between text-sm font-bold tracking-wide mb-1.5">
           <span>スコア</span>
@@ -54,6 +78,14 @@ export default function QuizRunner() {
         </div>
         <ProgressBar value={score.total > 0 ? score.correct / score.total : 0} />
       </header>
+
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {isGraded && result
+          ? result.isCorrect
+            ? "正解です。"
+            : `不正解です。正解は${quiz.question.choices[result.correctIndex]}です。`
+          : ""}
+      </p>
 
       <div key={quiz.question.id} className="flex-1 space-y-6 motion-safe:animate-rise pb-24">
         <h2 className="text-xl font-bold tracking-tight leading-snug">{quiz.question.question}</h2>

@@ -45,6 +45,33 @@ describe("QuestionList", () => {
     fireEvent.click(screen.getByRole("button", { name: "削除する" }));
     await waitFor(() => expect(deleteQuestion).toHaveBeenCalledWith(1));
     expect(screen.queryByText("Q1")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getAllByRole("button", { name: "削除" })[0]),
+    );
+  });
+
+  it("moves focus to the create action when deleting the last question", async () => {
+    vi.mocked(deleteQuestion).mockResolvedValue(undefined);
+    render(<QuestionList initialItems={[mockItems[0]]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "削除" }));
+    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
+
+    const createButton = await screen.findByRole("button", { name: "問題を作る" });
+    await waitFor(() => expect(document.activeElement).toBe(createButton));
+  });
+
+  it("moves focus to the previous row when deleting the final row in the list", async () => {
+    vi.mocked(deleteQuestion).mockResolvedValue(undefined);
+    render(<QuestionList initialItems={mockItems} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "削除" })[1]);
+    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
+
+    await waitFor(() => expect(screen.queryByText("Q2")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "削除" })),
+    );
   });
 
   it("handles cancel", () => {
@@ -79,6 +106,30 @@ describe("QuestionList", () => {
 
     resolve!();
     await waitFor(() => expect(screen.queryByText("Q1")).not.toBeInTheDocument());
+  });
+
+  it("does not steal focus if the user moves elsewhere while deletion is pending", async () => {
+    let resolve: () => void;
+    const promise = new Promise<void>((r) => {
+      resolve = r;
+    });
+    vi.mocked(deleteQuestion).mockReturnValue(promise);
+
+    render(
+      <>
+        <QuestionList initialItems={mockItems} />
+        <button type="button">別の操作</button>
+      </>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "削除" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
+    const otherButton = screen.getByRole("button", { name: "別の操作" });
+    otherButton.focus();
+
+    resolve!();
+    await waitFor(() => expect(screen.queryByText("Q1")).not.toBeInTheDocument());
+    expect(document.activeElement).toBe(otherButton);
   });
 
   it("independent row confirm", () => {

@@ -95,4 +95,18 @@ describe("parseWithRetry", () => {
       "GOOGLE_API_KEY environment variable is not set",
     );
   });
+
+  it("stops parse retries when the shared deadline expires during backoff", async () => {
+    const now = vi.spyOn(performance, "now");
+    now.mockReturnValueOnce(0).mockReturnValueOnce(0).mockReturnValueOnce(0).mockReturnValue(10);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn().mockResolvedValue("not json");
+
+    const result = await parseWithRetry(fetcher, schema, "test-context", 5);
+
+    expect(result).toBeNull();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    now.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
 });

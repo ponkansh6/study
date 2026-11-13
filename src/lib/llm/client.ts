@@ -15,6 +15,7 @@ export async function callGemini(
   maxTokens: number,
   timeoutMs: number,
   retries = LLM_MAX_RETRIES,
+  deadlineAt?: number,
 ): Promise<string | null> {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_API_KEY environment variable is not set");
@@ -30,8 +31,12 @@ export async function callGemini(
   });
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const remainingMs = deadlineAt === undefined ? timeoutMs : deadlineAt - performance.now();
+    if (remainingMs <= 0) throw new Error("LLM generation deadline exceeded");
     try {
-      const result = await model.generateContent(prompt, { timeout: timeoutMs });
+      const result = await model.generateContent(prompt, {
+        timeout: Math.min(timeoutMs, remainingMs),
+      });
       const response = await result.response;
       const text = response.text();
       return text;
@@ -45,10 +50,14 @@ export async function callGemini(
 
       if ((isRateLimit || isTransient) && attempt < retries) {
         const waitMs = backoffMs(attempt);
+        const remainingMs = deadlineAt === undefined ? undefined : deadlineAt - performance.now();
+        if (remainingMs !== undefined && remainingMs <= 0) {
+          throw new Error("LLM generation deadline exceeded");
+        }
         console.warn(
           `[llm] Gemini ${isRateLimit ? "rate limit" : "transient error"}: ${apiError.message} (retry ${attempt + 1}/${retries}), waiting ${waitMs}ms`,
         );
-        await sleep(waitMs);
+        await sleep(remainingMs === undefined ? waitMs : Math.min(waitMs, remainingMs));
         continue;
       }
 

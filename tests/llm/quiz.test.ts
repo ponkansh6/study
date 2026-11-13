@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateQuestion } from "@/lib/llm/quiz";
 import { validLlmJson } from "../fixtures/llm";
 import { QUIZ_GENERATION_PROMPT, buildQuizPrompt } from "@/lib/llm/prompts";
-import { LLM_QUIZ_MAX_TOKENS, LLM_QUIZ_MAX_TOKENS_HARD } from "@/lib/constants";
+import { LLM_QUIZ_BUDGET_MS, LLM_QUIZ_MAX_TOKENS, LLM_QUIZ_MAX_TOKENS_HARD } from "@/lib/constants";
 
 const mockCallGemini = vi.fn();
 
@@ -66,5 +66,15 @@ describe("generateQuestion", () => {
     const [prompt, maxTokens] = mockCallGemini.mock.calls[0];
     expect(prompt).toBe(buildQuizPrompt("ソース文", 3));
     expect(maxTokens).toBe(LLM_QUIZ_MAX_TOKENS_HARD);
+  });
+
+  it("passes one generation deadline into the Gemini call", async () => {
+    const now = vi.spyOn(performance, "now").mockReturnValue(1234);
+    mockCallGemini.mockResolvedValueOnce(validLlmJson);
+
+    await generateQuestion("ソース文");
+
+    expect(mockCallGemini.mock.calls[0][4]).toBe(1234 + LLM_QUIZ_BUDGET_MS);
+    now.mockRestore();
   });
 });

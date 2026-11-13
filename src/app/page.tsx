@@ -8,7 +8,11 @@ export default async function Home() {
   const { totalQuestions, todayAnswers, todayAccuracy } = await getStats();
 
   return (
-    <main className="py-12 space-y-10 flex-1 flex flex-col justify-center motion-safe:animate-rise">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="py-12 space-y-10 flex-1 flex flex-col justify-center motion-safe:animate-rise focus:outline-none"
+    >
       <header className="text-center space-y-3">
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
           Study

@@ -18,7 +18,7 @@ export function Spinner({ size = "sm", color = "current", className }: SpinnerPr
   return (
     <span
       aria-hidden="true"
-      className={`${sizeClasses} ${colorClasses} border-t-transparent rounded-full animate-spin ${className ?? ""}`}
+      className={`${sizeClasses} ${colorClasses} border-t-transparent rounded-full motion-safe:animate-spin ${className ?? ""}`}
     />
   );
 }

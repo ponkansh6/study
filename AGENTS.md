@@ -5,6 +5,8 @@
 - **正規のpush先**: このリポジトリの正規リモートは `origin` (`https://github.com/ponkansh6/study.git`)。依頼された通常のpushはこの送信先に限定し、別のリモートやURLへ送信しない。
 - **依頼に伴う通常pushの昇格実行**: pushが依頼され、通常権限で外部通信が利用できない場合、正規の `origin` (`https://github.com/ponkansh6/study.git`) への通常の `git push origin <branch>` だけを `sandbox_permissions=require_escalated` で実行する。別の送信先、force push、ref削除、hook無効化は許可しない。
 - **pre-push E2E用Chromium取得の昇格実行**: pre-push E2EがPlaywright管理のChromium未導入で失敗し、通常権限での取得もネットワークエラーになる場合、`pnpm exec playwright install chromium` だけを `sandbox_permissions=require_escalated` で実行し、このプロジェクトに必要なChromiumを取得する。任意の外部通信や永続的なsandbox / 承認設定の変更は許可しない。
+- **E2E用ローカルサーバー起動の昇格実行**: このリポジトリのPlaywright E2E実行時、webServerのローカルポート待ち受けが通常権限で拒否された場合に限り、該当する `pnpm exec playwright test` コマンドを `sandbox_permissions=require_escalated` で実行する。任意の外部通信や永続的なsandbox / 承認設定の変更は許可しない。
+- **GitHub Actions状態確認の昇格実行**: ユーザーからCI状態やログの確認を依頼された場合、通常権限でGitHub APIへ接続できないときは、本リポジトリ `ponkansh6/study` のActions run/status/logsを読むための `gh run list --repo ponkansh6/study`、`gh run view --repo ponkansh6/study`、および同リポジトリのActions runs関連endpointへの読み取り専用 `gh api` GETだけを `sandbox_permissions=require_escalated` で実行する。workflowのdispatch / rerun / cancel、secretsや設定の読み書き、他リポジトリ・他APIへのアクセス、任意の外部通信、永続的なsandbox / 承認設定の変更は許可しない。
 
 ## リソース制約
 
@@ -50,3 +52,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## 依存監査・更新のネットワーク通信
+
+- 依存関係の脆弱性監査と、semver範囲内の依存更新に限り、設定済みパッケージレジストリへの通信（監査情報・バージョンメタデータの取得、必要なパッケージの取得）を許可する。その他の外部通信には適用しない。

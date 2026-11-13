@@ -2,6 +2,7 @@
 export const LLM_MODEL = "gemini-3.1-flash-lite";
 export const LLM_QUIZ_MAX_TOKENS = 512;
 export const LLM_QUIZ_TIMEOUT_MS = 45_000;
+export const LLM_QUIZ_BUDGET_MS = 240_000;
 export const LLM_GEN_TEMPERATURE = 0.1;
 export const LLM_MAX_RETRIES = 3;
 export const LLM_MAX_PARSE_RETRIES = 2;

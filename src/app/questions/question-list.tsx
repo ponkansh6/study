@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { deleteQuestion } from "@/lib/api/client";
 import { Button } from "@/components/Button";
@@ -20,9 +20,11 @@ interface QuestionListProps {
 function QuestionRow({
   item,
   onDeleted,
+  registerDeleteButton,
 }: {
   item: QuestionListItem;
-  onDeleted: (id: number) => void;
+  onDeleted: (id: number, source: HTMLButtonElement | null) => void;
+  registerDeleteButton: (id: number, button: HTMLButtonElement | null) => void;
 }) {
   const [state, setState] = useState<"idle" | "confirming" | "deleting">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ function QuestionRow({
     setError(null);
     try {
       await deleteQuestion(item.id);
-      onDeleted(item.id);
+      onDeleted(item.id, confirmRef.current);
     } catch (e) {
       setError(errorMessage(e, "削除に失敗しました"));
       setState("confirming");
@@ -80,7 +82,10 @@ function QuestionRow({
               variant="danger"
               onClick={() => setState("confirming")}
               aria-describedby={`question-${item.id}`}
-              ref={deleteRef}
+              ref={(button) => {
+                deleteRef.current = button;
+                registerDeleteButton(item.id, button);
+              }}
             >
               削除
             </Button>
@@ -133,19 +138,53 @@ export function QuestionList({ initialItems }: QuestionListProps) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [announcement, setAnnouncement] = useState("");
+  const deleteButtons = useRef(new Map<number, HTMLButtonElement>());
+  const emptyStateRef = useRef<HTMLDivElement>(null);
+  const pendingFocus = useRef<{
+    source: HTMLButtonElement | null;
+    targetId: number | null;
+  } | null>(null);
 
-  const handleDeleted = (id: number) => {
+  const handleDeleted = (id: number, source: HTMLButtonElement | null) => {
+    const index = items.findIndex((item) => item.id === id);
+    const next = items[index + 1] ?? items[index - 1];
+    pendingFocus.current = { source, targetId: next?.id ?? null };
     setItems((prev) => prev.filter((i) => i.id !== id));
     setAnnouncement("削除しました");
   };
 
+  useLayoutEffect(() => {
+    const focusRequest = pendingFocus.current;
+    if (!focusRequest) return;
+    pendingFocus.current = null;
+
+    const activeElement = document.activeElement;
+    if (activeElement === focusRequest.source || activeElement === document.body) {
+      const target = focusRequest.targetId
+        ? (deleteButtons.current.get(focusRequest.targetId) ??
+          deleteButtons.current.values().next().value)
+        : emptyStateRef.current?.querySelector("button");
+      target?.focus();
+    }
+  }, [items]);
+
+  const registerDeleteButton = (id: number, button: HTMLButtonElement | null) => {
+    if (button) {
+      deleteButtons.current.set(id, button);
+    } else {
+      deleteButtons.current.delete(id);
+    }
+  };
+
   if (items.length === 0) {
     return (
-      <EmptyState
-        title="問題がありません"
-        actionLabel="問題を作る"
-        onAction={() => router.push("/create")}
-      />
+      <div ref={emptyStateRef}>
+        <EmptyState
+          title="問題がありません"
+          actionLabel="問題を作る"
+          onAction={() => router.push("/create")}
+        />
+      </div>
     );
   }
 
@@ -157,7 +196,12 @@ export function QuestionList({ initialItems }: QuestionListProps) {
       <p className="text-sm font-bold text-muted">{items.length}件</p>
       <ul className="space-y-3">
         {items.map((item) => (
-          <QuestionRow key={item.id} item={item} onDeleted={handleDeleted} />
+          <QuestionRow
+            key={item.id}
+            item={item}
+            onDeleted={handleDeleted}
+            registerDeleteButton={registerDeleteButton}
+          />
         ))}
       </ul>
     </div>

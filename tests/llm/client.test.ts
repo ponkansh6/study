@@ -122,5 +122,32 @@ describe("llm/client", () => {
       );
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
     });
+
+    it("limits the request timeout to the remaining generation budget", async () => {
+      const now = vi.spyOn(performance, "now").mockReturnValue(100);
+      mockGenerateContent.mockResolvedValueOnce({
+        response: { text: () => "within budget" },
+      });
+
+      await callGemini("prompt", 100, 1000, 0, 350);
+
+      expect(mockGenerateContent).toHaveBeenCalledWith("prompt", { timeout: 250 });
+      now.mockRestore();
+    });
+
+    it("does not retry after the shared deadline expires", async () => {
+      const now = vi.spyOn(performance, "now");
+      now.mockReturnValueOnce(0).mockReturnValueOnce(100);
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mockGenerateContent.mockRejectedValueOnce({ status: 429, message: "Rate limited" });
+
+      await expect(callGemini("prompt", 100, 1000, 3, 50)).rejects.toThrow(
+        "LLM generation deadline exceeded",
+      );
+
+      expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+      now.mockRestore();
+      consoleWarnSpy.mockRestore();
+    });
   });
 });

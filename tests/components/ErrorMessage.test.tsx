@@ -5,7 +5,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 describe("ErrorMessage", () => {
   it("renders message without retry button when onRetry is not provided", () => {
     render(<ErrorMessage message="Something went wrong" />);
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 

@@ -111,7 +111,7 @@ test("Test A: incorrect answer shows 不正解 banner, wrong-choice mark, and co
   await page.locator("button", { hasText: "選択肢A" }).click();
 
   // Assertions
-  await expect(page.locator("text=不正解")).toBeVisible();
+  await expect(page.getByText("不正解", { exact: true })).toBeVisible();
   await expect(page.locator("header", { hasText: "正解 0 / 1" })).toBeVisible();
   await expect(page.locator("text=解説: 正解は選択肢Bです。")).toBeVisible();
 
